@@ -2,9 +2,33 @@
 
 Warehouse-to-last-mile logistics platform (Next.js, Prisma, PostgreSQL).
 
+## Live app
+
+| Resource | URL |
+|----------|-----|
+| **Production** | https://agentic-logistics.vercel.app |
+| **GitHub** | https://github.com/Debsmit16/agentic-logistics |
+| **Vercel project** | `agentic-logistics` (team: plascom) |
+
+**First login (seed owner):** `owner@agentic.local` / `changeme123` — change this password after first login.
+
+Public tracking: https://agentic-logistics.vercel.app/track
+
+## Neon database
+
+Project was provisioned via Claimable Neon (`little-heart-86674213`). **Claim it into your Neon account** before it expires (72h from creation) so production keeps working:
+
+```bash
+npx neon claim accept little-heart-86674213 --no-open
+# Open the printed Verification Url and finish in the browser
+npx neon claim status little-heart-86674213
+```
+
+After claim, run `npx neon auth` and rename the project to **agentic-logistics** in the Neon console if you like.
+
 ## Production URLs
 
-Set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL after deploy.
+Set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL after deploy (already set for `https://agentic-logistics.vercel.app`).
 
 ## Local setup
 
