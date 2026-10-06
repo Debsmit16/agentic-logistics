@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/test?sslmode=disable
+          AUTH_SECRET: ci-secret-min-32-chars-long-xxxxx
+
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run test:e2e -- e2e/smoke.spec.ts
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/test?sslmode=disable
+          AUTH_SECRET: ci-secret-min-32-chars-long-xxxxx

@@ -1,0 +1,564 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SystemRole {
+  OWNER
+  ADMIN
+  WAREHOUSE_MANAGER
+  WAREHOUSE_STAFF
+  DELIVERY_MANAGER
+  DELIVERY_BOY
+  ACCOUNTANT
+}
+
+enum ParcelStatus {
+  EXPECTED
+  RECEIVED
+  WEIGHED
+  STORED
+  SORTED
+  READY_FOR_DISPATCH
+  ASSIGNED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  DELIVERY_FAILED
+  REATTEMPT_SCHEDULED
+  RETURN_TO_WAREHOUSE
+  RETURNED_TO_PARTNER
+  CANCELLED
+  DAMAGED
+  MISSING
+}
+
+enum PaymentType {
+  COD
+  PREPAID
+}
+
+enum DeliveryBatchStatus {
+  DRAFT
+  READY
+  ASSIGNED
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryAttemptStatus {
+  PENDING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+enum CodTransactionType {
+  EXPECTED
+  COLLECTED
+  DEPOSITED
+  SETTLED
+  ADJUSTMENT
+}
+
+enum ExceptionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum NotificationChannel {
+  IN_APP
+  SMS
+  EMAIL
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String?   @unique
+  phone          String?   @unique
+  passwordHash   String
+  displayName    String
+  role           SystemRole
+  isActive       Boolean   @default(true)
+  preferredLang  String    @default("en")
+  warehouseId    String?
+  warehouse      Warehouse? @relation(fields: [warehouseId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  sessions       Session[]
+  employee       Employee?
+  parcelEvents   ParcelEvent[]
+  auditLogs      AuditLog[] @relation("AuditActor")
+  notifications  Notification[]
+  deliveryAssignments DeliveryAssignment[]
+  codTransactions CodTransaction[] @relation("CODRecordedBy")
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([role])
+  @@index([warehouseId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  role         SystemRole
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Partner {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  isActive    Boolean  @default(true)
+  contactEmail String?
+  contactPhone String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  integrations PartnerIntegration[]
+  parcels      Parcel[]
+  settlements  Settlement[]
+  webhookEvents PartnerWebhookEvent[]
+
+  @@index([isActive])
+}
+
+model PartnerIntegration {
+  id          String   @id @default(uuid())
+  partnerId   String
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  providerKey String
+  config      Json?
+  webhookSecret String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([partnerId, providerKey])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parcels   Parcel[]
+
+  @@index([phone])
+}
+
+model Warehouse {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  address   String?
+  city      String?
+  state     String?
+  pincode   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  zones     WarehouseZone[]
+  parcels   Parcel[]
+  users     User[]
+  batches   DeliveryBatch[]
+
+  @@index([isActive])
+}
+
+model WarehouseZone {
+  id          String   @id @default(uuid())
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  code        String
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  racks WarehouseRack[]
+
+  @@unique([warehouseId, code])
+}
+
+model WarehouseRack {
+  id     String @id @default(uuid())
+  zoneId String
+  zone   WarehouseZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  code   String
+  name   String?
+  isActive Boolean @default(true)
+
+  shelves WarehouseShelf[]
+
+  @@unique([zoneId, code])
+}
+
+model WarehouseShelf {
+  id     String @id @default(uuid())
+  rackId String
+  rack   WarehouseRack @relation(fields: [rackId], references: [id], onDelete: Cascade)
+  code   String
+  label  String
+  isActive Boolean @default(true)
+  capacity Int?
+
+  parcels Parcel[]
+  locationHistory ParcelLocationHistory[]
+
+  @@unique([rackId, code])
+}
+
+model Parcel {
+  id              String       @id @default(uuid())
+  internalId      String       @unique
+  partnerId       String
+  partner         Partner      @relation(fields: [partnerId], references: [id])
+  partnerAwb      String
+  barcode         String?
+  status          ParcelStatus @default(EXPECTED)
+  paymentType     PaymentType  @default(PREPAID)
+  codAmount       Decimal      @default(0) @db.Decimal(12, 2)
+  weightKg        Decimal?     @db.Decimal(10, 3)
+  volumetricWeightKg Decimal?  @db.Decimal(10, 3)
+  chargeableWeightKg Decimal?  @db.Decimal(10, 3)
+  parcelType      String?
+  senderName      String?
+  senderPhone     String?
+  receiverName    String
+  receiverPhone   String
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  state           String
+  pincode         String
+  latitude        Decimal?     @db.Decimal(10, 7)
+  longitude       Decimal?     @db.Decimal(10, 7)
+  customerId      String?
+  customer        Customer?    @relation(fields: [customerId], references: [id])
+  warehouseId     String?
+  warehouse       Warehouse?   @relation(fields: [warehouseId], references: [id])
+  shelfId         String?
+  shelf           WarehouseShelf? @relation(fields: [shelfId], references: [id])
+  deliveryBatchId String?
+  deliveryBatch   DeliveryBatch? @relation(fields: [deliveryBatchId], references: [id])
+  assignedDeliveryBoyId String?
+  partnerMetadata Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  events          ParcelEvent[]
+  locationHistory ParcelLocationHistory[]
+  assignments     DeliveryAssignment[]
+  attempts        DeliveryAttempt[]
+  returns         Return[]
+  codTransactions CodTransaction[]
+  exceptions      Exception[]
+  deliveryOtps    DeliveryOtp[]
+
+  @@unique([partnerId, partnerAwb])
+  @@index([status])
+  @@index([internalId])
+  @@index([partnerAwb])
+  @@index([receiverPhone])
+  @@index([warehouseId])
+  @@index([deliveryBatchId])
+  @@index([assignedDeliveryBoyId])
+  @@index([createdAt])
+}
+
+model ParcelEvent {
+  id        String   @id @default(uuid())
+  parcelId  String
+  parcel    Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  eventType String
+  status    ParcelStatus?
+  message   String?
+  metadata  Json?
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([parcelId, createdAt])
+}
+
+model ParcelLocationHistory {
+  id        String   @id @default(uuid())
+  parcelId  String
+  parcel    Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  shelfId   String?
+  shelf     WarehouseShelf? @relation(fields: [shelfId], references: [id])
+  locationLabel String
+  note      String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([parcelId, createdAt])
+}
+
+model DeliveryBatch {
+  id          String              @id @default(uuid())
+  batchCode   String              @unique
+  warehouseId String
+  warehouse   Warehouse           @relation(fields: [warehouseId], references: [id])
+  status      DeliveryBatchStatus @default(DRAFT)
+  scheduledDate DateTime?
+  createdById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  parcels     Parcel[]
+  assignments DeliveryAssignment[]
+
+  @@index([warehouseId, status])
+}
+
+model DeliveryAssignment {
+  id              String   @id @default(uuid())
+  batchId         String
+  batch           DeliveryBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  parcelId        String
+  parcel          Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  deliveryBoyId   String
+  deliveryBoy     User     @relation(fields: [deliveryBoyId], references: [id])
+  isActive        Boolean  @default(true)
+  assignedAt      DateTime @default(now())
+  unassignedAt    DateTime?
+
+  attempts DeliveryAttempt[]
+
+  @@index([parcelId, isActive])
+  @@index([deliveryBoyId, isActive])
+}
+
+model DeliveryAttempt {
+  id             String                @id @default(uuid())
+  assignmentId   String
+  assignment     DeliveryAssignment    @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  parcelId       String
+  parcel         Parcel                @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  attemptNumber  Int
+  status         DeliveryAttemptStatus @default(PENDING)
+  failureReasonId String?
+  failureReason  DeliveryFailureReason? @relation(fields: [failureReasonId], references: [id])
+  failureNote    String?
+  otpVerified    Boolean               @default(false)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  proof DeliveryProof?
+  codCollected Decimal? @db.Decimal(12, 2)
+  codPaymentMode String?
+  codVarianceReason String?
+
+  @@index([parcelId, attemptNumber])
+}
+
+model DeliveryProof {
+  id              String          @id @default(uuid())
+  attemptId       String          @unique
+  attempt         DeliveryAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  photoBase64     String?         @db.Text
+  signatureBase64 String?         @db.Text
+  recipientName   String?
+  notes           String?
+  latitude        Decimal?        @db.Decimal(10, 7)
+  longitude       Decimal?        @db.Decimal(10, 7)
+  capturedAt      DateTime        @default(now())
+}
+
+model DeliveryFailureReason {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  label       String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  attempts    DeliveryAttempt[]
+}
+
+model DeliveryOtp {
+  id        String   @id @default(uuid())
+  parcelId  String
+  parcel    Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  phone     String
+  otpHash   String
+  expiresAt DateTime
+  verifiedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([parcelId, createdAt])
+}
+
+model Return {
+  id          String   @id @default(uuid())
+  parcelId    String
+  parcel      Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  reason      String
+  returnedAt  DateTime @default(now())
+  actorId     String?
+  metadata    Json?
+}
+
+model CodTransaction {
+  id          String             @id @default(uuid())
+  parcelId    String
+  parcel      Parcel             @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+  type        CodTransactionType
+  amount      Decimal            @db.Decimal(12, 2)
+  note        String?
+  recordedById String?
+  recordedBy  User?              @relation("CODRecordedBy", fields: [recordedById], references: [id])
+  settlementId String?
+  settlement  Settlement?        @relation(fields: [settlementId], references: [id])
+  createdAt   DateTime           @default(now())
+
+  @@index([parcelId, type])
+  @@index([settlementId])
+}
+
+model Settlement {
+  id          String   @id @default(uuid())
+  partnerId   String?
+  partner     Partner? @relation(fields: [partnerId], references: [id])
+  reference   String   @unique
+  totalAmount Decimal  @db.Decimal(14, 2)
+  settledAt   DateTime @default(now())
+  note        String?
+  transactions CodTransaction[]
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  channel   NotificationChannel @default(IN_APP)
+  isRead    Boolean             @default(false)
+  metadata  Json?
+  createdAt DateTime            @default(now())
+
+  @@index([userId, isRead])
+}
+
+model Exception {
+  id          String          @id @default(uuid())
+  parcelId    String?
+  parcel      Parcel?         @relation(fields: [parcelId], references: [id])
+  code        String
+  title       String
+  description String?
+  status      ExceptionStatus @default(OPEN)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  resolvedAt  DateTime?
+
+  @@index([status])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  response  Json?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PartnerWebhookEvent {
+  id             String   @id @default(uuid())
+  partnerId      String
+  partner        Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  idempotencyKey String?
+  eventType      String
+  payload        Json
+  processedAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  @@unique([partnerId, idempotencyKey])
+  @@index([partnerId, createdAt])
+}

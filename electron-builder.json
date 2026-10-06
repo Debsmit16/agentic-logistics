@@ -1,0 +1,10 @@
+{
+  "appId": "com.agentic.logistics",
+  "productName": "Agentic Logistics",
+  "directories": { "output": "dist-electron" },
+  "files": ["electron/**/*", "public/logo-512.png"],
+  "win": {
+    "target": "nsis",
+    "icon": "public/logo-512.png"
+  }
+}

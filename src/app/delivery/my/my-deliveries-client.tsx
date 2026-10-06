@@ -1,0 +1,339 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { SignaturePad } from "@/components/delivery/signature-pad";
+
+type Assignment = {
+  parcel: {
+    id: string;
+    internalId: string;
+    receiverName: string;
+    receiverPhone: string;
+    addressLine1: string;
+    city: string;
+    pincode: string;
+    paymentType: string;
+    codAmount: string;
+    status: string;
+  };
+};
+
+type PodReq = {
+  requireOtp: boolean;
+  requirePhoto: boolean;
+  requireSignature: boolean;
+  requireGps: boolean;
+};
+
+export default function MyDeliveriesClient() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [active, setActive] = useState<Assignment["parcel"] | null>(null);
+  const [pod, setPod] = useState<PodReq | null>(null);
+  const [otp, setOtp] = useState("");
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [cod, setCod] = useState("");
+  const [codMode, setCodMode] = useState("CASH");
+  const [varianceReason, setVarianceReason] = useState("");
+  const [photo, setPhoto] = useState<string | undefined>();
+  const [signature, setSignature] = useState<string | undefined>();
+  const [recipientName, setRecipientName] = useState("");
+  const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [reasons, setReasons] = useState<{ id: string; label: string }[]>([]);
+  const [failReason, setFailReason] = useState("");
+
+  async function load() {
+    const res = await fetch("/api/delivery/my");
+    const data = await res.json();
+    setAssignments(data.assignments ?? []);
+  }
+
+  useEffect(() => {
+    load();
+    fetch("/api/delivery/failure-reasons")
+      .then((r) => r.json())
+      .then((d) => setReasons(d.reasons ?? []));
+    fetch("/api/delivery/pod-requirements")
+      .then((r) => r.json())
+      .then((d) => setPod(d.pod ?? null));
+  }, []);
+
+  async function callApi(path: string, body?: object) {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed");
+    return data;
+  }
+
+  function captureGps() {
+    setGpsError(null);
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation is not supported on this device.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setMsg("Location captured");
+      },
+      () => setGpsError("Could not get GPS. Allow location access and try again."),
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  }
+
+  if (!active) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold">My Deliveries</h1>
+        {assignments.length === 0 ? (
+          <p className="text-gray-600">No active assignments.</p>
+        ) : null}
+        {assignments.map((a) => (
+          <button
+            key={a.parcel.id}
+            type="button"
+            onClick={() => {
+              setActive(a.parcel);
+              setCod(String(a.parcel.codAmount ?? "0"));
+              setRecipientName(a.parcel.receiverName);
+              setPhoto(undefined);
+              setSignature(undefined);
+              setGps(null);
+              setOtp("");
+              setMsg(null);
+            }}
+            className="w-full rounded-xl border bg-white p-4 text-left"
+          >
+            <p className="font-bold">{a.parcel.internalId}</p>
+            <p>{a.parcel.receiverName}</p>
+            <p className="text-sm text-gray-600">{a.parcel.addressLine1}</p>
+            <p className="text-xs text-gray-500">{a.parcel.status}</p>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-lg space-y-3">
+      <button type="button" onClick={() => setActive(null)} className="text-sm text-teal-700">
+        ← Back
+      </button>
+      <h1 className="text-xl font-bold">{active.internalId}</h1>
+      <p>
+        {active.receiverName} · {active.receiverPhone}
+      </p>
+      <a href={`tel:${active.receiverPhone}`} className="block rounded-xl bg-green-700 py-3 text-center text-white">
+        Call customer
+      </a>
+      <a
+        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${active.addressLine1} ${active.city} ${active.pincode}`,
+        )}`}
+        className="block rounded-xl bg-blue-700 py-3 text-center text-white"
+      >
+        Navigate
+      </a>
+      {msg ? <p className="rounded bg-blue-50 p-2 text-sm">{msg}</p> : null}
+      {devOtp ? <p className="rounded bg-amber-50 p-2 text-sm">Dev OTP: {devOtp}</p> : null}
+      <button
+        type="button"
+        className="w-full rounded-xl bg-teal-700 py-3 text-white"
+        onClick={async () => {
+          try {
+            await callApi(`/api/parcels/${active.id}/out-for-delivery`);
+            setMsg("Out for delivery");
+            load();
+          } catch (e) {
+            setMsg(e instanceof Error ? e.message : "Error");
+          }
+        }}
+      >
+        Start delivery
+      </button>
+      {pod?.requireOtp !== false ? (
+        <>
+          <button
+            type="button"
+            className="w-full rounded-xl bg-indigo-700 py-3 text-white"
+            onClick={async () => {
+              try {
+                const data = await callApi(`/api/parcels/${active.id}/otp/send`);
+                setDevOtp(data.devOtp ?? null);
+                setMsg(data.devOtp ? "OTP shown (SMS not configured)" : "OTP sent by SMS");
+              } catch (e) {
+                setMsg(e instanceof Error ? e.message : "Error");
+              }
+            }}
+          >
+            Send OTP
+          </button>
+          <input
+            className="w-full rounded border px-3 py-3 text-lg"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+          />
+          <button
+            type="button"
+            className="w-full rounded-xl bg-violet-700 py-3 text-white"
+            onClick={async () => {
+              try {
+                await callApi(`/api/parcels/${active.id}/otp/verify`, { otp });
+                setMsg("OTP verified");
+              } catch (e) {
+                setMsg(e instanceof Error ? e.message : "Error");
+              }
+            }}
+          >
+            Verify OTP
+          </button>
+        </>
+      ) : null}
+      {active.paymentType === "COD" ? (
+        <>
+          <input
+            className="w-full rounded border px-3 py-3"
+            placeholder="COD collected"
+            value={cod}
+            onChange={(e) => setCod(e.target.value)}
+          />
+          <select
+            className="w-full rounded border px-3 py-3"
+            value={codMode}
+            onChange={(e) => setCodMode(e.target.value)}
+          >
+            <option value="CASH">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input
+            className="w-full rounded border px-3 py-2 text-sm"
+            placeholder="Reason if amount differs"
+            value={varianceReason}
+            onChange={(e) => setVarianceReason(e.target.value)}
+          />
+        </>
+      ) : null}
+      <input
+        className="w-full rounded border px-3 py-2"
+        placeholder="Recipient name (POD)"
+        value={recipientName}
+        onChange={(e) => setRecipientName(e.target.value)}
+      />
+      {pod?.requirePhoto ? (
+        <div>
+          <p className="text-sm font-medium">Delivery photo (required)</p>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => setPhoto(String(reader.result).split(",")[1]);
+              reader.readAsDataURL(file);
+            }}
+          />
+        </div>
+      ) : (
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => setPhoto(String(reader.result).split(",")[1]);
+            reader.readAsDataURL(file);
+          }}
+        />
+      )}
+      <SignaturePad onChange={setSignature} />
+      {pod?.requireGps ? (
+        <div className="rounded-lg border bg-white p-3">
+          <p className="text-sm font-medium">GPS location (required)</p>
+          {gps ? (
+            <p className="text-xs text-gray-600">
+              {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}
+            </p>
+          ) : null}
+          {gpsError ? <p className="text-sm text-red-600">{gpsError}</p> : null}
+          <button
+            type="button"
+            className="mt-2 w-full rounded-lg bg-slate-800 py-2 text-white"
+            onClick={captureGps}
+          >
+            Capture GPS
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="w-full rounded-lg border py-2 text-sm" onClick={captureGps}>
+          Capture GPS (optional)
+        </button>
+      )}
+      <button
+        type="button"
+        className="w-full rounded-xl bg-green-700 py-4 text-lg font-bold text-white"
+        onClick={async () => {
+          try {
+            await callApi(`/api/parcels/${active.id}/deliver`, {
+              codCollected: Number(cod),
+              codPaymentMode: codMode,
+              codVarianceReason: varianceReason || undefined,
+              photoBase64: photo,
+              signatureBase64: signature,
+              recipientName: recipientName || undefined,
+              latitude: gps?.lat,
+              longitude: gps?.lng,
+            });
+            setMsg("Delivered");
+            setActive(null);
+            load();
+          } catch (e) {
+            setMsg(e instanceof Error ? e.message : "Error");
+          }
+        }}
+      >
+        Confirm delivery
+      </button>
+      <select
+        className="w-full rounded border px-3 py-2"
+        value={failReason}
+        onChange={(e) => setFailReason(e.target.value)}
+      >
+        <option value="">Why did delivery fail?</option>
+        {reasons.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.label}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        className="w-full rounded-xl bg-red-700 py-3 text-white"
+        onClick={async () => {
+          try {
+            await callApi(`/api/parcels/${active.id}/fail`, {
+              failureReasonId: failReason,
+            });
+            setMsg("Marked failed");
+            setActive(null);
+            load();
+          } catch (e) {
+            setMsg(e instanceof Error ? e.message : "Error");
+          }
+        }}
+      >
+        Mark failed
+      </button>
+    </div>
+  );
+}
