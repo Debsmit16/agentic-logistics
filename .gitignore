@@ -45,3 +45,5 @@ next-env.d.ts
 # electron
 /dist-electron
 .neon
+
+.vercel

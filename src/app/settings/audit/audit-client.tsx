@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function AuditClient() {
+  const t = useT();
   const [logs, setLogs] = useState<
     { id: string; action: string; entityType: string; createdAt: string; actor?: { displayName: string } }[]
   >([]);
@@ -15,7 +17,7 @@ export default function AuditClient() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Audit log</h1>
+      <h1 className="text-2xl font-bold">{t("auditLog")}</h1>
       <ul className="mt-4 space-y-2">
         {logs.map((log) => (
           <li key={log.id} className="rounded-lg border bg-white p-3 text-sm">

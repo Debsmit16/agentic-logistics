@@ -9,11 +9,13 @@ export function LanguageSwitcher({ current }: { current: string }) {
       className="rounded border px-2 py-1 text-sm"
       value={current}
       onChange={async (e) => {
+        const preferredLang = e.target.value;
+        document.cookie = `al_lang=${preferredLang};path=/;max-age=31536000;SameSite=Lax`;
         await fetch("/api/me/language", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preferredLang: e.target.value }),
-        });
+          body: JSON.stringify({ preferredLang }),
+        }).catch(() => undefined);
         router.refresh();
       }}
     >

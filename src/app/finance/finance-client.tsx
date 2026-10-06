@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function FinanceClient() {
+  const t = useT();
   const [ledger, setLedger] = useState<
     {
       id: string;
@@ -33,47 +35,47 @@ export default function FinanceClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">COD & Finance</h1>
+      <h1 className="text-2xl font-bold">{t("financeTitle")}</h1>
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Open expected</p>
+          <p className="text-sm text-gray-500">{t("openExpected")}</p>
           <p className="text-2xl font-bold">₹{summary.expectedOpen}</p>
         </div>
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Collected</p>
+          <p className="text-sm text-gray-500">{t("collected")}</p>
           <p className="text-2xl font-bold">₹{summary.collectedTotal}</p>
         </div>
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Unsettled</p>
+          <p className="text-sm text-gray-500">{t("unsettled")}</p>
           <p className="text-2xl font-bold">₹{summary.unsettledCollected}</p>
         </div>
       </div>
       {msg ? <p>{msg}</p> : null}
       <div className="rounded-xl border bg-white p-4 space-y-3">
-        <h2 className="font-semibold">Settle collections</h2>
+        <h2 className="font-semibold">{t("settleCollections")}</h2>
         <input
           className="w-full rounded border px-3 py-2"
-          placeholder="Settlement reference"
+          placeholder={t("settlementReference")}
           value={reference}
           onChange={(e) => setReference(e.target.value)}
         />
         <div className="max-h-48 overflow-auto space-y-1 text-sm">
           {ledger
-            .filter((t) => t.type === "COLLECTED" && !t.settlementId)
-            .map((t) => (
-              <label key={t.id} className="flex gap-2">
+            .filter((tx) => tx.type === "COLLECTED" && !tx.settlementId)
+            .map((tx) => (
+              <label key={tx.id} className="flex gap-2">
                 <input
                   type="checkbox"
-                  checked={selected.includes(t.id)}
+                  checked={selected.includes(tx.id)}
                   onChange={(e) =>
                     setSelected(
                       e.target.checked
-                        ? [...selected, t.id]
-                        : selected.filter((x) => x !== t.id),
+                        ? [...selected, tx.id]
+                        : selected.filter((x) => x !== tx.id),
                     )
                   }
                 />
-                {t.parcel.internalId} · ₹{t.amount}
+                {tx.parcel.internalId} · ₹{tx.amount}
               </label>
             ))}
         </div>
@@ -84,17 +86,17 @@ export default function FinanceClient() {
             const res = await fetch("/api/finance/cod", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reference, transactionIds: selected }),
+              body: JSON.stringify({ transactionIds: selected, reference }),
             });
             const data = await res.json();
-            setMsg(res.ok ? "Settlement recorded" : data.error);
+            setMsg(res.ok ? t("saved") : data.error ?? t("error"));
             if (res.ok) {
               setSelected([]);
               load();
             }
           }}
         >
-          Record settlement
+          {t("settleSelected")}
         </button>
       </div>
     </div>

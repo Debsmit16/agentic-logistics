@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function DeliveryOpsClient() {
+  const t = useT();
   const [warehouses, setWarehouses] = useState<{ id: string; name: string }[]>([]);
   const [parcels, setParcels] = useState<{ id: string; internalId: string; status: string }[]>([]);
   const [boys, setBoys] = useState<{ id: string; displayName: string }[]>([]);
@@ -59,7 +61,7 @@ export default function DeliveryOpsClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Delivery</h1>
+      <h1 className="text-2xl font-bold">{t("deliveryOps")}</h1>
       <a href="/delivery/failed" className="text-sm text-teal-700 underline">
         Failed deliveries & returns
       </a>

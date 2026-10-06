@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function SystemSettingsClient() {
+  const t = useT();
   const [pod, setPod] = useState({
     requireOtp: true,
     requirePhoto: false,
@@ -33,8 +35,8 @@ export default function SystemSettingsClient() {
 
   return (
     <div className="max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold">System settings</h1>
-      <p className="text-sm text-gray-600">Proof of delivery requirements</p>
+      <h1 className="text-2xl font-bold">{t("systemPodTitle")}</h1>
+      <p className="text-sm text-gray-600">{t("podRequirements")}</p>
       {(Object.keys(pod) as (keyof typeof pod)[]).map((key) => (
         <label key={key} className="flex items-center gap-2">
           <input

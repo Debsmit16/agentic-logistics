@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function NotificationsClient() {
+  const t = useT();
   const [items, setItems] = useState<
     { id: string; title: string; body: string; isRead: boolean; createdAt: string }[]
   >([]);
@@ -19,7 +21,7 @@ export default function NotificationsClient() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Notifications</h1>
+        <h1 className="text-2xl font-bold">{t("notifications")}</h1>
         <button
           type="button"
           className="rounded border px-3 py-1 text-sm"

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function PartnersSettingsClient() {
+  const t = useT();
   const [partners, setPartners] = useState<
     { id: string; code: string; name: string; isActive: boolean }[]
   >([]);
@@ -43,7 +45,7 @@ export default function PartnersSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Partners</h1>
+      <h1 className="text-2xl font-bold">{t("partnersTitle")}</h1>
       {msg ? <p className="text-sm">{msg}</p> : null}
       <form
         className="flex flex-wrap gap-2 rounded-xl border bg-white p-4"

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function FindParcelClient() {
+  const t = useT();
   const [scan, setScan] = useState("");
   const [parcel, setParcel] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export default function FindParcelClient() {
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold">Find Parcel</h1>
+      <h1 className="text-2xl font-bold">{t("findParcel")}</h1>
       <input
         className="w-full rounded-lg border px-4 py-3 text-lg"
         placeholder="Scan AWB / barcode"

@@ -4,68 +4,19 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { LogoutButton } from "@/components/layout/logout-button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
-const NAV: Partial<Record<SystemRole, { href: string; label: string }[]>> = {
-  OWNER: [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/parcels", label: "Parcels" },
-    { href: "/warehouse", label: "Warehouse" },
-    { href: "/delivery", label: "Delivery" },
-    { href: "/finance", label: "COD" },
-    { href: "/settings/partners", label: "Partners" },
-    { href: "/settings/customers", label: "Customers" },
-    { href: "/settings/warehouses", label: "Warehouses" },
-    { href: "/settings/employees", label: "Employees" },
-    { href: "/reports", label: "Reports" },
-    { href: "/notifications", label: "Alerts" },
-    { href: "/exceptions", label: "Exceptions" },
-    { href: "/settings/system", label: "System" },
-    { href: "/settings/audit", label: "Audit" },
-  ],
-  ADMIN: [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/parcels", label: "Parcels" },
-    { href: "/warehouse", label: "Warehouse" },
-    { href: "/delivery", label: "Delivery" },
-    { href: "/settings/partners", label: "Partners" },
-    { href: "/settings/customers", label: "Customers" },
-    { href: "/settings/warehouses", label: "Warehouses" },
-    { href: "/settings/employees", label: "Employees" },
-    { href: "/reports", label: "Reports" },
-  ],
-  WAREHOUSE_MANAGER: [
-    { href: "/warehouse", label: "Warehouse" },
-    { href: "/parcels", label: "Parcels" },
-    { href: "/delivery", label: "Delivery" },
-  ],
-  WAREHOUSE_STAFF: [
-    { href: "/warehouse", label: "Warehouse" },
-    { href: "/parcels", label: "Find" },
-  ],
-  DELIVERY_MANAGER: [
-    { href: "/delivery", label: "Delivery" },
-    { href: "/delivery/failed", label: "Failed" },
-    { href: "/parcels", label: "Parcels" },
-  ],
-  DELIVERY_BOY: [{ href: "/delivery/my", label: "My Deliveries" }],
-  ACCOUNTANT: [
-    { href: "/finance", label: "COD" },
-    { href: "/reports", label: "Reports" },
-  ],
-};
-
 export function AppShell({
   userName,
   role,
   preferredLang = "en",
+  links,
   children,
 }: {
   userName: string;
   role: SystemRole;
   preferredLang?: string;
+  links: { href: string; label: string }[];
   children: React.ReactNode;
 }) {
-  const links = NAV[role] ?? NAV.OWNER!;
-
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <header className="border-b border-gray-200 bg-white">

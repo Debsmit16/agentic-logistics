@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useT } from "@/components/i18n/i18n-provider";
 
 type Parcel = {
   id: string;
@@ -12,6 +13,7 @@ type Parcel = {
 };
 
 export default function ParcelsClient() {
+  const t = useT();
   const [items, setItems] = useState<Parcel[]>([]);
   const [partners, setPartners] = useState<{ id: string; name: string; code: string }[]>([]);
   const [warehouses, setWarehouses] = useState<{ id: string; name: string }[]>([]);
@@ -65,7 +67,7 @@ export default function ParcelsClient() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Parcels</h1>
+        <h1 className="text-2xl font-bold">{t("navParcels")}</h1>
         <div className="mt-3 flex gap-2">
           <input
             className="flex-1 rounded-lg border px-3 py-2"

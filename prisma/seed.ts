@@ -1,5 +1,6 @@
 import { hashPassword } from "../src/lib/auth/crypto";
 import { DEFAULT_POD } from "../src/lib/config/system-config";
+import { DEFAULT_GST } from "../src/lib/finance/gst-invoice-service";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -34,6 +35,12 @@ async function main() {
     where: { key: "pod.requirements" },
     create: { key: "pod.requirements", value: DEFAULT_POD },
     update: { value: DEFAULT_POD },
+  });
+
+  await prisma.systemConfig.upsert({
+    where: { key: "gst.profile" },
+    create: { key: "gst.profile", value: DEFAULT_GST },
+    update: { value: DEFAULT_GST },
   });
 }
 

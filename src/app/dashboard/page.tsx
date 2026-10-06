@@ -1,52 +1,57 @@
 import Link from "next/link";
-import { requirePageUser, withAppShell } from "@/lib/auth/page-auth";
+import { requirePageUser, withAppShell, getPageLocale } from "@/lib/auth/page-auth";
 import { prisma } from "@/lib/db";
 import { ParcelStatus } from "@prisma/client";
+import { t } from "@/lib/i18n";
 
 export default async function DashboardPage() {
   await requirePageUser();
+  const locale = await getPageLocale();
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const [total, received, outForDelivery, deliveredToday, failedOpen, aging] =
     await Promise.all([
-    prisma.parcel.count(),
-    prisma.parcel.count({ where: { status: ParcelStatus.RECEIVED } }),
-    prisma.parcel.count({ where: { status: ParcelStatus.OUT_FOR_DELIVERY } }),
-    prisma.parcel.count({
-      where: {
-        status: ParcelStatus.DELIVERED,
-        updatedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-      },
-    }),
-    prisma.parcel.count({
-      where: { status: { in: [ParcelStatus.DELIVERY_FAILED, ParcelStatus.REATTEMPT_SCHEDULED] } },
-    }),
-    prisma.parcel.count({
-      where: {
-        status: { notIn: [ParcelStatus.DELIVERED, ParcelStatus.CANCELLED] },
-        createdAt: { lt: cutoff },
-      },
-    }),
-  ]);
+      prisma.parcel.count(),
+      prisma.parcel.count({ where: { status: ParcelStatus.RECEIVED } }),
+      prisma.parcel.count({ where: { status: ParcelStatus.OUT_FOR_DELIVERY } }),
+      prisma.parcel.count({
+        where: {
+          status: ParcelStatus.DELIVERED,
+          updatedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
+      }),
+      prisma.parcel.count({
+        where: {
+          status: { in: [ParcelStatus.DELIVERY_FAILED, ParcelStatus.REATTEMPT_SCHEDULED] },
+        },
+      }),
+      prisma.parcel.count({
+        where: {
+          status: { notIn: [ParcelStatus.DELIVERED, ParcelStatus.CANCELLED] },
+          createdAt: { lt: cutoff },
+        },
+      }),
+    ]);
 
   return withAppShell(
     <>
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total parcels" value={total} />
-        <Stat label="Received (now)" value={received} />
-        <Stat label="Out for delivery" value={outForDelivery} />
-        <Stat label="Delivered today" value={deliveredToday} />
-        <Stat label="Failed / reattempt" value={failedOpen} />
-        <Stat label="Aging (&gt;7d open)" value={aging} />
+      <h1 className="text-2xl font-bold">{t(locale, "dashboard")}</h1>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Stat label={t(locale, "totalParcels")} value={total} />
+        <Stat label={t(locale, "receivedNow")} value={received} />
+        <Stat label={t(locale, "outForDelivery")} value={outForDelivery} />
+        <Stat label={t(locale, "deliveredToday")} value={deliveredToday} />
+        <Stat label={t(locale, "failedReattempt")} value={failedOpen} />
+        <Stat label={t(locale, "agingOpen")} value={aging} />
       </div>
       <div className="mt-8 flex flex-wrap gap-3">
-        <NavButton href="/warehouse">Warehouse</NavButton>
-        <NavButton href="/parcels">Parcels</NavButton>
-        <NavButton href="/delivery">Delivery</NavButton>
-        <NavButton href="/delivery/failed">Failed deliveries</NavButton>
-        <NavButton href="/finance">COD</NavButton>
-        <NavButton href="/reports">Reports</NavButton>
-        <NavButton href="/settings/warehouses">Setup warehouses</NavButton>
+        <NavButton href="/warehouse">{t(locale, "warehouse")}</NavButton>
+        <NavButton href="/parcels">{t(locale, "navParcels")}</NavButton>
+        <NavButton href="/delivery">{t(locale, "delivery")}</NavButton>
+        <NavButton href="/delivery/failed">{t(locale, "failedDeliveries")}</NavButton>
+        <NavButton href="/fleet">{t(locale, "navFleet")}</NavButton>
+        <NavButton href="/finance">{t(locale, "navCod")}</NavButton>
+        <NavButton href="/reports">{t(locale, "navReports")}</NavButton>
+        <NavButton href="/settings/warehouses">{t(locale, "setupWarehouses")}</NavButton>
       </div>
     </>,
   );

@@ -377,6 +377,13 @@ export async function completeDelivery(input: {
     metadata: { parcelId: input.parcelId, cod: result.codAmount },
   });
 
+  try {
+    const { generateTaxInvoiceForParcel } = await import("@/lib/finance/gst-invoice-service");
+    await generateTaxInvoiceForParcel(input.parcelId);
+  } catch (e) {
+    console.error("Auto GST invoice:", e);
+  }
+
   return { codAmount: result.codAmount };
 }
 

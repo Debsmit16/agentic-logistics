@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SignaturePad } from "@/components/delivery/signature-pad";
+import { useT } from "@/components/i18n/i18n-provider";
 
 type Assignment = {
   parcel: {
@@ -26,6 +27,7 @@ type PodReq = {
 };
 
 export default function MyDeliveriesClient() {
+  const t = useT();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [active, setActive] = useState<Assignment["parcel"] | null>(null);
   const [pod, setPod] = useState<PodReq | null>(null);
@@ -59,6 +61,31 @@ export default function MyDeliveriesClient() {
       .then((d) => setPod(d.pod ?? null));
   }, []);
 
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const ping = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetch("/api/fleet/ping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracyM: pos.coords.accuracy,
+              speedKmh: pos.coords.speed != null ? pos.coords.speed * 3.6 : undefined,
+            }),
+          }).catch(() => undefined);
+        },
+        () => undefined,
+        { enableHighAccuracy: true, maximumAge: 30000 },
+      );
+    };
+    ping();
+    const timer = setInterval(ping, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   async function callApi(path: string, body?: object) {
     const res = await fetch(path, {
       method: "POST",
@@ -89,9 +116,9 @@ export default function MyDeliveriesClient() {
   if (!active) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">My Deliveries</h1>
+        <h1 className="text-2xl font-bold">{t("myDeliveries")}</h1>
         {assignments.length === 0 ? (
-          <p className="text-gray-600">No active assignments.</p>
+          <p className="text-gray-600">{t("noAssignments")}</p>
         ) : null}
         {assignments.map((a) => (
           <button
@@ -122,14 +149,14 @@ export default function MyDeliveriesClient() {
   return (
     <div className="mx-auto max-w-lg space-y-3">
       <button type="button" onClick={() => setActive(null)} className="text-sm text-teal-700">
-        ← Back
+        ← {t("back")}
       </button>
       <h1 className="text-xl font-bold">{active.internalId}</h1>
       <p>
         {active.receiverName} · {active.receiverPhone}
       </p>
       <a href={`tel:${active.receiverPhone}`} className="block rounded-xl bg-green-700 py-3 text-center text-white">
-        Call customer
+        {t("callCustomer")}
       </a>
       <a
         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -137,7 +164,7 @@ export default function MyDeliveriesClient() {
         )}`}
         className="block rounded-xl bg-blue-700 py-3 text-center text-white"
       >
-        Navigate
+        {t("navigate")}
       </a>
       {msg ? <p className="rounded bg-blue-50 p-2 text-sm">{msg}</p> : null}
       {devOtp ? <p className="rounded bg-amber-50 p-2 text-sm">Dev OTP: {devOtp}</p> : null}
@@ -154,7 +181,7 @@ export default function MyDeliveriesClient() {
           }
         }}
       >
-        Start delivery
+        {t("startDelivery")}
       </button>
       {pod?.requireOtp !== false ? (
         <>
@@ -171,11 +198,11 @@ export default function MyDeliveriesClient() {
               }
             }}
           >
-            Send OTP
+            {t("sendOtp")}
           </button>
           <input
             className="w-full rounded border px-3 py-3 text-lg"
-            placeholder="Enter OTP"
+            placeholder={t("enterOtp")}
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
           />
@@ -191,7 +218,7 @@ export default function MyDeliveriesClient() {
               }
             }}
           >
-            Verify OTP
+            {t("verifyOtp")}
           </button>
         </>
       ) : null}
@@ -199,7 +226,7 @@ export default function MyDeliveriesClient() {
         <>
           <input
             className="w-full rounded border px-3 py-3"
-            placeholder="COD collected"
+            placeholder={t("codCollected")}
             value={cod}
             onChange={(e) => setCod(e.target.value)}
           />
@@ -208,13 +235,13 @@ export default function MyDeliveriesClient() {
             value={codMode}
             onChange={(e) => setCodMode(e.target.value)}
           >
-            <option value="CASH">Cash</option>
-            <option value="UPI">UPI</option>
-            <option value="OTHER">Other</option>
+            <option value="CASH">{t("codCash")}</option>
+            <option value="UPI">{t("codUpi")}</option>
+            <option value="OTHER">{t("codOther")}</option>
           </select>
           <input
             className="w-full rounded border px-3 py-2 text-sm"
-            placeholder="Reason if amount differs"
+            placeholder={t("codVarianceReason")}
             value={varianceReason}
             onChange={(e) => setVarianceReason(e.target.value)}
           />
@@ -222,13 +249,13 @@ export default function MyDeliveriesClient() {
       ) : null}
       <input
         className="w-full rounded border px-3 py-2"
-        placeholder="Recipient name (POD)"
+        placeholder={t("recipientName")}
         value={recipientName}
         onChange={(e) => setRecipientName(e.target.value)}
       />
       {pod?.requirePhoto ? (
         <div>
-          <p className="text-sm font-medium">Delivery photo (required)</p>
+          <p className="text-sm font-medium">{t("deliveryPhoto")}</p>
           <input
             type="file"
             accept="image/*"
@@ -259,7 +286,7 @@ export default function MyDeliveriesClient() {
       <SignaturePad onChange={setSignature} />
       {pod?.requireGps ? (
         <div className="rounded-lg border bg-white p-3">
-          <p className="text-sm font-medium">GPS location (required)</p>
+          <p className="text-sm font-medium">{t("gpsRequired")}</p>
           {gps ? (
             <p className="text-xs text-gray-600">
               {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}
@@ -271,12 +298,12 @@ export default function MyDeliveriesClient() {
             className="mt-2 w-full rounded-lg bg-slate-800 py-2 text-white"
             onClick={captureGps}
           >
-            Capture GPS
+            {t("captureGps")}
           </button>
         </div>
       ) : (
         <button type="button" className="w-full rounded-lg border py-2 text-sm" onClick={captureGps}>
-          Capture GPS (optional)
+          {t("captureGpsOptional")}
         </button>
       )}
       <button
@@ -302,14 +329,14 @@ export default function MyDeliveriesClient() {
           }
         }}
       >
-        Confirm delivery
+        {t("confirmDelivery")}
       </button>
       <select
         className="w-full rounded border px-3 py-2"
         value={failReason}
         onChange={(e) => setFailReason(e.target.value)}
       >
-        <option value="">Why did delivery fail?</option>
+        <option value="">{t("failReasonPrompt")}</option>
         {reasons.map((r) => (
           <option key={r.id} value={r.id}>
             {r.label}
@@ -332,7 +359,7 @@ export default function MyDeliveriesClient() {
           }
         }}
       >
-        Mark failed
+        {t("markFailed")}
       </button>
     </div>
   );

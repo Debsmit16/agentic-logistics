@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { getPublicLocale } from "@/lib/i18n/public-locale";
 
 const siteName = "Agentic Logistics";
 
@@ -32,13 +33,14 @@ export const viewport: Viewport = {
   themeColor: "#0a1628",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getPublicLocale();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   );

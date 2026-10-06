@@ -48,6 +48,14 @@ const PERMISSIONS: Record<string, SystemRole[]> = {
     SystemRole.DELIVERY_MANAGER,
     SystemRole.ACCOUNTANT,
   ],
+  "fleet.view": [
+    SystemRole.OWNER,
+    SystemRole.ADMIN,
+    SystemRole.WAREHOUSE_MANAGER,
+    SystemRole.DELIVERY_MANAGER,
+  ],
+  "fleet.track": [SystemRole.DELIVERY_BOY, SystemRole.DELIVERY_MANAGER],
+  "gst.manage": [SystemRole.OWNER, SystemRole.ADMIN, SystemRole.ACCOUNTANT],
   "audit.view": [SystemRole.OWNER],
 };
 
@@ -75,7 +83,18 @@ export function canAccessPath(role: SystemRole, pathname: string): boolean {
     );
   }
   if (role === SystemRole.ACCOUNTANT) {
-    return pathname.startsWith("/finance") || pathname.startsWith("/reports");
+    return (
+      pathname.startsWith("/finance") ||
+      pathname.startsWith("/reports") ||
+      pathname.startsWith("/settings/gst")
+    );
+  }
+  if (role === SystemRole.DELIVERY_MANAGER) {
+    return (
+      pathname.startsWith("/delivery") ||
+      pathname.startsWith("/fleet") ||
+      pathname.startsWith("/parcels")
+    );
   }
   return true;
 }

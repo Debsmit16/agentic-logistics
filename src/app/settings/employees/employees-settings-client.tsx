@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 const ROLES = [
   "ADMIN",
@@ -22,6 +23,7 @@ type Employee = {
 };
 
 export default function EmployeesSettingsClient() {
+  const t = useT();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [warehouses, setWarehouses] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
@@ -56,7 +58,7 @@ export default function EmployeesSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Employees</h1>
+      <h1 className="text-2xl font-bold">{t("employeesTitle")}</h1>
       {msg ? <p className="text-sm">{msg}</p> : null}
       <form
         className="grid gap-2 rounded-xl border bg-white p-4 sm:grid-cols-2"

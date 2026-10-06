@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 type AgingRow = {
   internalId: string;
@@ -10,6 +11,7 @@ type AgingRow = {
 };
 
 export default function ReportsAgingClient() {
+  const t = useT();
   const [rows, setRows] = useState<AgingRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,13 +38,13 @@ export default function ReportsAgingClient() {
           {loading ? (
             <tr>
               <td colSpan={5} className="p-4 text-gray-500">
-                Loading…
+                {t("loading")}
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
               <td colSpan={5} className="p-4 text-gray-500">
-                No aging parcels (older than 7 days, not delivered).
+                {t("noData")}
               </td>
             </tr>
           ) : (

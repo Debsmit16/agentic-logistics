@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 type Customer = {
   id: string;
@@ -11,6 +12,7 @@ type Customer = {
 };
 
 export default function CustomersSettingsClient() {
+  const t = useT();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [q, setQ] = useState("");
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
@@ -28,7 +30,7 @@ export default function CustomersSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Customers</h1>
+      <h1 className="text-2xl font-bold">{t("customersTitle")}</h1>
       <p className="text-sm text-gray-600">
         Auto-created when parcels are imported. Search by name, phone, or email.
       </p>

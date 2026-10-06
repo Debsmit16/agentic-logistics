@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 type Props = {
   onChange: (base64: string | undefined) => void;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function SignaturePad({ onChange, className }: Props) {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
 
@@ -43,7 +45,7 @@ export function SignaturePad({ onChange, className }: Props) {
 
   return (
     <div className={className}>
-      <p className="mb-1 text-sm font-medium text-gray-700">Customer signature</p>
+      <p className="mb-1 text-sm font-medium text-gray-700">{t("signature")}</p>
       <canvas
         ref={canvasRef}
         className="h-36 w-full touch-none rounded-lg border border-gray-300 bg-white"
@@ -79,7 +81,7 @@ export function SignaturePad({ onChange, className }: Props) {
           onChange(undefined);
         }}
       >
-        Clear signature
+        {t("clearSignature")}
       </button>
     </div>
   );

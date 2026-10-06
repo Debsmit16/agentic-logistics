@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function ExceptionsClient() {
+  const t = useT();
   const [items, setItems] = useState<
     {
       id: string;
@@ -24,7 +26,7 @@ export default function ExceptionsClient() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Exceptions</h1>
+      <h1 className="text-2xl font-bold">{t("exceptions")}</h1>
       <ul className="mt-4 space-y-2">
         {items.map((ex) => (
           <li key={ex.id} className="flex items-center justify-between rounded-lg border bg-white p-3">

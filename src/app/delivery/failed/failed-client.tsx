@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function DeliveryFailedClient() {
+  const t = useT();
   const [parcels, setParcels] = useState<
     { id: string; internalId: string; status: string }[]
   >([]);
@@ -34,7 +36,7 @@ export default function DeliveryFailedClient() {
       <Link href="/delivery" className="text-teal-700">
         ← Delivery
       </Link>
-      <h1 className="text-2xl font-bold">Failed deliveries</h1>
+      <h1 className="text-2xl font-bold">{t("failedDeliveries")}</h1>
       {msg ? <p>{msg}</p> : null}
       {parcels.map((p) => (
         <div key={p.id} className="rounded-lg border bg-white p-4">

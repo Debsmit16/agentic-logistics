@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export default function WarehousesSettingsClient() {
+  const t = useT();
   const [warehouses, setWarehouses] = useState<
     {
       id: string;
@@ -43,7 +45,7 @@ export default function WarehousesSettingsClient() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Warehouses</h1>
+      <h1 className="text-2xl font-bold">{t("warehousesTitle")}</h1>
       {msg ? <p className="text-sm text-green-800">{msg}</p> : null}
       <form
         className="grid gap-2 rounded-xl border bg-white p-4 sm:grid-cols-3"

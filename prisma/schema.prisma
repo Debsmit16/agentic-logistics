@@ -65,6 +65,17 @@ enum CodTransactionType {
   ADJUSTMENT
 }
 
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum InvoiceType {
+  TAX_INVOICE
+  BILL_OF_SUPPLY
+}
+
 enum ExceptionStatus {
   OPEN
   IN_PROGRESS
@@ -101,6 +112,7 @@ model User {
   deliveryAssignments DeliveryAssignment[]
   codTransactions CodTransaction[] @relation("CODRecordedBy")
   passwordResetTokens PasswordResetToken[]
+  fleetGpsPings       FleetGpsPing[]
 
   @@index([role])
   @@index([warehouseId])
@@ -159,6 +171,7 @@ model Partner {
   parcels      Parcel[]
   settlements  Settlement[]
   webhookEvents PartnerWebhookEvent[]
+  taxInvoices   TaxInvoice[]
 
   @@index([isActive])
 }
@@ -301,6 +314,7 @@ model Parcel {
   codTransactions CodTransaction[]
   exceptions      Exception[]
   deliveryOtps    DeliveryOtp[]
+  taxInvoice      TaxInvoice?
 
   @@unique([partnerId, partnerAwb])
   @@index([status])
@@ -561,4 +575,54 @@ model PartnerWebhookEvent {
 
   @@unique([partnerId, idempotencyKey])
   @@index([partnerId, createdAt])
+}
+
+model FleetGpsPing {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  latitude     Decimal  @db.Decimal(10, 7)
+  longitude    Decimal  @db.Decimal(10, 7)
+  accuracyM    Float?
+  speedKmh     Float?
+  headingDeg   Float?
+  recordedAt   DateTime @default(now())
+
+  @@index([userId, recordedAt])
+  @@index([recordedAt])
+}
+
+model TaxInvoice {
+  id              String        @id @default(uuid())
+  invoiceNumber   String        @unique
+  parcelId        String?       @unique
+  parcel          Parcel?       @relation(fields: [parcelId], references: [id])
+  partnerId       String?
+  partner         Partner?      @relation(fields: [partnerId], references: [id])
+  status          InvoiceStatus @default(ISSUED)
+  invoiceType     InvoiceType   @default(TAX_INVOICE)
+  issuedAt        DateTime      @default(now())
+  placeOfSupply   String
+  sellerLegalName String
+  sellerGstin     String
+  sellerAddress   String
+  buyerName       String
+  buyerGstin      String?
+  buyerAddress    String
+  buyerState      String
+  hsnSac          String        @default("996812")
+  taxableAmount   Decimal       @db.Decimal(12, 2)
+  cgstRate        Decimal       @db.Decimal(5, 2) @default(0)
+  sgstRate        Decimal       @db.Decimal(5, 2) @default(0)
+  igstRate        Decimal       @db.Decimal(5, 2) @default(0)
+  cgstAmount      Decimal       @db.Decimal(12, 2) @default(0)
+  sgstAmount      Decimal       @db.Decimal(12, 2) @default(0)
+  igstAmount      Decimal       @db.Decimal(12, 2) @default(0)
+  totalAmount     Decimal       @db.Decimal(12, 2)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([issuedAt])
+  @@index([status])
 }
