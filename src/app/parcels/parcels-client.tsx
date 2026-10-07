@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useT } from "@/components/i18n/i18n-provider";
 import { PageHeader } from "@/components/ui/page-header";
@@ -9,7 +9,6 @@ import {
   Package,
   Search,
   Plus,
-  Filter,
   ExternalLink,
   Printer,
   X,
@@ -18,7 +17,7 @@ import {
   MapPin,
   RefreshCw,
   Clock,
-  ArrowUpDown,
+  Sparkles,
 } from "lucide-react";
 
 type Parcel = {
@@ -41,13 +40,13 @@ type Parcel = {
 };
 
 const STATUS_TABS = [
-  { id: "", label: "All Shipments" },
+  { id: "", label: "All Parcels" },
   { id: "EXPECTED", label: "Expected" },
   { id: "RECEIVED", label: "Received" },
-  { id: "STORED", label: "In Warehouse" },
+  { id: "STORED", label: "In Hub" },
   { id: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
   { id: "DELIVERED", label: "Delivered" },
-  { id: "DELIVERY_FAILED", label: "Failed" },
+  { id: "DELIVERY_FAILED", label: "Exceptions" },
 ];
 
 export default function ParcelsClient() {
@@ -158,16 +157,16 @@ export default function ParcelsClient() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header with Title and Create Action */}
+      {/* Top Header */}
       <PageHeader
         title={t("navParcels")}
-        description="Comprehensive shipment registry, lifecycle tracking, and manifest management."
+        description="Real-time freight registry, status verification, and physical warehouse tracking."
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => loadData(q, statusFilter)}
-              className="p-2 text-slate-500 hover:text-slate-900 bg-white border border-slate-200/90 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs"
+              className="skeuo-btn skeuo-btn-secondary p-2.5 rounded-xl shadow-xs"
               title="Refresh"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -175,10 +174,10 @@ export default function ParcelsClient() {
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all duration-150 hover:shadow-md"
+              className="skeuo-btn skeuo-btn-primary px-4 py-2.5 text-xs font-bold gap-2 tracking-wide"
             >
               <Plus className="w-4 h-4" />
-              <span>Ingest Parcel</span>
+              <span>Ingest Shipment</span>
             </button>
           </div>
         }
@@ -186,27 +185,27 @@ export default function ParcelsClient() {
 
       {message ? (
         <div
-          className={`flex items-center justify-between p-4 rounded-xl border text-sm font-medium ${
+          className={`flex items-center justify-between p-4 rounded-2xl border text-sm font-medium backdrop-blur-md ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              : "bg-rose-500/10 text-rose-400 border-rose-500/30"
           }`}
         >
           <span>{message.text}</span>
           <button
             type="button"
             onClick={() => setMessage(null)}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       ) : null}
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-4">
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100">
+      {/* Tactile Filter Capsule & Search Bar */}
+      <div className="skeuo-card p-4 space-y-4">
+        {/* Segmented Filter Control */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-[var(--bg-surface-muted)] p-1.5 rounded-xl border border-[var(--border-subtle)] shadow-inner">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.id;
             return (
@@ -214,10 +213,10 @@ export default function ParcelsClient() {
                 key={tab.id}
                 type="button"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-150 ${
                   active
-                    ? "bg-cyan-50 text-cyan-800 border border-cyan-200/80 shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-[var(--bg-surface)] text-[var(--accent-primary)] shadow-sm border border-[var(--border-subtle)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {tab.label}
@@ -229,13 +228,13 @@ export default function ParcelsClient() {
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="flex gap-2.5">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by AWB, Internal ID (PAR-...), or Customer Phone..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors placeholder:text-slate-400"
+              placeholder="Search by AWB barcode, PAR-000001, customer phone..."
+              className="skeuo-input w-full pl-11 pr-4 py-2.5 text-sm font-medium"
             />
             {q ? (
               <button
@@ -244,7 +243,7 @@ export default function ParcelsClient() {
                   setQ("");
                   loadData("", statusFilter);
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -252,69 +251,69 @@ export default function ParcelsClient() {
           </div>
           <button
             type="submit"
-            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-2xs"
+            className="skeuo-btn skeuo-btn-secondary px-5 py-2.5 text-xs font-bold tracking-wide"
           >
             {t("search")}
           </button>
         </form>
       </div>
 
-      {/* Main Data Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium bg-slate-50/50">
+      {/* Main Glass Table Container */}
+      <div className="skeuo-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)] font-medium bg-[var(--bg-surface-muted)]">
           <span>
-            Showing <strong className="text-slate-900">{items.length}</strong> of{" "}
-            <strong className="text-slate-900">{total}</strong> shipments
+            Tracking <strong className="text-[var(--text-primary)]">{items.length}</strong> of{" "}
+            <strong className="text-[var(--text-primary)]">{total}</strong> active parcels
           </span>
-          <span className="flex items-center gap-1 text-slate-400">
-            <Clock className="w-3.5 h-3.5" />
-            Live sync
+          <span className="flex items-center gap-1.5 text-[var(--accent-primary)]">
+            <Sparkles className="w-3.5 h-3.5" />
+            Live sync enabled
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-5">Shipment ID / AWB</th>
-                <th className="py-3 px-5">Partner</th>
-                <th className="py-3 px-5">Status</th>
-                <th className="py-3 px-5">Receiver & Destination</th>
-                <th className="py-3 px-5">Payment</th>
-                <th className="py-3 px-5">Created</th>
+              <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface-muted)] text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                <th className="py-3 px-5">Shipment / AWB</th>
+                <th className="py-3 px-5">Carrier</th>
+                <th className="py-3 px-5">Current Status</th>
+                <th className="py-3 px-5">Receiver & City</th>
+                <th className="py-3 px-5">Billing</th>
+                <th className="py-3 px-5">Recorded</th>
                 <th className="py-3 px-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-[var(--border-subtle)] text-sm">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td className="py-4 px-5">
-                      <div className="h-4 bg-slate-200 rounded w-28 mb-1" />
-                      <div className="h-3 bg-slate-100 rounded w-20" />
+                      <div className="h-4 bg-slate-500/20 rounded w-28 mb-1" />
+                      <div className="h-3 bg-slate-500/10 rounded w-20" />
                     </td>
-                    <td className="py-4 px-5"><div className="h-5 bg-slate-100 rounded w-16" /></td>
-                    <td className="py-4 px-5"><div className="h-6 bg-slate-100 rounded-full w-24" /></td>
+                    <td className="py-4 px-5"><div className="h-5 bg-slate-500/20 rounded w-16" /></td>
+                    <td className="py-4 px-5"><div className="h-6 bg-slate-500/20 rounded-full w-24" /></td>
                     <td className="py-4 px-5">
-                      <div className="h-4 bg-slate-200 rounded w-32 mb-1" />
-                      <div className="h-3 bg-slate-100 rounded w-24" />
+                      <div className="h-4 bg-slate-500/20 rounded w-32 mb-1" />
+                      <div className="h-3 bg-slate-500/10 rounded w-24" />
                     </td>
-                    <td className="py-4 px-5"><div className="h-5 bg-slate-100 rounded w-20" /></td>
-                    <td className="py-4 px-5"><div className="h-4 bg-slate-100 rounded w-16" /></td>
-                    <td className="py-4 px-5 text-right"><div className="h-7 bg-slate-100 rounded w-16 ml-auto" /></td>
+                    <td className="py-4 px-5"><div className="h-5 bg-slate-500/20 rounded w-20" /></td>
+                    <td className="py-4 px-5"><div className="h-4 bg-slate-500/20 rounded w-16" /></td>
+                    <td className="py-4 px-5 text-right"><div className="h-7 bg-slate-500/20 rounded w-16 ml-auto" /></td>
                   </tr>
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 px-5 text-center">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                  <td colSpan={7} className="py-16 px-5 text-center">
+                    <div className="mx-auto w-12 h-12 rounded-2xl bg-[var(--bg-surface-muted)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] mb-3 shadow-inner">
                       <Package className="w-6 h-6" />
                     </div>
-                    <p className="text-base font-semibold text-slate-800">No shipments found</p>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    <p className="text-base font-bold text-[var(--text-primary)]">No parcel records found</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1 max-w-sm mx-auto">
                       {q || statusFilter
-                        ? "Try clearing your search query or switching to another status tab."
-                        : "There are no parcels in the system yet. Click '+ Ingest Parcel' to create your first shipment."}
+                        ? "No shipments match your current query or status filters."
+                        : "There are no shipments registered yet. Click '+ Ingest Shipment' to record one."}
                     </p>
                   </td>
                 </tr>
@@ -324,38 +323,38 @@ export default function ParcelsClient() {
                   return (
                     <tr
                       key={p.id}
-                      className="hover:bg-slate-50/80 transition-colors group"
+                      className="hover:bg-[var(--bg-surface-muted)] transition-colors group"
                     >
                       {/* Tracking / Internal ID */}
                       <td className="py-3.5 px-5">
                         <Link
                           href={`/parcels/${p.id}`}
-                          className="font-bold text-slate-900 group-hover:text-cyan-700 hover:underline transition-colors flex items-center gap-1.5"
+                          className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] hover:underline transition-colors flex items-center gap-1.5"
                         >
                           <span>{p.internalId}</span>
                         </Link>
-                        <p className="text-xs font-mono text-slate-500">{p.partnerAwb}</p>
+                        <p className="text-xs font-mono text-[var(--text-muted)]">{p.partnerAwb}</p>
                       </td>
 
                       {/* Partner */}
                       <td className="py-3.5 px-5">
-                        <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] border border-[var(--border-subtle)] shadow-2xs">
                           {p.partner?.code || "PARTNER"}
                         </span>
                       </td>
 
-                      {/* Status Badge */}
+                      {/* Status Jewel Badge */}
                       <td className="py-3.5 px-5">
                         <StatusBadge status={p.status} size="sm" />
                       </td>
 
                       {/* Receiver & Destination */}
                       <td className="py-3.5 px-5">
-                        <p className="font-semibold text-slate-800 truncate max-w-[180px]">
+                        <p className="font-semibold text-[var(--text-primary)] truncate max-w-[180px]">
                           {p.receiverName}
                         </p>
-                        <p className="text-xs text-slate-500 flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-[var(--accent-primary)] shrink-0" />
                           <span>
                             {p.city}
                             {p.pincode ? ` (${p.pincode})` : ""}
@@ -366,12 +365,12 @@ export default function ParcelsClient() {
                       {/* Payment */}
                       <td className="py-3.5 px-5">
                         {isCod ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 shadow-2xs">
                             <Banknote className="w-3.5 h-3.5" />
                             <span>COD ₹{p.codAmount}</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-500/10 text-slate-400 border border-slate-500/30 shadow-2xs">
                             <CreditCard className="w-3.5 h-3.5" />
                             <span>Prepaid</span>
                           </span>
@@ -379,7 +378,7 @@ export default function ParcelsClient() {
                       </td>
 
                       {/* Date */}
-                      <td className="py-3.5 px-5 text-xs text-slate-500 whitespace-nowrap">
+                      <td className="py-3.5 px-5 text-xs text-[var(--text-muted)] whitespace-nowrap">
                         {new Date(p.createdAt).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
@@ -388,19 +387,19 @@ export default function ParcelsClient() {
 
                       {/* Actions */}
                       <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5">
+                        <div className="inline-flex items-center gap-2">
                           <Link
                             href={`/parcels/${p.id}/label`}
-                            className="p-1.5 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            className="skeuo-btn skeuo-btn-secondary p-1.5 rounded-lg"
                             title="Print Label"
                           >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="w-3.5 h-3.5" />
                           </Link>
                           <Link
                             href={`/parcels/${p.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-lg transition-colors"
+                            className="skeuo-btn skeuo-btn-secondary px-2.5 py-1 text-xs gap-1"
                           >
-                            <span>View</span>
+                            <span>Inspect</span>
                             <ExternalLink className="w-3 h-3" />
                           </Link>
                         </div>
@@ -414,38 +413,37 @@ export default function ParcelsClient() {
         </div>
       </div>
 
-      {/* Ingest Parcel Modal */}
+      {/* Ingest Parcel Modal with Tactile Inset Inputs */}
       {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
+          <div className="skeuo-card max-w-xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Ingest New Parcel</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Create a tracked warehouse shipment from a partner AWB.
+                <h2 className="text-xl font-black text-[var(--text-primary)]">Ingest New Parcel</h2>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  Record AWB manifest to initialize parcel state tracking.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
+                className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-full hover:bg-[var(--bg-surface-muted)] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={createParcel} className="space-y-4">
-              {/* Partner & AWB */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                    Logistics Partner *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                    Partner Carrier *
                   </label>
                   <select
                     required
                     value={form.partnerId}
                     onChange={(e) => setForm({ ...form, partnerId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   >
                     {partners.map((pt) => (
                       <option key={pt.id} value={pt.id}>
@@ -455,119 +453,113 @@ export default function ParcelsClient() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
                     Partner AWB *
                   </label>
                   <input
                     required
                     value={form.partnerAwb}
                     onChange={(e) => setForm({ ...form, partnerAwb: e.target.value })}
-                    placeholder="e.g. DLV-99881122"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                    placeholder="e.g. EKART-992200"
+                    className="skeuo-input w-full px-3 py-2 text-sm font-mono"
                   />
                 </div>
               </div>
 
-              {/* Receiver Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                    Customer Name *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                    Receiver Full Name *
                   </label>
                   <input
                     required
                     value={form.receiverName}
                     onChange={(e) => setForm({ ...form, receiverName: e.target.value })}
-                    placeholder="Receiver full name"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                    placeholder="Full recipient name"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                    Customer Phone *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                    Contact Phone *
                   </label>
                   <input
                     required
                     value={form.receiverPhone}
                     onChange={(e) => setForm({ ...form, receiverPhone: e.target.value })}
                     placeholder="10-digit mobile number"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   />
                 </div>
               </div>
 
-              {/* Address */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                  Delivery Address *
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                  Street Address *
                 </label>
                 <input
                   required
                   value={form.addressLine1}
                   onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
-                  placeholder="Street address, building, apartment"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                  placeholder="Premises, building, street"
+                  className="skeuo-input w-full px-3 py-2 text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
                     City *
                   </label>
                   <input
                     required
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    placeholder="Mumbai"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
                     State *
                   </label>
                   <input
                     required
                     value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
-                    placeholder="Maharashtra"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
                     Pincode *
                   </label>
                   <input
                     required
                     value={form.pincode}
                     onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-                    placeholder="400001"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono"
+                    className="skeuo-input w-full px-3 py-2 text-sm font-mono"
                   />
                 </div>
               </div>
 
-              {/* Payment Type & COD */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-[var(--border-subtle)]">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
                     Payment Method
                   </label>
                   <select
                     value={form.paymentType}
                     onChange={(e) => setForm({ ...form, paymentType: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                    className="skeuo-input w-full px-3 py-2 text-sm"
                   >
-                    <option value="PREPAID">Prepaid (Paid Online)</option>
-                    <option value="COD">Cash on Delivery (COD)</option>
+                    <option value="PREPAID">Prepaid (Electronic Transfer)</option>
+                    <option value="COD">Cash On Delivery (COD)</option>
                   </select>
                 </div>
                 {form.paymentType === "COD" ? (
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                      COD Amount (₹) *
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                      COD Cash Collection (₹) *
                     </label>
                     <input
                       type="number"
@@ -576,26 +568,26 @@ export default function ParcelsClient() {
                       required
                       value={form.codAmount}
                       onChange={(e) => setForm({ ...form, codAmount: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold"
+                      className="skeuo-input w-full px-3 py-2 text-sm font-bold"
                     />
                   </div>
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="skeuo-btn skeuo-btn-secondary px-4 py-2.5 text-xs font-bold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50"
+                  className="skeuo-btn skeuo-btn-primary px-6 py-2.5 text-xs font-bold"
                 >
-                  {isSubmitting ? "Ingesting…" : "Create Shipment"}
+                  {isSubmitting ? "Ingesting…" : "Create Record"}
                 </button>
               </div>
             </form>

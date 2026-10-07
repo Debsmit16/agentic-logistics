@@ -192,9 +192,9 @@ export function DashboardView({
       {quickLinks.length > 0 ? (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <h2 className="text-base font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
               <span>{t("quickActions")}</span>
-              <span className="text-xs font-normal text-slate-500">· Fast access</span>
+              <span className="text-xs font-normal text-[var(--text-muted)]">Â· Fast access</span>
             </h2>
           </div>
 
@@ -205,24 +205,24 @@ export function DashboardView({
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="group relative flex flex-col justify-between p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
+                  className="skeuo-card group relative flex flex-col justify-between p-5 hover:-translate-y-1 overflow-hidden transition-all duration-300"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div
-                      className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white shadow-xs group-hover:scale-105 transition-transform duration-200`}
+                      className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white shadow-md group-hover:scale-105 transition-transform duration-200 ring-1 ring-white/20`}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="p-1 rounded-full text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all">
+                    <span className="p-1.5 rounded-full text-[var(--text-muted)] group-hover:text-[var(--text-primary)] group-hover:translate-x-1 transition-all">
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   </div>
 
                   <div className="mt-4">
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
                       {action.label}
                     </h3>
-                    <p className="mt-1 text-xs text-slate-500 line-clamp-1">{action.desc}</p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)] line-clamp-1">{action.desc}</p>
                   </div>
                 </Link>
               );
@@ -235,3 +235,4 @@ export function DashboardView({
     </div>
   );
 }
+

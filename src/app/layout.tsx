@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { getPublicLocale } from "@/lib/i18n/public-locale";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 const siteName = "Agentic Logistics";
-
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     default: siteName,
     template: `%s · ${siteName}`,
   },
-  description: "Warehouse and last-mile logistics management",
+  description: "High-precision warehouse and last-mile logistics operating system",
   applicationName: siteName,
   icons: {
     icon: [
@@ -30,7 +30,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a1628",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#080b11" },
+  ],
 };
 
 export default async function RootLayout({
@@ -40,8 +43,10 @@ export default async function RootLayout({
 }>) {
   const locale = await getPublicLocale();
   return (
-    <html lang={locale}>
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang={locale} suppressHydrationWarning className="dark">
+      <body className="min-h-screen antialiased bg-slate-950 text-slate-100 transition-colors duration-200">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
