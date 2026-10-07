@@ -9,10 +9,10 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: siteName,
+    default: "Agentic Logistics · Autonomous Freight & Fulfillment OS",
     template: `%s · ${siteName}`,
   },
-  description: "High-precision warehouse and last-mile logistics operating system",
+  description: "Enterprise autonomous logistics, warehouse sortation, real-time fleet telematics, and automated GST reconciliation platform.",
   applicationName: siteName,
   icons: {
     icon: [
@@ -23,16 +23,16 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   openGraph: {
-    title: siteName,
-    description: "Warehouse and last-mile logistics management",
+    title: "Agentic Logistics · Autonomous Logistics Operating System",
+    description: "Enterprise warehouse sortation, real-time fleet GPS, and automated GST reconciliation.",
     images: [{ url: "/og-image.png", width: 512, height: 512, alt: siteName }],
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-    { media: "(prefers-color-scheme: dark)", color: "#080b11" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f8fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#06090f" },
   ],
 };
 
@@ -43,8 +43,16 @@ export default async function RootLayout({
 }>) {
   const locale = await getPublicLocale();
   return (
-    <html lang={locale} suppressHydrationWarning className="dark">
-      <body className="min-h-screen antialiased bg-slate-950 text-slate-100 transition-colors duration-200">
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen antialiased bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-200">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

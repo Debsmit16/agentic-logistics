@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { SignaturePad } from "@/components/delivery/signature-pad";
@@ -172,11 +172,11 @@ export default function MyDeliveriesClient() {
   return (
     <div className="mx-auto max-w-lg space-y-3">
       <button type="button" onClick={() => setActive(null)} className="text-sm text-teal-700">
-        ← {t("back")}
+        â† {t("back")}
       </button>
       <h1 className="text-xl font-bold">{active.internalId}</h1>
       <p>
-        {active.receiverName} · {active.receiverPhone}
+        {active.receiverName} Â· {active.receiverPhone}
       </p>
       {mapEmbed(
         `${active.addressLine1} ${active.city} ${active.pincode}`,
@@ -198,7 +198,7 @@ export default function MyDeliveriesClient() {
       {devOtp ? <p className="rounded bg-amber-50 p-2 text-sm">Dev OTP: {devOtp}</p> : null}
       <button
         type="button"
-        className="w-full rounded-xl bg-teal-700 py-3 text-white"
+        className="skeuo-btn skeuo-btn-primary w-full py-3.5 text-sm font-bold shadow-md"
         onClick={async () => {
           try {
             await callApi(`/api/parcels/${active.id}/out-for-delivery`);
@@ -215,7 +215,7 @@ export default function MyDeliveriesClient() {
         <>
           <button
             type="button"
-            className="w-full rounded-xl bg-indigo-700 py-3 text-white"
+            className="skeuo-btn skeuo-btn-secondary w-full py-3 text-xs font-bold"
             onClick={async () => {
               try {
                 const data = await callApi(`/api/parcels/${active.id}/otp/send`);
@@ -229,14 +229,14 @@ export default function MyDeliveriesClient() {
             {t("sendOtp")}
           </button>
           <input
-            className="w-full rounded border px-3 py-3 text-lg"
+            className="skeuo-input w-full text-lg font-mono tracking-widest text-center"
             placeholder={t("enterOtp")}
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
           />
           <button
             type="button"
-            className="w-full rounded-xl bg-violet-700 py-3 text-white"
+            className="skeuo-btn skeuo-btn-primary w-full py-3 text-sm font-bold shadow-md"
             onClick={async () => {
               try {
                 await callApi(`/api/parcels/${active.id}/otp/verify`, { otp });
@@ -253,13 +253,13 @@ export default function MyDeliveriesClient() {
       {active.paymentType === "COD" ? (
         <>
           <input
-            className="w-full rounded border px-3 py-3"
+            className="skeuo-input w-full"
             placeholder={t("codCollected")}
             value={cod}
             onChange={(e) => setCod(e.target.value)}
           />
           <select
-            className="w-full rounded border px-3 py-3"
+            className="skeuo-input w-full"
             value={codMode}
             onChange={(e) => setCodMode(e.target.value)}
           >
@@ -268,7 +268,7 @@ export default function MyDeliveriesClient() {
             <option value="OTHER">{t("codOther")}</option>
           </select>
           <input
-            className="w-full rounded border px-3 py-2 text-sm"
+            className="skeuo-input w-full text-sm"
             placeholder={t("codVarianceReason")}
             value={varianceReason}
             onChange={(e) => setVarianceReason(e.target.value)}
@@ -276,7 +276,7 @@ export default function MyDeliveriesClient() {
         </>
       ) : null}
       <input
-        className="w-full rounded border px-3 py-2"
+        className="skeuo-input w-full"
         placeholder={t("recipientName")}
         value={recipientName}
         onChange={(e) => setRecipientName(e.target.value)}
@@ -313,7 +313,7 @@ export default function MyDeliveriesClient() {
       )}
       <SignaturePad onChange={setSignature} />
       {pod?.requireGps ? (
-        <div className="rounded-lg border bg-white p-3">
+        <div className="skeuo-card p-4 space-y-2">
           <p className="text-sm font-medium">{t("gpsRequired")}</p>
           {gps ? (
             <p className="text-xs text-gray-600">
@@ -323,20 +323,20 @@ export default function MyDeliveriesClient() {
           {gpsError ? <p className="text-sm text-red-600">{gpsError}</p> : null}
           <button
             type="button"
-            className="mt-2 w-full rounded-lg bg-slate-800 py-2 text-white"
+            className="skeuo-btn skeuo-btn-secondary w-full py-2.5 mt-2 text-xs font-bold"
             onClick={captureGps}
           >
             {t("captureGps")}
           </button>
         </div>
       ) : (
-        <button type="button" className="w-full rounded-lg border py-2 text-sm" onClick={captureGps}>
+        <button type="button" className="skeuo-btn skeuo-btn-secondary w-full py-2.5 text-xs font-bold" onClick={captureGps}>
           {t("captureGpsOptional")}
         </button>
       )}
       <button
         type="button"
-        className="w-full rounded-xl bg-green-700 py-4 text-lg font-bold text-white"
+        className="skeuo-btn skeuo-btn-emerald w-full py-4 text-base font-extrabold shadow-lg gap-2"
         onClick={async () => {
           try {
             await callApi(`/api/parcels/${active.id}/deliver`, {
@@ -360,7 +360,7 @@ export default function MyDeliveriesClient() {
         {t("confirmDelivery")}
       </button>
       <select
-        className="w-full rounded border px-3 py-2"
+        className="skeuo-input w-full"
         value={failReason}
         onChange={(e) => setFailReason(e.target.value)}
       >
@@ -373,7 +373,7 @@ export default function MyDeliveriesClient() {
       </select>
       <button
         type="button"
-        className="w-full rounded-xl bg-red-700 py-3 text-white"
+        className="skeuo-btn w-full py-3 text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white rounded-xl shadow-md"
         onClick={async () => {
           try {
             await callApi(`/api/parcels/${active.id}/fail`, {
@@ -392,3 +392,5 @@ export default function MyDeliveriesClient() {
     </div>
   );
 }
+
+

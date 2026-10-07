@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { useT, useLocale } from "@/components/i18n/i18n-provider";
@@ -16,16 +16,31 @@ import {
   Truck,
   Warehouse,
   IndianRupee,
+  Key,
 } from "lucide-react";
 
 export default function LoginClient() {
   const t = useT();
   const locale = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setIdentifier(emailParam);
+      if (emailParam === "owner@agentic.local") {
+        setPassword("changeme123");
+      } else if (emailParam.includes("demo.agentic.local")) {
+        setPassword("demo123456");
+      }
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +73,7 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-200 flex flex-col lg:flex-row antialiased">
+    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-200 flex flex-col lg:flex-row antialiased selection:bg-sky-500 selection:text-white">
       {/* Left Hero Pane (Visible on lg+) */}
       <section className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-base)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)]">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--accent-glow)] rounded-full blur-3xl pointer-events-none" />
@@ -73,7 +88,7 @@ export default function LoginClient() {
         </div>
 
         <div className="relative z-10 my-12 lg:my-0 space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] text-xs font-bold shadow-xs">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] text-xs font-bold shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Next-Gen Tactile Logistics Platform</span>
           </div>
@@ -98,7 +113,7 @@ export default function LoginClient() {
                   <span className="p-2 rounded-xl bg-[var(--accent-glow)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 shrink-0 shadow-2xs">
                     <Icon className="w-4 h-4" />
                   </span>
-                  <span className="font-medium text-[var(--text-primary)]">{f.text}</span>
+                  <span className="font-semibold text-[var(--text-primary)]">{f.text}</span>
                 </li>
               );
             })}
@@ -107,8 +122,8 @@ export default function LoginClient() {
 
         <div className="relative z-10 flex items-center justify-between text-xs text-[var(--text-muted)] pt-6 border-t border-[var(--border-subtle)]">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[var(--accent-primary)]" />
-            <span>Encrypted Session Authentication</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <span className="font-semibold">Encrypted Session Authentication</span>
           </div>
           <Link href="/track" className="text-[var(--accent-primary)] font-bold hover:underline">
             Public Tracking →
@@ -119,6 +134,9 @@ export default function LoginClient() {
       {/* Right Login Card Pane */}
       <main className="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16">
         <div className="skeuo-card w-full max-w-md p-8 sm:p-10 space-y-7 relative">
+          {/* Top Specular Edge Line */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
           <div className="space-y-1.5">
             <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
               {t("login")}
@@ -129,7 +147,7 @@ export default function LoginClient() {
           </div>
 
           {error ? (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold animate-fadeIn">
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 dark:text-rose-400 text-xs font-semibold animate-fadeIn">
               {error}
             </div>
           ) : null}
@@ -180,13 +198,13 @@ export default function LoginClient() {
             <button
               type="submit"
               disabled={loading}
-              className="skeuo-btn skeuo-btn-primary w-full py-3.5 px-4 text-sm font-bold gap-2 disabled:opacity-50 mt-4"
+              className="skeuo-btn skeuo-btn-primary skeuo-btn-lg w-full font-bold shadow-md gap-2.5 disabled:opacity-50 mt-4"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{t("login")}</span>
+                  <span>Sign In to Console</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -195,16 +213,17 @@ export default function LoginClient() {
 
           {/* Quick Demo Accounts Chips with Tactile Skeuomorphic Buttons */}
           <div className="pt-6 border-t border-[var(--border-subtle)] space-y-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-              Tactile One-Click Demo Personas:
-            </p>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <Key className="w-3 h-3 text-amber-500" />
+              <span>Instant One-Click Demo Personas:</span>
+            </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => setDemoCredentials("owner@agentic.local", "changeme123")}
                 className="skeuo-btn skeuo-btn-secondary px-3 py-2 text-left justify-between"
               >
-                <span className="font-bold text-cyan-500">Superadmin</span>
+                <span className="font-bold text-sky-500">Superadmin</span>
                 <span className="text-[10px] text-[var(--text-muted)]">Owner</span>
               </button>
               <button
@@ -220,7 +239,7 @@ export default function LoginClient() {
                 onClick={() => setDemoCredentials("rider@demo.agentic.local", "demo123456")}
                 className="skeuo-btn skeuo-btn-secondary px-3 py-2 text-left justify-between"
               >
-                <span className="font-bold text-amber-500">Rider</span>
+                <span className="font-bold text-emerald-500">Rider</span>
                 <span className="text-[10px] text-[var(--text-muted)]">Delivery</span>
               </button>
               <button

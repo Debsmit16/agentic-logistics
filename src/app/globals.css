@@ -2,30 +2,37 @@
 
 @layer base {
   :root {
-    --bg-base: #f4f6f9;
+    --bg-base: #f6f8fb;
     --bg-surface: #ffffff;
     --bg-surface-elevated: #ffffff;
-    --bg-surface-muted: #f1f5f9;
-    --border-subtle: rgba(203, 213, 225, 0.7);
+    --bg-surface-muted: #eef2f6;
+    --border-subtle: rgba(203, 213, 225, 0.8);
     --border-strong: #94a3b8;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --text-primary: #090e17;
+    --text-secondary: #334155;
     --text-muted: #64748b;
-    --accent-glow: rgba(8, 145, 178, 0.18);
-    --accent-primary: #0891b2;
-    --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-    --card-inset: inset 0 2px 4px rgba(15, 23, 42, 0.06), inset 0 0 0 1px rgba(15, 23, 42, 0.03);
+    --accent-glow: rgba(2, 132, 199, 0.2);
+    --accent-primary: #0284c7;
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+    --card-inset: inset 0 2px 4px rgba(15, 23, 42, 0.06), inset 0 0 0 1px rgba(15, 23, 42, 0.04);
     
+    /* Secondary Button Milled Metal/Glass Tokens */
+    --btn-secondary-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #eef2f6 100%);
+    --btn-secondary-border: rgba(203, 213, 225, 0.9);
+    --btn-secondary-shadow: 0 1px 0 #ffffff inset, 0 -1.5px 0 rgba(203, 213, 225, 0.7) inset, 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+    --btn-secondary-hover-bg: linear-gradient(180deg, #ffffff 0%, #ffffff 50%, #f8fafc 100%);
+    --btn-secondary-hover-shadow: 0 1px 0 #ffffff inset, 0 -1.5px 0 rgba(148, 163, 184, 0.6) inset, 0 2px 6px rgba(15, 23, 42, 0.1), 0 8px 20px -2px rgba(15, 23, 42, 0.08);
+
     /* Semantic aliases */
     --background: var(--bg-base);
     --foreground: var(--text-primary);
     --surface: var(--bg-surface);
     --surface-muted: var(--bg-surface-muted);
     --border: var(--border-subtle);
-    --brand-navy: #0f172a;
-    --brand-cyan: #06b6d4;
+    --brand-navy: #090e17;
+    --brand-cyan: #0ea5e9;
     --brand-blue: #0284c7;
-    --primary: #0891b2;
+    --primary: #0284c7;
     --primary-foreground: #ffffff;
     --danger: #e11d48;
     --success: #10b981;
@@ -33,19 +40,26 @@
   }
 
   .dark, [data-theme="dark"] {
-    --bg-base: #070a11;
-    --bg-surface: rgba(15, 23, 42, 0.85);
-    --bg-surface-elevated: #1e293b;
-    --bg-surface-muted: rgba(30, 41, 59, 0.6);
+    --bg-base: #06090f;
+    --bg-surface: rgba(13, 19, 33, 0.85);
+    --bg-surface-elevated: #162032;
+    --bg-surface-muted: rgba(26, 38, 59, 0.55);
     --border-subtle: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.2);
+    --border-strong: rgba(255, 255, 255, 0.22);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    --accent-glow: rgba(6, 182, 212, 0.28);
-    --accent-primary: #06b6d4;
-    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-    --card-inset: inset 0 2px 5px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --accent-glow: rgba(14, 165, 233, 0.32);
+    --accent-primary: #38bdf8;
+    --card-shadow: 0 14px 40px -4px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    --card-inset: inset 0 2px 6px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+    /* Secondary Button Milled Obsidian/Titanium Tokens */
+    --btn-secondary-bg: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+    --btn-secondary-border: rgba(255, 255, 255, 0.13);
+    --btn-secondary-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 -1.5px 0 rgba(0, 0, 0, 0.55) inset, 0 2px 6px rgba(0, 0, 0, 0.45);
+    --btn-secondary-hover-bg: linear-gradient(180deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+    --btn-secondary-hover-shadow: 0 1.5px 0 rgba(255, 255, 255, 0.26) inset, 0 -1.5px 0 rgba(0, 0, 0, 0.55) inset, 0 6px 20px rgba(0, 0, 0, 0.65);
 
     /* Semantic aliases */
     --background: var(--bg-base);
@@ -54,11 +68,11 @@
     --surface-muted: var(--bg-surface-muted);
     --border: var(--border-subtle);
     --brand-navy: #f8fafc;
-    --brand-cyan: #06b6d4;
-    --brand-blue: #38bdf8;
-    --primary: #06b6d4;
-    --primary-foreground: #041019;
-    --danger: #f43f5e;
+    --brand-cyan: #38bdf8;
+    --brand-blue: #0284c7;
+    --primary: #38bdf8;
+    --primary-foreground: #030712;
+    --danger: #fb7185;
     --success: #34d399;
     --warning: #fbbf24;
   }
@@ -66,47 +80,61 @@
 
 body {
   background-color: var(--bg-base);
+  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: 28px 28px;
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
-  letter-spacing: -0.011em;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.015em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body,
+[data-theme="dark"] body {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -0.03em;
 }
 
 /* ==========================================================================
-   SKEUOMORPHIC & LUXE UI PRIMITIVES
+   PRECISION-ENGINEERED SKEUOMORPHIC BUTTON SYSTEM (SDE STAFF SPEC)
    ========================================================================== */
 
-/* Tactile 3D Skeuo Card */
-.skeuo-card,
-.erp-card {
-  position: relative;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 1.25rem;
-  box-shadow: var(--card-shadow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
-}
-
-.skeuo-card:hover,
-.erp-card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--card-shadow), 0 12px 32px -4px var(--accent-glow);
-}
-
-/* Tactile Embossed Button */
 .skeuo-btn,
 .erp-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  gap: 0.5rem;
+  font-weight: 700;
   border-radius: 0.875rem;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   cursor: pointer;
-  border: 1px solid transparent;
+  text-decoration: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.skeuo-btn::before,
+.erp-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  pointer-events: none;
 }
 
 .skeuo-btn:disabled,
@@ -114,73 +142,131 @@ body {
   opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
+/* Primary Hero Button: High-Tech Sapphire / Electric Cyan */
 .skeuo-btn-primary,
 .erp-btn--primary {
-  background: linear-gradient(180deg, #06b6d4 0%, #0891b2 55%, #0e7490 100%);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 6px rgba(8, 145, 178, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 48%, #0369a1 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 
+    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 -1.5px 0 0 rgba(0, 0, 0, 0.32) inset,
+    0 2px 4px 0 rgba(2, 132, 199, 0.35),
+    0 8px 24px -4px rgba(2, 132, 199, 0.5);
+  text-shadow: 0 1px 2px rgba(2, 44, 80, 0.6);
 }
 
 .skeuo-btn-primary:hover:not(:disabled),
 .erp-btn--primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #22d3ee 0%, #06b6d4 55%, #0891b2 100%);
-  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 48%, #0284c7 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 
+    0 1.5px 0 0 rgba(255, 255, 255, 0.72) inset,
+    0 -1.5px 0 0 rgba(0, 0, 0, 0.28) inset,
+    0 4px 8px 0 rgba(2, 132, 199, 0.42),
+    0 14px 32px -4px rgba(2, 132, 199, 0.65);
 }
 
 .skeuo-btn-primary:active:not(:disabled),
 .erp-btn--primary:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  transform: translateY(1.5px);
+  background: linear-gradient(180deg, #0369a1 0%, #0284c7 60%, #0ea5e9 100%);
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.52),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Secondary & Ghost Buttons */
+/* Secondary Button: Milled Frosted Glass / Brushed Metal */
 .skeuo-btn-secondary,
 .erp-btn--secondary,
 .erp-btn--ghost {
-  background: var(--bg-surface-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary) !important;
+  border: 1px solid var(--btn-secondary-border);
+  box-shadow: var(--btn-secondary-shadow);
 }
 
 .skeuo-btn-secondary:hover:not(:disabled),
 .erp-btn--secondary:hover:not(:disabled),
 .erp-btn--ghost:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: var(--bg-surface-muted);
-  transform: translateY(-1px);
+  background: var(--btn-secondary-hover-bg);
+  transform: translateY(-1.5px);
+  box-shadow: var(--btn-secondary-hover-shadow);
 }
 
 .skeuo-btn-secondary:active:not(:disabled),
 .erp-btn--secondary:active:not(:disabled),
 .erp-btn--ghost:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(1.5px);
   box-shadow: var(--card-inset);
 }
 
+/* Emerald Jewel Button */
+.skeuo-btn-emerald {
+  background: linear-gradient(180deg, #10b981 0%, #059669 48%, #047857 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 
+    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 -1.5px 0 0 rgba(0, 0, 0, 0.32) inset,
+    0 2px 4px 0 rgba(5, 150, 105, 0.35),
+    0 8px 24px -4px rgba(5, 150, 105, 0.5);
+  text-shadow: 0 1px 2px rgba(2, 44, 30, 0.6);
+}
+
+.skeuo-btn-emerald:hover:not(:disabled) {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 48%, #059669 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 
+    0 1.5px 0 0 rgba(255, 255, 255, 0.72) inset,
+    0 -1.5px 0 0 rgba(0, 0, 0, 0.28) inset,
+    0 4px 8px 0 rgba(5, 150, 105, 0.42),
+    0 14px 32px -4px rgba(5, 150, 105, 0.65);
+}
+
+.skeuo-btn-emerald:active:not(:disabled) {
+  transform: translateY(1.5px);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.52);
+}
+
+/* Button Sizes */
+.skeuo-btn-lg {
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  border-radius: 1rem;
+}
+
+.skeuo-btn-sm,
 .erp-btn--sm {
   padding: 0.375rem 0.875rem;
   font-size: 0.8125rem;
   border-radius: 0.625rem;
 }
 
+.skeuo-btn-xs {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+}
+
 .erp-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface-muted);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+  box-shadow: var(--btn-secondary-shadow);
 }
 
 .erp-icon-btn:hover {
@@ -189,7 +275,39 @@ body {
   transform: translateY(-1px);
 }
 
-/* Debossed Inset Input */
+/* ==========================================================================
+   TACTILE SKEUOMORPHIC CARD & WELL ARCHITECTURE
+   ========================================================================== */
+
+.skeuo-card,
+.erp-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.skeuo-card::after,
+.erp-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.skeuo-card:hover,
+.erp-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--card-shadow), 0 16px 40px -4px var(--accent-glow);
+}
+
+/* Debossed Inset Well / Inputs */
 .skeuo-input,
 .erp-input,
 .erp-select {
@@ -198,8 +316,9 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: 0.875rem;
   box-shadow: var(--card-inset);
-  padding: 0.625rem 0.875rem;
+  padding: 0.6875rem 1rem;
   font-size: 0.9375rem;
+  font-family: inherit;
   transition: all 0.2s ease;
 }
 
@@ -215,13 +334,13 @@ body {
 .skeuo-badge {
   display: inline-flex;
   align-items: center;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 9999px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.02em;
 }
 
-/* Navigation Link */
+/* Navigation Links */
 .skeuo-nav-link {
   position: relative;
   display: flex;
@@ -230,20 +349,20 @@ body {
   padding: 0.625rem 0.875rem;
   border-radius: 0.875rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.15s ease;
 }
 
 .skeuo-nav-link-active {
-  background: linear-gradient(180deg, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.08) 100%);
+  background: linear-gradient(180deg, rgba(2, 132, 199, 0.18) 0%, rgba(2, 132, 199, 0.08) 100%);
   color: var(--accent-primary);
-  font-weight: 600;
-  border: 1px solid rgba(6, 182, 212, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px -1px var(--accent-glow);
+  font-weight: 700;
+  border: 1px solid rgba(2, 132, 199, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 10px -1px var(--accent-glow);
 }
 
 /* ==========================================================================
-   ERP CORE LAYOUT & TYPOGRAPHY
+   ERP CORE LAYOUT & TABLES
    ========================================================================== */
 
 .erp-page-header {
@@ -262,11 +381,11 @@ body {
 }
 
 .erp-page-title {
-  font-size: 1.75rem;
+  font-size: 1.875rem;
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .erp-page-desc {
@@ -287,7 +406,7 @@ body {
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
 .erp-card-desc {
@@ -312,7 +431,6 @@ body {
   opacity: 0.9;
 }
 
-/* Modern ERP Table with Skeuomorphic Glass Container */
 .erp-table {
   width: 100%;
   border-collapse: separate;
@@ -327,7 +445,7 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -369,9 +487,9 @@ body {
 }
 
 .erp-alert--info {
-  background: rgba(6, 182, 212, 0.12);
+  background: rgba(2, 132, 199, 0.12);
   color: var(--accent-primary);
-  border-color: rgba(6, 182, 212, 0.35);
+  border-color: rgba(2, 132, 199, 0.35);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -384,30 +502,30 @@ body {
   bottom: 1.5rem;
   right: 1.5rem;
   z-index: 40;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: linear-gradient(135deg, #06b6d4, #0284c7);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
   color: #fff;
   font-size: 1.25rem;
-  font-weight: 700;
-  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .erp-guide-fab:hover {
   transform: scale(1.08) translateY(-2px);
-  box-shadow: 0 8px 28px rgba(6, 182, 212, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 30px rgba(2, 132, 199, 0.65), inset 0 1.5px 0 rgba(255, 255, 255, 0.8);
 }
 
 .erp-guide-backdrop {
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
 }
 
 .erp-guide-panel {
@@ -415,12 +533,12 @@ body {
   top: 0;
   right: 0;
   z-index: 50;
-  width: min(100%, 24rem);
+  width: min(100%, 25rem);
   height: 100%;
   background: var(--bg-surface);
   border-left: 1px solid var(--border-subtle);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
+  box-shadow: -14px 0 48px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
@@ -476,11 +594,11 @@ body {
 .erp-guide-dot--active {
   background: var(--accent-primary);
   transform: scale(1.3);
-  box-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .erp-guide-dot--done {
-  background: #22d3ee;
+  background: #38bdf8;
 }
 
 .erp-guide-step {
@@ -572,11 +690,6 @@ body {
   text-decoration: underline;
 }
 
-.erp-guide-dismiss:hover {
-  color: var(--text-primary);
-}
-
-/* Demo Credentials Table */
 .erp-cred-table-wrap {
   overflow-x: auto;
   margin-top: 0.75rem;
@@ -641,7 +754,6 @@ body {
 
 /* ==========================================================================
    SMART DARK-MODE THEME COMPATIBILITY BRIDGE
-   Ensures legacy hardcoded classes gracefully adapt to dark/light surfaces
    ========================================================================== */
 
 .dark .bg-white,
@@ -697,6 +809,15 @@ body {
 
 .animate-pulseGlow {
   animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-floatSlow {
+  animation: floatSlow 4s ease-in-out infinite;
 }
 
 @keyframes fadeIn {
