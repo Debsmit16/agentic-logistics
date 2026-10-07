@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useT } from "@/components/i18n/i18n-provider";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function DeliveryOpsClient() {
   const t = useT();
@@ -61,15 +63,20 @@ export default function DeliveryOpsClient() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{t("deliveryOps")}</h1>
-      <a href="/delivery/failed" className="text-sm text-teal-700 underline">
-        Failed deliveries & returns
-      </a>
-      {msg ? <p className="rounded bg-blue-50 p-3">{msg}</p> : null}
-      <section className="rounded-xl border bg-white p-4 space-y-3">
-        <h2 className="font-semibold">Create batch</h2>
+      <PageHeader
+        title={t("deliveryOps")}
+        description={t("guideStepDeliveryBody")}
+        actions={
+          <Link href="/delivery/failed" className="erp-btn erp-btn--ghost erp-btn--sm">
+            {t("failedDeliveries")}
+          </Link>
+        }
+      />
+      {msg ? <p className="erp-alert erp-alert--info">{msg}</p> : null}
+      <section className="erp-section space-y-3">
+        <h2 className="erp-section-title">{t("createBatch")}</h2>
         <select
-          className="w-full rounded border px-3 py-2"
+          className="erp-select"
           value={warehouseId}
           onChange={(e) => setWarehouseId(e.target.value)}
         >
@@ -98,18 +105,14 @@ export default function DeliveryOpsClient() {
             </label>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={createBatch}
-          className="rounded-lg bg-teal-700 px-4 py-2 text-white"
-        >
-          Create batch
+        <button type="button" onClick={createBatch} className="erp-btn erp-btn--primary">
+          {t("createBatch")}
         </button>
       </section>
-      <section className="rounded-xl border bg-white p-4 space-y-3">
-        <h2 className="font-semibold">Assign delivery boy</h2>
+      <section className="erp-section space-y-3">
+        <h2 className="erp-section-title">{t("assign")}</h2>
         <select
-          className="w-full rounded border px-3 py-2"
+          className="erp-select"
           value={assignParcelId}
           onChange={(e) => setAssignParcelId(e.target.value)}
         >
@@ -124,7 +127,7 @@ export default function DeliveryOpsClient() {
           })}
         </select>
         <select
-          className="w-full rounded border px-3 py-2"
+          className="erp-select"
           value={deliveryBoyId}
           onChange={(e) => setDeliveryBoyId(e.target.value)}
         >
@@ -135,8 +138,8 @@ export default function DeliveryOpsClient() {
             </option>
           ))}
         </select>
-        <button type="button" onClick={assign} className="rounded-lg bg-blue-700 px-4 py-2 text-white">
-          Assign
+        <button type="button" onClick={assign} className="erp-btn erp-btn--primary">
+          {t("assign")}
         </button>
       </section>
     </div>

@@ -95,6 +95,10 @@ export const bn: Record<MessageKey, string> = {
   failReasonPrompt: "ডেলিভারি কেন ব্যর্থ?",
   devOtp: "Dev OTP",
   noAssignments: "কোনো অ্যাসাইনমেন্ট নেই।",
+  locationSharingHint:
+    "এই পৃষ্ঠা খোলা থাকলে প্রতি মিনিটে আপনার অবস্থান ডিসপ্যাচে যায় (ফ্লিট ম্যাপ)।",
+  deliveryDestinationMap: "ডেলিভারি ঠিকানা",
+  yourLocationMap: "আপনার লাইভ অবস্থান",
   financeTitle: "COD ও ফাইন্যান্স",
   openExpected: "খোলা প্রত্যাশিত",
   collected: "সংগৃহীত",

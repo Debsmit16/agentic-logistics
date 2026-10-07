@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SignaturePad } from "@/components/delivery/signature-pad";
 import { useT } from "@/components/i18n/i18n-provider";
+import { PageHeader } from "@/components/ui/page-header";
 
 type Assignment = {
   parcel: {
@@ -40,6 +41,7 @@ export default function MyDeliveriesClient() {
   const [signature, setSignature] = useState<string | undefined>();
   const [recipientName, setRecipientName] = useState("");
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
+  const [livePos, setLivePos] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [reasons, setReasons] = useState<{ id: string; label: string }[]>([]);
@@ -66,6 +68,7 @@ export default function MyDeliveriesClient() {
     const ping = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          setLivePos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
           fetch("/api/fleet/ping", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -113,10 +116,30 @@ export default function MyDeliveriesClient() {
     );
   }
 
+  function mapEmbed(query: string, title: string) {
+    return (
+      <div className="overflow-hidden rounded-xl border bg-white">
+        <p className="border-b px-3 py-2 text-sm font-medium text-gray-700">{title}</p>
+        <iframe
+          title={title}
+          className="h-44 w-full"
+          loading="lazy"
+          src={`https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=14&output=embed`}
+        />
+      </div>
+    );
+  }
+
   if (!active) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{t("myDeliveries")}</h1>
+        <PageHeader title={t("myDeliveries")} />
+        {livePos
+          ? mapEmbed(`${livePos.lat},${livePos.lng}`, t("yourLocationMap"))
+          : null}
+        {livePos ? (
+          <p className="text-xs text-gray-500">{t("locationSharingHint")}</p>
+        ) : null}
         {assignments.length === 0 ? (
           <p className="text-gray-600">{t("noAssignments")}</p>
         ) : null}
@@ -155,6 +178,11 @@ export default function MyDeliveriesClient() {
       <p>
         {active.receiverName} · {active.receiverPhone}
       </p>
+      {mapEmbed(
+        `${active.addressLine1} ${active.city} ${active.pincode}`,
+        t("deliveryDestinationMap"),
+      )}
+      {livePos ? mapEmbed(`${livePos.lat},${livePos.lng}`, t("yourLocationMap")) : null}
       <a href={`tel:${active.receiverPhone}`} className="block rounded-xl bg-green-700 py-3 text-center text-white">
         {t("callCustomer")}
       </a>

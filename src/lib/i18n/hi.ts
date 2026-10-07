@@ -94,6 +94,10 @@ export const hi: Record<MessageKey, string> = {
   failReasonPrompt: "डिलीवरी क्यों विफल?",
   devOtp: "Dev OTP",
   noAssignments: "कोई असाइनमेंट नहीं।",
+  locationSharingHint:
+    "यह पेज खुला रहने पर हर मिनट आपकी लोकेशन डिस्पैच को जाती है (फ्लीट मैप)।",
+  deliveryDestinationMap: "डिलीवरी पता",
+  yourLocationMap: "आपकी लाइव लोकेशन",
   financeTitle: "COD और वित्त",
   openExpected: "खुली अपेक्षा",
   collected: "एकत्र",

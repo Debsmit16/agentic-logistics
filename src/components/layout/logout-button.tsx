@@ -9,7 +9,7 @@ export function LogoutButton() {
   return (
     <button
       type="button"
-      className="rounded-lg border px-3 py-1 text-sm"
+      className="erp-btn erp-btn--ghost erp-btn--sm"
       onClick={async () => {
         await fetch("/api/auth/logout", { method: "POST" });
         router.push("/login");

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useT } from "@/components/i18n/i18n-provider";
+import { PageHeader } from "@/components/ui/page-header";
 
 type Loc = {
   userId: string;
@@ -30,36 +31,39 @@ export default function FleetClient() {
     return () => clearInterval(id);
   }, [load]);
 
-  const center = locations[0]
-    ? `${locations[0].latitude},${locations[0].longitude}`
-    : "20.5937,78.9629";
+  const center =
+    locations.length > 0
+      ? `${locations.reduce((s, l) => s + l.latitude, 0) / locations.length},${
+          locations.reduce((s, l) => s + l.longitude, 0) / locations.length
+        }`
+      : "19.076,72.8777";
+  const mapQuery =
+    locations.length > 0
+      ? locations.map((l) => `${l.latitude},${l.longitude}`).join("|")
+      : center;
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">{t("fleetTitle")}</h1>
-          <p className="text-sm text-gray-600">{t("fleetSubtitle")}</p>
-        </div>
-        <button
-          type="button"
-          onClick={load}
-          className="rounded-lg bg-teal-700 px-4 py-2 text-white text-sm"
-        >
-          {t("refreshMap")}
-        </button>
-      </div>
-      <div className="overflow-hidden rounded-xl border bg-white">
+      <PageHeader
+        title={t("fleetTitle")}
+        description={t("fleetSubtitle")}
+        actions={
+          <button type="button" onClick={load} className="erp-btn erp-btn--primary erp-btn--sm">
+            {t("refreshMap")}
+          </button>
+        }
+      />
+      <div className="erp-card overflow-hidden">
         <iframe
           title="Fleet map"
           className="h-72 w-full"
           loading="lazy"
-          src={`https://maps.google.com/maps?q=${encodeURIComponent(center)}&z=12&output=embed`}
+          src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=11&output=embed`}
         />
       </div>
       {loading ? <p className="text-sm text-gray-500">{t("loading")}</p> : null}
       {!loading && locations.length === 0 ? (
-        <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">{t("noFleetPings")}</p>
+        <p className="erp-alert erp-alert--info m-4">{t("noFleetPings")}</p>
       ) : (
         <ul className="space-y-2">
           {locations.map((l) => (
