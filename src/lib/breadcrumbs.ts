@@ -6,7 +6,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   general: "General Settings",
   users: "Users",
   roles: "Roles",
-  logs: "System Logs",
+  logs: "Logs",
   profile: "Profile",
   parcels: "Parcels",
   warehouse: "Warehouse",

@@ -13,6 +13,9 @@ export type AuditLogListItem = {
   ip: string | null;
   userAgent: string | null;
   durationMs: number | null;
+  httpMethod: string | null;
+  statusCode: number | null;
+  requestUrl: string | null;
   oldValues: unknown;
   newValues: unknown;
   user: { id: string; name: string; email: string } | null;
@@ -59,6 +62,7 @@ function buildWhere(input: AuditQueryInput): Prisma.AuditLogWhereInput {
         { entityId: { contains: q, mode: "insensitive" } },
         { correlationId: { contains: q, mode: "insensitive" } },
         { ipAddress: { contains: q, mode: "insensitive" } },
+        { requestUrl: { contains: q, mode: "insensitive" } },
       ],
     });
   }
@@ -125,6 +129,9 @@ function mapRow(row: AuditRow): AuditLogListItem {
     ip: row.ipAddress,
     userAgent: row.userAgent,
     durationMs: row.durationMs,
+    httpMethod: row.httpMethod,
+    statusCode: row.statusCode,
+    requestUrl: row.requestUrl,
     oldValues: row.oldValues,
     newValues: row.newValues,
     user: row.user

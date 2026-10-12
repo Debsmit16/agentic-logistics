@@ -12,6 +12,9 @@ export type LogAuditParams = {
   newValues?: Prisma.InputJsonValue;
   durationMs?: number;
   userId?: string | null;
+  httpMethod?: string;
+  statusCode?: number;
+  requestUrl?: string;
 };
 
 export async function logAudit(params: LogAuditParams) {
@@ -27,6 +30,8 @@ export async function logAudit(params: LogAuditParams) {
       /* background / edge */
     }
 
+    const correlationId = params.correlationId ?? crypto.randomUUID();
+
     void prisma.auditLog
       .create({
         data: {
@@ -34,11 +39,14 @@ export async function logAudit(params: LogAuditParams) {
           action: params.action,
           module: params.module,
           entityId: params.entityId,
-          correlationId: params.correlationId,
+          correlationId,
           oldValues: params.oldValues ?? undefined,
           newValues: params.newValues ?? undefined,
           ipAddress,
           userAgent,
+          httpMethod: params.httpMethod,
+          statusCode: params.statusCode,
+          requestUrl: params.requestUrl,
           durationMs: params.durationMs,
         },
       })

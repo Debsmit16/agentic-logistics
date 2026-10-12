@@ -19,6 +19,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
   }
 
+  const started = Date.now();
+
   try {
     const user = await prisma.user.findUnique({
       where: { email: body.email.toLowerCase() },
@@ -38,6 +40,10 @@ export async function POST(req: Request) {
       module: AppModule.PROFILE,
       entityId: user.id,
       userId: user.id,
+      httpMethod: "POST",
+      statusCode: 200,
+      requestUrl: "/api/auth/login",
+      durationMs: Date.now() - started,
     });
 
     return NextResponse.json({ redirect: "/dashboard" });

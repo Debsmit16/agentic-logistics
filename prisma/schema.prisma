@@ -74,6 +74,9 @@ model AuditLog {
   newValues     Json?
   ipAddress     String?
   userAgent     String?
+  httpMethod    String?
+  statusCode    Int?
+  requestUrl    String?
   durationMs    Int?
   createdAt     DateTime   @default(now())
 
