@@ -1,66 +1,28 @@
-# Agentic Logistics
+# Agentic Logistics (RBAC foundation)
 
-Warehouse-to-last-mile logistics platform (Next.js, Prisma, PostgreSQL).
+Greenfield core inspired by [Plexi-ERP](https://github.com/Flexicom-Industries-Pvt-Ltd/Plexi-ERP) patterns:
 
-## Live app
+- **Roles** with per-module **Create / Read / Update / Delete** flags
+- **Audit logs** (action, module, entity, user, IP, user-agent)
+- **Profile** (name, phone, password)
+- **Module shells** for Parcels, Warehouse, Delivery, Finance, Settings
 
-| Resource | URL |
-|----------|-----|
-| **Production** | https://agentic-logistics.vercel.app |
-| **GitHub** | https://github.com/Debsmit16/agentic-logistics |
-| **Vercel project** | `agentic-logistics` (team: plascom) |
-
-**First login (seed owner):** `owner@agentic.local` / `changeme123` — change this password after first login.
-
-Public tracking: https://agentic-logistics.vercel.app/track
-
-## Neon database
-
-Project was provisioned via Claimable Neon (`little-heart-86674213`). **Claim it into your Neon account** before it expires (72h from creation) so production keeps working:
+## Setup
 
 ```bash
-npx neon claim accept little-heart-86674213 --no-open
-# Open the printed Verification Url and finish in the browser
-npx neon claim status little-heart-86674213
+npm install
+cp .env.example .env.local   # set DATABASE_URL + AUTH_SECRET
+npx prisma migrate dev --name init_rbac
+npm run db:seed
+npm run dev
 ```
 
-After claim, run `npx neon auth` and rename the project to **agentic-logistics** in the Neon console if you like.
+Login: `admin@agenticlogistics.in` / `admin123` (or `SEED_ADMIN_PASSWORD`).
 
-## Production URLs
+## Adding a feature module
 
-Set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL after deploy (already set for `https://agentic-logistics.vercel.app`).
+1. Add enum value to `AppModule` in `prisma/schema.prisma` if needed.
+2. Add nav entry in `src/lib/nav.ts`.
+3. Guard pages with `requirePermission(AppModule.X, "canRead")`.
+4. Guard APIs with `requireApiPermission` and call `logAudit` on writes.
 
-## Local setup
-
-1. Copy `.env.example` to `.env.local` and set `DATABASE_URL` (Neon **pooled** URL recommended).
-2. `npm install`
-3. `npm run db:migrate` or `npm run db:push`
-4. `npm run db:seed`
-5. `npm run dev`
-
-Default seed owner (when no users exist): see `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` in `.env.example`.
-
-## Deploy (Vercel + Neon)
-
-- Build runs `prisma migrate deploy` via `build:vercel`.
-- Required env: `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, `SMS_DEV_MODE=true` (until Fast2SMS is configured).
-
-## Neon claimable project
-
-If the database was created via `neon claim create`, claim it into your Neon account before expiry:
-
-```bash
-npx neon claim accept --no-open
-npx neon claim status
-```
-
-Then run `npx neon auth` and link the project for long-term management.
-
-## Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Local dev server |
-| `npm run build:vercel` | Production build with migrations |
-| `npm run test:e2e` | Playwright (optional `E2E_OWNER_*` for acceptance) |
-| `npm run brand:assets` | Regenerate logos from `public/logo-source.jpg` |

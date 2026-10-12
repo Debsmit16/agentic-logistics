@@ -1,7 +1,9 @@
-import { requirePageUser, withAppShell } from "@/lib/auth/page-auth";
-import FinanceClient from "./finance-client";
+import { AppModule } from "@prisma/client";
+import { ModulePlaceholder } from "@/components/module-placeholder";
+import { withAppLayout } from "@/lib/app-layout";
+import { requirePermission } from "@/lib/permissions";
 
 export default async function FinancePage() {
-  await requirePageUser();
-  return withAppShell(<FinanceClient />);
+  await requirePermission(AppModule.FINANCE, "canRead");
+  return withAppLayout(<ModulePlaceholder name="Finance" />);
 }

@@ -1,47 +1,81 @@
+import { AppModule, PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/crypto";
-import { DEFAULT_POD } from "../src/lib/config/system-config";
-import { DEFAULT_GST } from "../src/lib/finance/gst-invoice-service";
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const ADMIN_EMAIL = "admin@agenticlogistics.in";
+const ALL_MODULES = Object.values(AppModule);
+
+const FULL = { canCreate: true, canRead: true, canUpdate: true, canDelete: true };
+const READ = { canCreate: false, canRead: true, canUpdate: false, canDelete: false };
+
 async function main() {
-  const count = await prisma.user.count();
-  if (count === 0) {
-    const password = process.env.SEED_OWNER_PASSWORD ?? "changeme123";
-    await prisma.user.create({
-      data: {
-        email: process.env.SEED_OWNER_EMAIL ?? "owner@agentic.local",
-        displayName: "Owner",
-        role: "OWNER",
-        passwordHash: await hashPassword(password),
-      },
+  const adminRole = await prisma.role.upsert({
+    where: { name: "System Admin" },
+    update: { description: "Full access to all modules", isSystem: true },
+    create: {
+      name: "System Admin",
+      description: "Full access to all modules",
+      isSystem: true,
+    },
+  });
+
+  for (const module of ALL_MODULES) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_module: { roleId: adminRole.id, module } },
+      update: FULL,
+      create: { roleId: adminRole.id, module, ...FULL },
     });
-    console.log(
-      `Created owner ${process.env.SEED_OWNER_EMAIL ?? "owner@agentic.local"} / ${password}`,
-    );
   }
 
-  await prisma.deliveryFailureReason.createMany({
-    data: [
-      { code: "CUSTOMER_UNAVAILABLE", label: "Customer not available", sortOrder: 1 },
-      { code: "WRONG_ADDRESS", label: "Wrong address", sortOrder: 2 },
-      { code: "REFUSED", label: "Customer refused", sortOrder: 3 },
-    ],
-    skipDuplicates: true,
+  const viewerRole = await prisma.role.upsert({
+    where: { name: "Viewer" },
+    update: { description: "Read-only access to operational modules" },
+    create: { name: "Viewer", description: "Read-only access to operational modules" },
   });
 
-  await prisma.systemConfig.upsert({
-    where: { key: "pod.requirements" },
-    create: { key: "pod.requirements", value: DEFAULT_POD },
-    update: { value: DEFAULT_POD },
+  for (const module of [AppModule.PARCELS, AppModule.WAREHOUSE, AppModule.DELIVERY, AppModule.LOGS]) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_module: { roleId: viewerRole.id, module } },
+      update: READ,
+      create: { roleId: viewerRole.id, module, ...READ },
+    });
+  }
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: viewerRole.id, module: AppModule.PROFILE } },
+    update: { ...READ, canUpdate: true },
+    create: {
+      roleId: viewerRole.id,
+      module: AppModule.PROFILE,
+      canCreate: false,
+      canRead: true,
+      canUpdate: true,
+      canDelete: false,
+    },
   });
 
-  await prisma.systemConfig.upsert({
-    where: { key: "gst.profile" },
-    create: { key: "gst.profile", value: DEFAULT_GST },
-    update: { value: DEFAULT_GST },
+  const password = process.env.SEED_ADMIN_PASSWORD ?? "admin123";
+  const passwordHash = await hashPassword(password);
+
+  await prisma.user.deleteMany({ where: { email: "admin@agentic.local" } });
+
+  await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: {
+      displayName: "Administrator",
+      passwordHash,
+      roleId: adminRole.id,
+      isActive: true,
+    },
+    create: {
+      email: ADMIN_EMAIL,
+      displayName: "Administrator",
+      passwordHash,
+      roleId: adminRole.id,
+    },
   });
+
+  console.log(`Seed OK — login: ${ADMIN_EMAIL} / (password from SEED_ADMIN_PASSWORD or default admin123)`);
 }
 
 main()

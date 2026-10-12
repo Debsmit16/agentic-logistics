@@ -1,9 +1,9 @@
-import { requirePageUser, withAppShell, getPageLocale } from "@/lib/auth/page-auth";
-import { t } from "@/lib/i18n";
-import { WarehouseHub } from "@/components/warehouse/warehouse-hub";
+import { AppModule } from "@prisma/client";
+import { ModulePlaceholder } from "@/components/module-placeholder";
+import { withAppLayout } from "@/lib/app-layout";
+import { requirePermission } from "@/lib/permissions";
 
-export default async function WarehouseHomePage() {
-  await requirePageUser();
-  const locale = await getPageLocale();
-  return withAppShell(<WarehouseHub locale={locale} />);
+export default async function WarehousePage() {
+  await requirePermission(AppModule.WAREHOUSE, "canRead");
+  return withAppLayout(<ModulePlaceholder name="Warehouse" />);
 }
