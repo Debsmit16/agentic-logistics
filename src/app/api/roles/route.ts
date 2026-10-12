@@ -4,6 +4,7 @@ import { AppModule } from "@prisma/client";
 import { requireApiPermission } from "@/lib/permissions";
 import { jsonError } from "@/lib/api/helpers";
 import { createRole, listRoles } from "@/lib/roles/role-service";
+import { flagsForModule } from "@/lib/permissions/user-module";
 
 const permSchema = z.object({
   module: z.nativeEnum(AppModule),
@@ -21,9 +22,12 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    await requireApiPermission(AppModule.SETTINGS, "canRead");
-    const roles = await listRoles();
-    return NextResponse.json({ roles, modules: Object.values(AppModule) });
+    const actor = await requireApiPermission(AppModule.SETTINGS, "canRead");
+    const [roles, permissions] = await Promise.all([
+      listRoles(),
+      flagsForModule(actor.role?.name, AppModule.USERS),
+    ]);
+    return NextResponse.json({ roles, modules: Object.values(AppModule), permissions });
   } catch (e) {
     return jsonError(e);
   }

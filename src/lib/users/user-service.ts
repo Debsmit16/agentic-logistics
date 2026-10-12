@@ -17,6 +17,7 @@ export async function createUser(
     password: string;
     roleId: string;
     phone?: string | null;
+    department?: string | null;
   },
   actorId: string,
 ) {
@@ -26,6 +27,7 @@ export async function createUser(
       email: input.email.toLowerCase().trim(),
       displayName: input.displayName.trim(),
       phone: input.phone?.trim() || null,
+      department: input.department?.trim() || null,
       passwordHash,
       roleId: input.roleId,
     },
@@ -48,6 +50,7 @@ export async function updateUser(
   input: {
     displayName?: string;
     phone?: string | null;
+    department?: string | null;
     roleId?: string;
     isActive?: boolean;
     password?: string;
@@ -57,6 +60,7 @@ export async function updateUser(
   const data: {
     displayName?: string;
     phone?: string | null;
+    department?: string | null;
     roleId?: string;
     isActive?: boolean;
     passwordHash?: string;
@@ -64,6 +68,7 @@ export async function updateUser(
 
   if (input.displayName !== undefined) data.displayName = input.displayName.trim();
   if (input.phone !== undefined) data.phone = input.phone?.trim() || null;
+  if (input.department !== undefined) data.department = input.department?.trim() || null;
   if (input.roleId !== undefined) data.roleId = input.roleId;
   if (input.isActive !== undefined) data.isActive = input.isActive;
   if (input.password) data.passwordHash = await hashPassword(input.password);
@@ -83,4 +88,34 @@ export async function updateUser(
   });
 
   return user;
+}
+
+export async function deleteUser(id: string, actorId: string) {
+  if (id === actorId) {
+    throw new Error("You cannot delete your own account.");
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id },
+    include: { role: { select: { name: true } } },
+  });
+
+  if (user.role?.name === "System Admin") {
+    const adminCount = await prisma.user.count({
+      where: { isActive: true, role: { name: "System Admin" } },
+    });
+    if (adminCount <= 1) {
+      throw new Error("Cannot delete the only active System Admin.");
+    }
+  }
+
+  await prisma.user.delete({ where: { id } });
+
+  await logAudit({
+    action: "USER_DELETE",
+    module: AppModule.USERS,
+    entityId: id,
+    userId: actorId,
+    oldValues: { email: user.email, displayName: user.displayName },
+  });
 }

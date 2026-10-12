@@ -2,9 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ErpPageHeader } from "@/components/ui/erp-page-header";
+import { Modal } from "@/components/ui/modal";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { IconBuilding, IconPlus, IconRole, IconShield } from "@/components/icons/nav-icons";
+import { UserFormModal, type UserFormValues } from "@/components/settings/user-form-modal";
+import type { ModulePermissionFlags } from "@/lib/permissions/user-module";
+import {
+  IconBuilding,
+  IconPencil,
+  IconPlus,
+  IconRole,
+  IconShield,
+  IconTrash,
+} from "@/components/icons/nav-icons";
 
 type Role = { id: string; name: string };
 
@@ -13,6 +23,7 @@ type UserRow = {
   email: string;
   displayName: string;
   phone: string | null;
+  department: string | null;
   isActive: boolean;
   role: Role | null;
 };
@@ -24,45 +35,88 @@ function shortId(id: string) {
 export function UsersClient() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<ModulePermissionFlags | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [password, setPassword] = useState("");
-  const [roleId, setRoleId] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
 
   const load = useCallback(async () => {
     const data = await fetch("/api/users").then((r) => r.json());
-    setUsers(data.users ?? []);
+    if (!data.users) {
+      setMsg(data.error ?? "Could not load users");
+      return;
+    }
+    setUsers(data.users);
     setRoles(data.roles ?? []);
-    if (data.roles?.length && !roleId) setRoleId(data.roles[0].id);
-  }, [roleId]);
+    setPermissions(data.permissions ?? null);
+    setCurrentUserId(data.currentUserId ?? null);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  async function createUser(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, displayName, password, roleId }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setMsg(data.error ?? "Could not create user");
-      return;
+  function openCreate() {
+    setEditingUser(null);
+    setModalOpen(true);
+  }
+
+  function openEdit(user: UserRow) {
+    setEditingUser(user);
+    setModalOpen(true);
+  }
+
+  async function handleSubmit(values: UserFormValues) {
+    setSaving(true);
+    setMsg(null);
+    try {
+      if (editingUser) {
+        const payload: Record<string, unknown> = {
+          displayName: values.displayName,
+          phone: values.phone || null,
+          department: values.department || null,
+          roleId: values.roleId,
+        };
+        if (values.password) payload.password = values.password;
+        const res = await fetch(`/api/users/${editingUser.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Update failed");
+        setMsg("User updated");
+      } else {
+        const res = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: values.email,
+            displayName: values.displayName,
+            password: values.password,
+            roleId: values.roleId,
+            phone: values.phone || null,
+            department: values.department || null,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Create failed");
+        setMsg("User created");
+      }
+      setModalOpen(false);
+      await load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Request failed");
+    } finally {
+      setSaving(false);
     }
-    setMsg("User created");
-    setShowForm(false);
-    setEmail("");
-    setDisplayName("");
-    setPassword("");
-    load();
   }
 
   async function toggleActive(user: UserRow) {
+    if (!permissions?.canUpdate) return;
     const res = await fetch(`/api/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -76,19 +130,24 @@ export function UsersClient() {
     load();
   }
 
-  async function changeRole(user: UserRow, newRoleId: string) {
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roleId: newRoleId }),
-    });
+  async function confirmDelete() {
+    if (!deleteTarget || !permissions?.canDelete) return;
+    setSaving(true);
+    const res = await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE" });
+    const data = await res.json();
+    setSaving(false);
     if (!res.ok) {
-      const data = await res.json();
-      setMsg(data.error ?? "Update failed");
+      setMsg(data.error ?? "Delete failed");
       return;
     }
+    setMsg("User deleted");
+    setDeleteTarget(null);
     load();
   }
+
+  const canCreate = permissions?.canCreate ?? false;
+  const canUpdate = permissions?.canUpdate ?? false;
+  const canDelete = permissions?.canDelete ?? false;
 
   return (
     <div>
@@ -112,50 +171,13 @@ export function UsersClient() {
               <p className="text-sm text-[var(--muted)]">Manage user access, roles, and organizational assignments.</p>
             </div>
           </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-pill"
-            onClick={() => setShowForm((v) => !v)}
-          >
-            <IconPlus />
-            {showForm ? "Cancel" : "Add User"}
-          </button>
+          {canCreate ? (
+            <button type="button" className="btn btn-primary btn-pill" onClick={openCreate}>
+              <IconPlus />
+              Add User
+            </button>
+          ) : null}
         </div>
-
-        {showForm ? (
-          <form onSubmit={createUser} className="space-y-4 border-b border-[var(--border)] bg-neutral-50/50 px-5 py-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium">
-                Email
-                <input className="input mt-1.5" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </label>
-              <label className="block text-sm font-medium">
-                Display name
-                <input className="input mt-1.5" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-              </label>
-              <label className="block text-sm font-medium">
-                Password
-                <input
-                  className="input mt-1.5"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </label>
-              <label className="block text-sm font-medium">
-                Role
-                <select className="input mt-1.5" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <button type="submit" className="btn btn-primary">Create user</button>
-          </form>
-        ) : null}
 
         <div className="overflow-x-auto">
           <table className="erp-table">
@@ -172,7 +194,7 @@ export function UsersClient() {
               {users.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-sm text-[var(--muted)]">
-                    No users yet. Add your first user above.
+                    No users yet.
                   </td>
                 </tr>
               ) : (
@@ -191,28 +213,20 @@ export function UsersClient() {
                     <td>
                       <div className="flex items-center gap-2 text-[var(--primary)]">
                         <IconRole className="shrink-0 opacity-70" />
-                        <select
-                          className="select-ghost max-w-[12rem] uppercase"
-                          value={u.role?.id ?? ""}
-                          onChange={(e) => changeRole(u, e.target.value)}
-                          aria-label={`Role for ${u.displayName}`}
-                        >
-                          {roles.map((r) => (
-                            <option key={r.id} value={r.id}>{r.name}</option>
-                          ))}
-                        </select>
+                        <span className="text-xs font-semibold uppercase tracking-wide">{u.role?.name ?? "—"}</span>
                       </div>
                     </td>
                     <td>
                       <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
                         <IconBuilding className="shrink-0 opacity-60" />
-                        {u.phone ? u.phone : "—"}
+                        {u.department || u.phone || "—"}
                       </div>
                     </td>
                     <td>
                       <div className="flex items-center gap-2.5">
                         <ToggleSwitch
                           checked={u.isActive}
+                          disabled={!canUpdate}
                           onChange={() => toggleActive(u)}
                           label={`${u.displayName} active`}
                         />
@@ -222,7 +236,28 @@ export function UsersClient() {
                       </div>
                     </td>
                     <td>
-                      <span className="text-xs text-[var(--muted)]">—</span>
+                      <div className="flex items-center gap-1">
+                        {canUpdate ? (
+                          <button
+                            type="button"
+                            className="rounded-lg p-2 text-[var(--muted)] hover:bg-neutral-100 hover:text-[var(--primary)]"
+                            title="Edit user"
+                            onClick={() => openEdit(u)}
+                          >
+                            <IconPencil />
+                          </button>
+                        ) : null}
+                        {canDelete && u.id !== currentUserId ? (
+                          <button
+                            type="button"
+                            className="rounded-lg p-2 text-[var(--muted)] hover:bg-red-50 hover:text-red-600"
+                            title="Delete user"
+                            onClick={() => setDeleteTarget(u)}
+                          >
+                            <IconTrash />
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -231,6 +266,39 @@ export function UsersClient() {
           </table>
         </div>
       </div>
+
+      <Modal
+        open={modalOpen}
+        title={editingUser ? "Edit user" : "Add user"}
+        description={editingUser ? "Update profile, role, or password." : "Create a new account with role assignment."}
+        onClose={() => !saving && setModalOpen(false)}
+        wide
+      >
+        <UserFormModal
+          open={modalOpen}
+          user={editingUser}
+          roles={roles}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleSubmit}
+          saving={saving}
+        />
+      </Modal>
+
+      <Modal
+        open={Boolean(deleteTarget)}
+        title="Delete user"
+        description={`Remove ${deleteTarget?.displayName}? This cannot be undone.`}
+        onClose={() => !saving && setDeleteTarget(null)}
+      >
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn btn-ghost" onClick={() => setDeleteTarget(null)} disabled={saving}>
+            Cancel
+          </button>
+          <button type="button" className="btn bg-red-600 text-white hover:bg-red-700" onClick={confirmDelete} disabled={saving}>
+            {saving ? "Deleting…" : "Delete user"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

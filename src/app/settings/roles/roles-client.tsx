@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErpPageHeader } from "@/components/ui/erp-page-header";
-import { IconPlus, IconShield } from "@/components/icons/nav-icons";
+import { Modal } from "@/components/ui/modal";
+import { IconPencil, IconPlus, IconRole, IconShield, IconTrash } from "@/components/icons/nav-icons";
+import type { ModulePermissionFlags } from "@/lib/permissions/user-module";
 
 type Perm = {
   module: string;
@@ -28,24 +30,63 @@ const ACTIONS = [
   { key: "canDelete" as const, label: "Delete" },
 ];
 
+const MODULE_ORDER = [
+  "USERS",
+  "SETTINGS",
+  "LOGS",
+  "PROFILE",
+  "PARCELS",
+  "WAREHOUSE",
+  "DELIVERY",
+  "FINANCE",
+];
+
+function moduleLabel(module: string) {
+  return module.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function accessSummary(role: Role, moduleCount: number) {
+  const withRead = role.permissions.filter((p) => p.canRead).length;
+  const full = role.permissions.filter(
+    (p) => p.canCreate && p.canRead && p.canUpdate && p.canDelete,
+  ).length;
+  if (role.isSystem) return "Full platform access";
+  if (full > 0 && full === withRead) return `${full} modules · full CRUD`;
+  return `${withRead} of ${moduleCount} modules`;
+}
+
 export function RolesClient() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [modules, setModules] = useState<string[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, Perm>>({});
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<ModulePermissionFlags | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | "new" | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const sortedModules = useMemo(() => {
+    const order = new Map(MODULE_ORDER.map((m, i) => [m, i]));
+    return [...modules].sort((a, b) => (order.get(a) ?? 99) - (order.get(b) ?? 99));
+  }, [modules]);
 
   const load = useCallback(async () => {
     const data = await fetch("/api/roles").then((r) => r.json());
     setRoles(data.roles ?? []);
     setModules(data.modules ?? []);
+    setPermissions(data.permissions ?? null);
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const editingRole = editingId && editingId !== "new" ? roles.find((r) => r.id === editingId) : null;
+  const isSystemEditor = editingRole?.isSystem ?? false;
+  const readOnlyMatrix = isSystemEditor || !(editingId === "new" ? permissions?.canCreate : permissions?.canUpdate);
 
   function emptyPerms(): Record<string, Perm> {
     const map: Record<string, Perm> = {};
@@ -55,8 +96,16 @@ export function RolesClient() {
     return map;
   }
 
-  function selectRole(role: Role) {
-    setSelectedId(role.id);
+  function openCreate() {
+    setEditingId("new");
+    setName("");
+    setDescription("");
+    setDraft(emptyPerms());
+    setEditorOpen(true);
+  }
+
+  function openEdit(role: Role) {
+    setEditingId(role.id);
     setName(role.name);
     setDescription(role.description ?? "");
     const map = emptyPerms();
@@ -64,155 +113,294 @@ export function RolesClient() {
       map[p.module] = { ...p };
     }
     setDraft(map);
+    setEditorOpen(true);
   }
 
-  function startCreate() {
-    setSelectedId("new");
-    setName("");
-    setDescription("");
-    setDraft(emptyPerms());
+  function setRowAll(module: string, enabled: boolean) {
+    setDraft((d) => ({
+      ...d,
+      [module]: {
+        module,
+        canRead: enabled,
+        canCreate: enabled,
+        canUpdate: enabled,
+        canDelete: enabled,
+      },
+    }));
   }
 
   async function save() {
-    const permissions = Object.values(draft);
-    const payload = { name, description, permissions };
+    if (!editingId) return;
+    setSaving(true);
+    setMsg(null);
+    const payload = { name, description, permissions: Object.values(draft) };
     const res =
-      selectedId === "new"
+      editingId === "new"
         ? await fetch("/api/roles", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-        : await fetch(`/api/roles/${selectedId}`, {
+        : await fetch(`/api/roles/${editingId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
     const data = await res.json();
+    setSaving(false);
     if (!res.ok) {
       setMsg(data.error ?? "Save failed");
       return;
     }
-    setMsg("Saved");
+    setMsg(editingId === "new" ? "Role created" : "Role updated");
+    setEditorOpen(false);
+    setEditingId(null);
     await load();
-    if (selectedId === "new" && data.role?.id) setSelectedId(data.role.id);
   }
 
-  async function remove() {
-    if (!selectedId || selectedId === "new") return;
-    if (!confirm("Delete this role?")) return;
-    const res = await fetch(`/api/roles/${selectedId}`, { method: "DELETE" });
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setSaving(true);
+    const res = await fetch(`/api/roles/${deleteTarget.id}`, { method: "DELETE" });
     const data = await res.json();
+    setSaving(false);
     if (!res.ok) {
       setMsg(data.error ?? "Delete failed");
       return;
     }
-    setSelectedId(null);
-    setMsg("Deleted");
+    setMsg("Role deleted");
+    setDeleteTarget(null);
     load();
   }
 
-  const selected = roles.find((r) => r.id === selectedId);
+  const canCreate = permissions?.canCreate ?? false;
+  const canUpdate = permissions?.canUpdate ?? false;
+  const canDelete = permissions?.canDelete ?? false;
 
   return (
-    <div className="space-y-4">
+    <div>
       <ErpPageHeader
         title="Role Management"
-        description="Define roles and module permissions: read, write, edit, and delete."
+        description="Define roles and control module access — read, write, edit, and delete."
       />
+
       {msg ? (
-        <p className="rounded-lg bg-[var(--primary-soft)] px-4 py-2 text-sm text-[var(--primary-dark)]">{msg}</p>
+        <p className="mb-4 rounded-lg bg-[var(--primary-soft)] px-4 py-2 text-sm text-[var(--primary-dark)]">{msg}</p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-        <div className="data-panel p-3 space-y-2">
-          <div className="mb-2 flex items-center gap-2 px-1 text-[var(--primary)]">
-            <IconShield className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Roles</span>
+      <div className="data-panel">
+        <div className="data-panel-header">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
+              <IconShield />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[var(--text)]">Role Directory</h2>
+              <p className="text-sm text-[var(--muted)]">Assign permissions per module and manage who can access what.</p>
+            </div>
           </div>
-          <button type="button" className="btn btn-primary btn-pill w-full text-xs" onClick={startCreate}>
-            <IconPlus />
-            New role
-          </button>
-          {roles.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => selectRole(r)}
-              className={`w-full rounded-lg px-2 py-2 text-left text-sm ${selectedId === r.id ? "bg-[var(--primary-soft)] font-medium text-[var(--primary)]" : "hover:bg-neutral-50"}`}
-            >
-              {r.name}
-              <span className="block text-xs text-[var(--muted)]">{r._count.users} users</span>
+          {canCreate ? (
+            <button type="button" className="btn btn-primary btn-pill" onClick={openCreate}>
+              <IconPlus />
+              Add Role
             </button>
-          ))}
+          ) : null}
         </div>
 
-        {selectedId ? (
-          <div className="card space-y-4 p-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                Role name
-                <input
-                  className="input mt-1"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={selected?.isSystem}
-                />
-              </label>
-              <label className="text-sm">
-                Description
-                <input className="input mt-1" value={description} onChange={(e) => setDescription(e.target.value)} />
-              </label>
-            </div>
+        <div className="overflow-x-auto">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Access</th>
+                <th>Users</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roles.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-sm text-[var(--muted)]">No roles defined.</td>
+                </tr>
+              ) : (
+                roles.map((role) => (
+                  <tr key={role.id}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
+                          <IconRole />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[var(--text)]">{role.name}</p>
+                          <p className="max-w-xs truncate text-xs text-[var(--muted)]">
+                            {role.description || "No description"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-sm text-[var(--muted)]">{accessSummary(role, modules.length)}</td>
+                    <td>
+                      <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium">{role._count.users}</span>
+                    </td>
+                    <td>
+                      {role.isSystem ? <span className="badge-system">System</span> : <span className="badge-custom">Custom</span>}
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="rounded-lg p-2 text-[var(--muted)] hover:bg-neutral-100 hover:text-[var(--primary)]"
+                          title="View or edit permissions"
+                          onClick={() => openEdit(role)}
+                        >
+                          <IconPencil />
+                        </button>
+                        {canDelete && !role.isSystem ? (
+                          <button
+                            type="button"
+                            className="rounded-lg p-2 text-[var(--muted)] hover:bg-red-50 hover:text-red-600"
+                            title="Delete role"
+                            disabled={role._count.users > 0}
+                            onClick={() => setDeleteTarget(role)}
+                          >
+                            <IconTrash />
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+      <Modal
+        open={editorOpen}
+        title={editingId === "new" ? "Create role" : isSystemEditor ? "View role" : "Edit role"}
+        description={
+          isSystemEditor
+            ? "System Admin has fixed full access across all modules."
+            : "Set the role name and tick permissions for each module."
+        }
+        onClose={() => !saving && setEditorOpen(false)}
+        wide
+      >
+        <div className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium">
+              Role name
+              <input
+                className="input mt-1.5"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isSystemEditor || readOnlyMatrix}
+                placeholder="e.g. Warehouse Manager"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Description
+              <input
+                className="input mt-1.5"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isSystemEditor || readOnlyMatrix}
+                placeholder="Short summary for admins"
+              />
+            </label>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+            <div className="border-b border-[var(--border)] bg-neutral-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Module permissions
+            </div>
+            <div className="max-h-[min(50vh,420px)] overflow-auto">
+              <table className="erp-table perm-matrix">
                 <thead>
-                  <tr className="border-b">
-                    <th className="py-2 pr-4">Module</th>
+                  <tr>
+                    <th className="!text-left">Module</th>
                     {ACTIONS.map((a) => (
-                      <th key={a.key} className="px-2 py-2">{a.label}</th>
+                      <th key={a.key}>{a.label}</th>
                     ))}
+                    <th>All</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {modules.map((m) => (
-                    <tr key={m} className="border-b border-neutral-100">
-                      <td className="py-2 pr-4 font-medium">{m.replaceAll("_", " ")}</td>
-                      {ACTIONS.map((a) => (
-                        <td key={a.key} className="px-2 py-2 text-center">
+                  {sortedModules.map((m) => {
+                    const row = draft[m];
+                    const allOn = row?.canRead && row?.canCreate && row?.canUpdate && row?.canDelete;
+                    return (
+                      <tr key={m}>
+                        <td className="!text-left font-medium text-[var(--text)]">{moduleLabel(m)}</td>
+                        {ACTIONS.map((a) => (
+                          <td key={a.key}>
+                            <input
+                              type="checkbox"
+                              className="perm-check"
+                              checked={row?.[a.key] ?? false}
+                              disabled={readOnlyMatrix || isSystemEditor}
+                              onChange={(e) =>
+                                setDraft((d) => ({
+                                  ...d,
+                                  [m]: { ...d[m], module: m, [a.key]: e.target.checked },
+                                }))
+                              }
+                            />
+                          </td>
+                        ))}
+                        <td>
                           <input
                             type="checkbox"
-                            checked={draft[m]?.[a.key] ?? false}
-                            disabled={selected?.isSystem}
-                            onChange={(e) =>
-                              setDraft((d) => ({
-                                ...d,
-                                [m]: { ...d[m], module: m, [a.key]: e.target.checked },
-                              }))
-                            }
+                            className="perm-check"
+                            checked={allOn}
+                            disabled={readOnlyMatrix || isSystemEditor}
+                            onChange={(e) => setRowAll(m, e.target.checked)}
+                            aria-label={`All permissions for ${moduleLabel(m)}`}
                           />
                         </td>
-                      ))}
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              {!selected?.isSystem ? (
-                <>
-                  <button type="button" className="btn btn-primary" onClick={save}>Save role</button>
-                  {selectedId !== "new" ? (
-                    <button type="button" className="btn btn-ghost text-red-600" onClick={remove}>Delete</button>
-                  ) : null}
-                </>
-              ) : (
-                <p className="text-xs text-[var(--muted)]">System Admin permissions are fixed.</p>
-              )}
-            </div>
           </div>
-        ) : (
-          <p className="text-sm text-[var(--muted)]">Select a role or create a new one.</p>
-        )}
-      </div>
+
+          <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
+            <button type="button" className="btn btn-ghost" onClick={() => setEditorOpen(false)} disabled={saving}>
+              Close
+            </button>
+            {!isSystemEditor && (editingId === "new" ? canCreate : canUpdate) ? (
+              <button type="button" className="btn btn-primary" onClick={save} disabled={saving || !name.trim()}>
+                {saving ? "Saving…" : editingId === "new" ? "Create role" : "Save changes"}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={Boolean(deleteTarget)}
+        title="Delete role"
+        description={
+          deleteTarget?._count.users
+            ? `“${deleteTarget?.name}” still has ${deleteTarget._count.users} user(s). Reassign them first.`
+            : `Remove “${deleteTarget?.name}”? This cannot be undone.`
+        }
+        onClose={() => !saving && setDeleteTarget(null)}
+      >
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn btn-ghost" onClick={() => setDeleteTarget(null)} disabled={saving}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn bg-red-600 text-white hover:bg-red-700"
+            onClick={confirmDelete}
+            disabled={saving || (deleteTarget?._count.users ?? 0) > 0}
+          >
+            {saving ? "Deleting…" : "Delete role"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

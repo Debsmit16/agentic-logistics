@@ -75,6 +75,19 @@ async function main() {
     },
   });
 
+  const defaults = [
+    { key: "app_name", value: "Agentic Logistics" },
+    { key: "support_email", value: "support@agenticlogistics.in" },
+    { key: "timezone", value: "Asia/Kolkata" },
+  ];
+  for (const row of defaults) {
+    await prisma.systemSetting.upsert({
+      where: { key: row.key },
+      update: { value: row.value },
+      create: row,
+    });
+  }
+
   console.log(`Seed OK — login: ${ADMIN_EMAIL} / (password from SEED_ADMIN_PASSWORD or default admin123)`);
 }
 

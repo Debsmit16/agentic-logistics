@@ -157,3 +157,27 @@ body {
 .toggle:disabled {
   @apply cursor-not-allowed opacity-50;
 }
+
+.perm-matrix th {
+  @apply text-center text-[10px] font-semibold normal-case tracking-normal;
+}
+
+.perm-matrix td {
+  @apply text-center;
+}
+
+.perm-check {
+  @apply h-4 w-4 cursor-pointer rounded border-[var(--border)] text-[var(--primary)] accent-[var(--primary)];
+}
+
+.perm-check:disabled {
+  @apply cursor-not-allowed opacity-40;
+}
+
+.badge-system {
+  @apply inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700;
+}
+
+.badge-custom {
+  @apply inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)];
+}

@@ -50,6 +50,7 @@ model User {
   passwordHash String
   displayName  String
   phone        String?
+  department   String?
   isActive     Boolean    @default(true)
   roleId       String?
   role         Role?      @relation(fields: [roleId], references: [id])
@@ -79,4 +80,10 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([action])
   @@index([entityId])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
 }
