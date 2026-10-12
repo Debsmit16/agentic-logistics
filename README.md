@@ -31,6 +31,8 @@ In the project that deploys this repo, set **Production** (and Preview if needed
 
 After changing env vars, **redeploy**. Env vars are not updated on past deployments automatically.
 
+Builds run `prisma migrate deploy` against `DATABASE_URL_UNPOLED` (see `directUrl` in `schema.prisma`). If a deploy fails with advisory-lock timeout, retry the deployment or wait for concurrent builds to finish.
+
 ## Adding a feature module
 
 1. Add enum value to `AppModule` in `prisma/schema.prisma` if needed.

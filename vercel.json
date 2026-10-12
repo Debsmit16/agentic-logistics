@@ -1,4 +1,7 @@
 {
-  "buildCommand": "npm run build:vercel",
-  "framework": "nextjs"
+  "build": {
+    "env": {
+      "PRISMA_MIGRATE_ADVISORY_LOCK_TIMEOUT": "60000"
+    }
+  }
 }
