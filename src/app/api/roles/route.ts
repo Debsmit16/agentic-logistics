@@ -21,7 +21,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    await requireApiPermission(AppModule.USERS, "canRead");
+    await requireApiPermission(AppModule.SETTINGS, "canRead");
     const roles = await listRoles();
     return NextResponse.json({ roles, modules: Object.values(AppModule) });
   } catch (e) {

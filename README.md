@@ -11,13 +11,24 @@ Greenfield core inspired by [Plexi-ERP](https://github.com/Flexicom-Industries-P
 
 ```bash
 npm install
-cp .env.example .env.local   # set DATABASE_URL + AUTH_SECRET
-npx prisma migrate dev --name init_rbac
+cp .env.example .env.local   # DATABASE_URL + AUTH_SECRET (required, 32+ chars)
+npx prisma migrate deploy
 npm run db:seed
 npm run dev
 ```
 
 Login: `admin@agenticlogistics.in` / `admin123` (or `SEED_ADMIN_PASSWORD`).
+
+### Vercel (your own account / project)
+
+In the project that deploys this repo, set **Production** (and Preview if needed):
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Same Neon DB you migrated and seeded |
+| `AUTH_SECRET` | Random string, **at least 32 characters** (login fails without it) |
+
+After changing env vars, **redeploy**. Env vars are not updated on past deployments automatically.
 
 ## Adding a feature module
 

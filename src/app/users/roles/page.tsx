@@ -1,9 +1,5 @@
-import { AppModule } from "@prisma/client";
-import { withAppLayout } from "@/lib/app-layout";
-import { requirePermission } from "@/lib/permissions";
-import { RolesClient } from "./roles-client";
+import { redirect } from "next/navigation";
 
-export default async function RolesPage() {
-  await requirePermission(AppModule.USERS, "canRead");
-  return withAppLayout(<RolesClient />);
+export default function RolesRedirectPage() {
+  redirect("/settings/roles");
 }

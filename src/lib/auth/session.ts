@@ -4,6 +4,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { Role, RolePermission, User } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { getAuthSecretKey } from "@/lib/auth/ensure-auth-secret";
 
 export const SESSION_COOKIE = "al_session";
 
@@ -17,21 +18,13 @@ type SessionPayload = {
   role: string;
 };
 
-function authSecret() {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("AUTH_SECRET must be at least 32 characters");
-  }
-  return new TextEncoder().encode(secret);
-}
-
 export async function createSession(userId: string, email: string, roleName: string) {
   const token = await new SignJWT({ email, role: roleName })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(authSecret());
+    .sign(getAuthSecretKey());
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
@@ -49,7 +42,7 @@ export async function getSessionPayload(): Promise<SessionPayload | null> {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, authSecret());
+    const { payload } = await jwtVerify(token, getAuthSecretKey());
     const sub = payload.sub;
     if (!sub || typeof sub !== "string") return null;
     const email = payload.email;

@@ -1,9 +1,5 @@
-import { AppModule } from "@prisma/client";
-import { withAppLayout } from "@/lib/app-layout";
-import { requirePermission } from "@/lib/permissions";
-import { LogsClient } from "./logs-client";
+import { redirect } from "next/navigation";
 
-export default async function LogsPage() {
-  await requirePermission(AppModule.LOGS, "canRead");
-  return withAppLayout(<LogsClient />);
+export default function LogsRedirectPage() {
+  redirect("/settings/logs");
 }

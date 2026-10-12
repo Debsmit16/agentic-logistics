@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { getSessionUser } from "@/lib/auth/session";
-import { MODULE_NAV } from "@/lib/nav";
+import { MODULE_NAV, SETTINGS_NAV } from "@/lib/nav";
 import { hasPermission } from "@/lib/rbac";
+import { AppModule } from "@prisma/client";
 
 export async function withAppLayout(children: React.ReactNode) {
   const user = await getSessionUser();
@@ -15,8 +16,16 @@ export async function withAppLayout(children: React.ReactNode) {
     }
   }
 
+  const settingsLinks =
+    await hasPermission(user.role?.name, AppModule.SETTINGS, "canRead") ? SETTINGS_NAV : [];
+
   return (
-    <AppShell userName={user.displayName} roleName={user.role?.name ?? "—"} links={links}>
+    <AppShell
+      userName={user.displayName}
+      roleName={user.role?.name ?? "—"}
+      links={links}
+      settingsLinks={settingsLinks}
+    >
       {children}
     </AppShell>
   );

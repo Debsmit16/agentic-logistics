@@ -12,8 +12,14 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let body: z.infer<typeof bodySchema>;
   try {
-    const body = bodySchema.parse(await req.json());
+    body = bodySchema.parse(await req.json());
+  } catch {
+    return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
+  }
+
+  try {
     const user = await prisma.user.findUnique({
       where: { email: body.email.toLowerCase() },
       include: { role: true },
@@ -35,7 +41,18 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ redirect: "/dashboard" });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "";
+    if (message === "AUTH_SECRET_MISSING") {
+      return NextResponse.json(
+        {
+          error:
+            "Server is missing AUTH_SECRET (at least 32 characters). Add it in .env.local for dev or in your Vercel project Environment Variables, then redeploy.",
+        },
+        { status: 503 },
+      );
+    }
+    console.error("[login]", e);
+    return NextResponse.json({ error: "Sign-in failed. Check database connection and try again." }, { status: 500 });
   }
 }

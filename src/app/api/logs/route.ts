@@ -6,7 +6,7 @@ import { jsonError } from "@/lib/api/helpers";
 
 export async function GET(req: Request) {
   try {
-    await requireApiPermission(AppModule.LOGS, "canRead");
+    await requireApiPermission(AppModule.SETTINGS, "canRead");
     const url = new URL(req.url);
     const module = url.searchParams.get("module") as AppModule | null;
     const q = url.searchParams.get("q")?.trim();

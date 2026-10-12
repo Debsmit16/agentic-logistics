@@ -6,13 +6,22 @@ export type NavItem = {
   label: string;
 };
 
+/** Top-level operational modules (Settings is separate in the shell). */
 export const MODULE_NAV: NavItem[] = [
-  { module: "USERS", href: "/users/roles", label: "Roles" },
-  { module: "LOGS", href: "/logs", label: "Audit logs" },
-  { module: "PROFILE", href: "/profile", label: "Profile" },
   { module: "PARCELS", href: "/parcels", label: "Parcels" },
   { module: "WAREHOUSE", href: "/warehouse", label: "Warehouse" },
   { module: "DELIVERY", href: "/delivery", label: "Delivery" },
   { module: "FINANCE", href: "/finance", label: "Finance" },
-  { module: "SETTINGS", href: "/settings", label: "Settings" },
+];
+
+export type SettingsNavItem = {
+  href: string;
+  label: string;
+};
+
+export const SETTINGS_NAV: SettingsNavItem[] = [
+  { href: "/settings/general", label: "General" },
+  { href: "/settings/users", label: "Users" },
+  { href: "/settings/roles", label: "Roles" },
+  { href: "/settings/logs", label: "System logs" },
 ];

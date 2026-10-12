@@ -1,9 +1,5 @@
-import { AppModule } from "@prisma/client";
-import { ModulePlaceholder } from "@/components/module-placeholder";
-import { withAppLayout } from "@/lib/app-layout";
-import { requirePermission } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
-export default async function SettingsPage() {
-  await requirePermission(AppModule.SETTINGS, "canRead");
-  return withAppLayout(<ModulePlaceholder name="Settings" />);
+export default function SettingsIndexPage() {
+  redirect("/settings/users");
 }
