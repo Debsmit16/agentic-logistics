@@ -25,7 +25,8 @@ In the project that deploys this repo, set **Production** (and Preview if needed
 
 | Variable | Notes |
 |----------|--------|
-| `DATABASE_URL` | Same Neon DB you migrated and seeded |
+| `DATABASE_URL` | Neon **pooled** connection string (app runtime) |
+| `DATABASE_URL_UNPOOLED` | Neon **direct** connection (required for `prisma migrate deploy` on Vercel) |
 | `AUTH_SECRET` | Random string, **at least 32 characters** (login fails without it) |
 
 After changing env vars, **redeploy**. Env vars are not updated on past deployments automatically.
