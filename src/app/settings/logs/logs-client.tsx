@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ErpPageHeader } from "@/components/ui/erp-page-header";
+import { IconShield } from "@/components/icons/nav-icons";
 
 type LogRow = {
   id: string;
@@ -27,39 +29,56 @@ export function LogsClient() {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="page-title">System logs</h1>
-        <p className="page-lead">Audit trail of actions in the app.</p>
-      </div>
-      <div className="flex gap-2">
-        <input className="input max-w-xs" placeholder="Search action or entity" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button type="button" className="btn btn-primary" onClick={load}>Search</button>
-      </div>
-      <p className="text-xs text-[var(--muted)]">{total} events</p>
-      <div className="card overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b text-xs text-[var(--muted)]">
-              <th className="p-3">Time</th>
-              <th className="p-3">User</th>
-              <th className="p-3">Module</th>
-              <th className="p-3">Action</th>
-              <th className="p-3">Entity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((row) => (
-              <tr key={row.id} className="border-b border-neutral-100">
-                <td className="p-3 whitespace-nowrap text-xs">{new Date(row.createdAt).toLocaleString()}</td>
-                <td className="p-3 text-xs">{row.user?.displayName ?? "—"}</td>
-                <td className="p-3 text-xs">{row.module}</td>
-                <td className="p-3 font-mono text-xs">{row.action}</td>
-                <td className="p-3 font-mono text-xs">{row.entityId ?? "—"}</td>
+    <div>
+      <ErpPageHeader title="System Logs" description="Audit trail of actions across the application." />
+
+      <div className="data-panel">
+        <div className="data-panel-header">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
+              <IconShield />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">Activity log</h2>
+              <p className="text-sm text-[var(--muted)]">{total} events recorded</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <input
+              className="input max-w-xs"
+              placeholder="Search action or entity"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <button type="button" className="btn btn-primary" onClick={load}>Search</button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Module</th>
+                <th>Action</th>
+                <th>Entity</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((row) => (
+                <tr key={row.id}>
+                  <td className="whitespace-nowrap text-xs text-[var(--muted)]">
+                    {new Date(row.createdAt).toLocaleString()}
+                  </td>
+                  <td className="text-sm">{row.user?.displayName ?? "—"}</td>
+                  <td className="text-xs font-medium uppercase text-[var(--primary)]">{row.module}</td>
+                  <td className="font-mono text-xs">{row.action}</td>
+                  <td className="font-mono text-xs text-[var(--muted)]">{row.entityId ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

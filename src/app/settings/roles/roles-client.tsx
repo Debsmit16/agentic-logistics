@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ErpPageHeader } from "@/components/ui/erp-page-header";
+import { IconPlus, IconShield } from "@/components/icons/nav-icons";
 
 type Perm = {
   module: string;
@@ -110,23 +112,30 @@ export function RolesClient() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="page-title">Roles &amp; permissions</h1>
-        <p className="page-lead">Module access: read, write, edit, delete.</p>
-      </div>
-      {msg ? <p className="text-sm text-[var(--muted)]">{msg}</p> : null}
+      <ErpPageHeader
+        title="Role Management"
+        description="Define roles and module permissions: read, write, edit, and delete."
+      />
+      {msg ? (
+        <p className="rounded-lg bg-[var(--primary-soft)] px-4 py-2 text-sm text-[var(--primary-dark)]">{msg}</p>
+      ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
-        <div className="card p-3 space-y-2">
-          <button type="button" className="btn btn-ghost w-full text-xs" onClick={startCreate}>
-            + New role
+      <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
+        <div className="data-panel p-3 space-y-2">
+          <div className="mb-2 flex items-center gap-2 px-1 text-[var(--primary)]">
+            <IconShield className="h-4 w-4" />
+            <span className="text-xs font-semibold uppercase tracking-wide">Roles</span>
+          </div>
+          <button type="button" className="btn btn-primary btn-pill w-full text-xs" onClick={startCreate}>
+            <IconPlus />
+            New role
           </button>
           {roles.map((r) => (
             <button
               key={r.id}
               type="button"
               onClick={() => selectRole(r)}
-              className={`w-full rounded-md px-2 py-2 text-left text-sm ${selectedId === r.id ? "bg-neutral-100 font-medium" : "hover:bg-neutral-50"}`}
+              className={`w-full rounded-lg px-2 py-2 text-left text-sm ${selectedId === r.id ? "bg-[var(--primary-soft)] font-medium text-[var(--primary)]" : "hover:bg-neutral-50"}`}
             >
               {r.name}
               <span className="block text-xs text-[var(--muted)]">{r._count.users} users</span>

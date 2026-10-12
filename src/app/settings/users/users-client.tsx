@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ErpPageHeader } from "@/components/ui/erp-page-header";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { IconBuilding, IconPlus, IconRole, IconShield } from "@/components/icons/nav-icons";
 
 type Role = { id: string; name: string };
 
@@ -12,6 +16,10 @@ type UserRow = {
   isActive: boolean;
   role: Role | null;
 };
+
+function shortId(id: string) {
+  return id.replace(/-/g, "").slice(-4).toUpperCase();
+}
 
 export function UsersClient() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -83,81 +91,145 @@ export function UsersClient() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="page-title">Users</h1>
-          <p className="page-lead">Accounts, roles, and activation status.</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancel" : "Add user"}
-        </button>
-      </div>
-      {msg ? <p className="text-sm text-[var(--muted)]">{msg}</p> : null}
+    <div>
+      <ErpPageHeader
+        title="User Management"
+        description="Manage system users, their roles, departments, and activation status."
+      />
 
-      {showForm ? (
-        <form onSubmit={createUser} className="card space-y-3 p-4">
-          <label className="block text-sm">
-            Email
-            <input className="input mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </label>
-          <label className="block text-sm">
-            Display name
-            <input className="input mt-1" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-          </label>
-          <label className="block text-sm">
-            Password
-            <input className="input mt-1" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-          </label>
-          <label className="block text-sm">
-            Role
-            <select className="input mt-1" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className="btn btn-primary">Create user</button>
-        </form>
+      {msg ? (
+        <p className="mb-4 rounded-lg bg-[var(--primary-soft)] px-4 py-2 text-sm text-[var(--primary-dark)]">{msg}</p>
       ) : null}
 
-      <div className="card overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b text-xs text-[var(--muted)]">
-              <th className="p-3">Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Status</th>
-              <th className="p-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-neutral-100">
-                <td className="p-3">{u.displayName}</td>
-                <td className="p-3 text-xs text-[var(--muted)]">{u.email}</td>
-                <td className="p-3">
-                  <select
-                    className="input max-w-[10rem] py-1 text-xs"
-                    value={u.role?.id ?? ""}
-                    onChange={(e) => changeRole(u, e.target.value)}
-                  >
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.id}>{r.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="p-3 text-xs">{u.isActive ? "Active" : "Inactive"}</td>
-                <td className="p-3">
-                  <button type="button" className="btn btn-ghost text-xs" onClick={() => toggleActive(u)}>
-                    {u.isActive ? "Deactivate" : "Activate"}
-                  </button>
-                </td>
+      <div className="data-panel">
+        <div className="data-panel-header">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
+              <IconShield />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[var(--text)]">User Directory</h2>
+              <p className="text-sm text-[var(--muted)]">Manage user access, roles, and organizational assignments.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-pill"
+            onClick={() => setShowForm((v) => !v)}
+          >
+            <IconPlus />
+            {showForm ? "Cancel" : "Add User"}
+          </button>
+        </div>
+
+        {showForm ? (
+          <form onSubmit={createUser} className="space-y-4 border-b border-[var(--border)] bg-neutral-50/50 px-5 py-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Email
+                <input className="input mt-1.5" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </label>
+              <label className="block text-sm font-medium">
+                Display name
+                <input className="input mt-1.5" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+              </label>
+              <label className="block text-sm font-medium">
+                Password
+                <input
+                  className="input mt-1.5"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Role
+                <select className="input mt-1.5" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <button type="submit" className="btn btn-primary">Create user</button>
+          </form>
+        ) : null}
+
+        <div className="overflow-x-auto">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-sm text-[var(--muted)]">
+                    No users yet. Add your first user above.
+                  </td>
+                </tr>
+              ) : (
+                users.map((u) => (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <UserAvatar name={u.displayName} />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[var(--text)]">{u.displayName}</p>
+                          <p className="text-xs text-[var(--muted)]">{u.email}</p>
+                          <span className="id-badge">ID: {shortId(u.id)}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2 text-[var(--primary)]">
+                        <IconRole className="shrink-0 opacity-70" />
+                        <select
+                          className="select-ghost max-w-[12rem] uppercase"
+                          value={u.role?.id ?? ""}
+                          onChange={(e) => changeRole(u, e.target.value)}
+                          aria-label={`Role for ${u.displayName}`}
+                        >
+                          {roles.map((r) => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                        <IconBuilding className="shrink-0 opacity-60" />
+                        {u.phone ? u.phone : "—"}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2.5">
+                        <ToggleSwitch
+                          checked={u.isActive}
+                          onChange={() => toggleActive(u)}
+                          label={`${u.displayName} active`}
+                        />
+                        <span className={u.isActive ? "status-active" : "text-sm text-[var(--muted)]"}>
+                          {u.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="text-xs text-[var(--muted)]">—</span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

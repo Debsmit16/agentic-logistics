@@ -20,8 +20,8 @@ export type SettingsNavItem = {
 };
 
 export const SETTINGS_NAV: SettingsNavItem[] = [
-  { href: "/settings/general", label: "General" },
+  { href: "/settings/general", label: "General Settings" },
   { href: "/settings/users", label: "Users" },
   { href: "/settings/roles", label: "Roles" },
-  { href: "/settings/logs", label: "System logs" },
+  { href: "/settings/logs", label: "System Logs" },
 ];

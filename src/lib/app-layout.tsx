@@ -22,6 +22,7 @@ export async function withAppLayout(children: React.ReactNode) {
   return (
     <AppShell
       userName={user.displayName}
+      userEmail={user.email}
       roleName={user.role?.name ?? "—"}
       links={links}
       settingsLinks={settingsLinks}
