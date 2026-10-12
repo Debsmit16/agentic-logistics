@@ -34,7 +34,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-6">
       <form onSubmit={onSubmit} className="card w-full max-w-md space-y-6 p-8 shadow-md">
         <div className="flex flex-col items-center gap-4 text-center">
-          <AppLogo />
+          <AppLogo size="lg" />
           <div>
             <h1 className="erp-hero-title text-2xl">Sign in</h1>
             <p className="mt-1 text-sm text-[var(--muted)]">Enter your credentials to access the ERP.</p>
