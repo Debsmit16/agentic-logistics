@@ -6,4 +6,8 @@ export const LOGO = {
   md: "/logo-128.png",
 } as const;
 
-export const ERP_URL = "http://localhost:3000";
+export const ERP_URL =
+  process.env.NEXT_PUBLIC_ERP_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://erp.agenticlogistics.in"
+    : "http://localhost:3000");
