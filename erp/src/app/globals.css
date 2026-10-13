@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Grotesk", ui-monospace, monospace;
+}
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --border: #e2e8f0;
+  --border-subtle: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --sidebar-width: 15.5rem;
+  color-scheme: light;
+}
+
+html.dark {
+  --bg: #090d16;
+  --surface: #0f172a;
+  --surface-raised: #1e293b;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-soft: rgba(59, 130, 246, 0.15);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans, "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.font-display {
+  font-family: var(--font-display, "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+/* Typography */
+.erp-hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.page-title {
+  @apply text-base font-semibold tracking-tight text-[var(--text)];
+}
+
+.page-lead {
+  @apply mt-1 text-xs text-[var(--muted)];
+}
+
+/* Minimalist Clean Cards */
+.card {
+  @apply rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition-all;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.data-panel {
+  @apply overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)];
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.data-panel-header {
+  @apply flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold tracking-tight transition-all disabled:opacity-50 active:scale-[0.99];
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-pill {
+  @apply rounded-full px-4;
+}
+
+.btn-ghost {
+  @apply border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-raised)];
+}
+
+/* Input Fields */
+.input {
+  @apply w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-xs text-[var(--text)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)];
+}
+
+.select-ghost {
+  @apply cursor-pointer border-0 bg-transparent p-0 text-xs font-medium uppercase tracking-wider text-[var(--text)] outline-none focus:ring-0;
+}
+
+/* Navigation */
+.nav-item {
+  @apply relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[var(--muted)] transition-all;
+}
+
+.nav-item:hover {
+  @apply bg-[var(--surface-raised)] text-[var(--text)];
+}
+
+.nav-item-active {
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.nav-sub-item {
+  @apply block rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition-all;
+}
+
+.nav-sub-item:hover {
+  @apply bg-[var(--surface-raised)] text-[var(--text)];
+}
+
+.nav-sub-item-active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Tables */
+.erp-table {
+  @apply w-full text-left text-xs;
+}
+
+.erp-table thead tr {
+  @apply border-b border-[var(--border)] bg-[var(--surface-raised)]/60 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)];
+}
+
+.erp-table th {
+  @apply px-5 py-3;
+}
+
+.erp-table td {
+  @apply px-5 py-3.5 align-middle text-[var(--text)];
+}
+
+.erp-table tbody tr {
+  @apply border-b border-[var(--border)] last:border-0 transition-colors hover:bg-[var(--surface-raised)]/50;
+}
+
+.status-active {
+  color: var(--success);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.id-badge {
+  @apply inline-block rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Toggles */
+.toggle {
+  @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-0 bg-slate-200 p-0.5 transition-colors dark:bg-slate-700;
+}
+
+.toggle-on {
+  background: var(--primary);
+}
+
+.toggle-thumb {
+  @apply block h-4 w-4 rounded-full bg-white shadow-sm transition-transform;
+}
+
+.toggle-on .toggle-thumb {
+  transform: translateX(1rem);
+}
+
+.toggle:disabled {
+  @apply cursor-not-allowed opacity-40;
+}
+
+/* Permissions */
+.perm-matrix th {
+  @apply text-center text-[10px] font-semibold normal-case tracking-normal;
+}
+
+.perm-matrix td {
+  @apply text-center;
+}
+
+.perm-check {
+  @apply h-3.5 w-3.5 cursor-pointer rounded border-[var(--border)] text-[var(--primary)] accent-[var(--primary)];
+}
+
+.perm-check:disabled {
+  @apply cursor-not-allowed opacity-30;
+}
+
+.badge-system {
+  @apply inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-700 dark:border-violet-800/40 dark:bg-violet-950/40 dark:text-violet-300;
+}
+
+.badge-custom {
+  @apply inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)];
+}

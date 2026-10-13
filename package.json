@@ -1,44 +1,17 @@
 {
-  "name": "agentic-logistics",
+  "name": "agentic-logistics-monorepo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "erp",
+    "website"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "build:vercel": "prisma generate && node scripts/migrate-deploy.mjs && next build",
-    "postinstall": "prisma generate",
-    "start": "next start",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.0",
-    "bcryptjs": "^3.0.3",
-    "jose": "^6.2.12",
-    "next": "^16.3.8",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "zod": "^4.6.5"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^26.6.4",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.8",
-    "prisma": "^6.19.0",
-    "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.15",
-    "typescript": "^6.0.3"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "dev:erp": "npm run dev --workspace=erp",
+    "dev:website": "npm run dev --workspace=website",
+    "build:erp": "npm run build --workspace=erp",
+    "build:website": "npm run build --workspace=website",
+    "typecheck:erp": "npm run typecheck --workspace=erp",
+    "typecheck:website": "npm run typecheck --workspace=website"
   }
 }

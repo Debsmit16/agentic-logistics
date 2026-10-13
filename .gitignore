@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,7 +12,7 @@
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -41,6 +41,10 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations/**/migration.sql.bak
+
+# python
+__pycache__/
+*.pyc
 
 # electron
 /dist-electron

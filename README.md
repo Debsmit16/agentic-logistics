@@ -1,42 +1,69 @@
-# Agentic Logistics (RBAC foundation)
+# Agentic Logistics Monorepo
 
-Greenfield core inspired by [Plexi-ERP](https://github.com/Flexicom-Industries-Pvt-Ltd/Plexi-ERP) patterns:
+Enterprise-grade autonomous freight orchestration platform and public brand website.
 
-- **Roles** with per-module **Create / Read / Update / Delete** flags
-- **Audit logs** (action, module, entity, user, IP, user-agent)
-- **Profile** (name, phone, password)
-- **Module shells** for Parcels, Warehouse, Delivery, Finance, Settings
-
-## Setup
-
-```bash
-npm install
-cp .env.example .env.local   # DATABASE_URL + AUTH_SECRET (required, 32+ chars)
-npx prisma migrate deploy
-npm run db:seed
-npm run dev
+```
+agentic-logistics/
+├── erp/                  # Enterprise Logistics ERP & Management Console (Port 3000)
+│   ├── src/app/          # Next.js App Router (RBAC, Warehouses, Dispatches, Audits)
+│   ├── prisma/           # PostgreSQL/SQLite schema & migrations
+│   └── public/           # Shared brand assets & enterprise imagery
+│
+├── website/              # Public-facing Marketing & Tracking Portal (Port 3001)
+│   ├── src/app/          # Solutions, Global Network, Live Telemetry Tracking, Company, Contact
+│   └── public/           # Brand emblems and high-res architectural assets
+│
+└── package.json          # Root npm workspaces orchestrator
 ```
 
-Login: `admin@agenticlogistics.in` / `admin123` (or `SEED_ADMIN_PASSWORD`).
+---
 
-### Vercel (your own account / project)
+## Quick Start
 
-In the project that deploys this repo, set **Production** (and Preview if needed):
+### 1. Launch ERP Console (`http://localhost:3000`)
+```bash
+npm run dev:erp
+# Or from inside erp/: cd erp && npm run dev
+```
+- **Login**: `admin@agenticlogistics.in` / `admin123`
+- **Features**: Live Waybill Dispatches, Fleet Telemetry, Bay Allocation, Audit Logs, RBAC.
 
-| Variable | Notes |
-|----------|--------|
-| `DATABASE_URL` | Neon **pooled** connection string (app runtime) |
-| `DATABASE_URL_UNPOOLED` | Neon **direct** connection (required for `prisma migrate deploy` on Vercel) |
-| `AUTH_SECRET` | Random string, **at least 32 characters** (login fails without it) |
+### 2. Launch Marketing Website (`http://localhost:3001`)
+```bash
+npm run dev:website
+# Or from inside website/: cd website && npm run dev
+```
+- **Port**: `3001` (prevents port conflicts with ERP).
+- **Features**: Interactive Waybill Tracking, 42-Hub Global Network Directory, Solutions Showcase, Enterprise Demo Request form, direct link to ERP Console.
 
-After changing env vars, **redeploy**. Env vars are not updated on past deployments automatically.
+---
 
-Builds run `prisma migrate deploy` against `DATABASE_URL_UNPOLED` (see `directUrl` in `schema.prisma`). If a deploy fails with advisory-lock timeout, retry the deployment or wait for concurrent builds to finish.
+## Monorepo Commands
 
-## Adding a feature module
+| Command | Description |
+|---|---|
+| `npm run dev:erp` | Start ERP dev server on port `3000` |
+| `npm run dev:website` | Start Website dev server on port `3001` |
+| `npm run typecheck:erp` | TypeScript verification for ERP |
+| `npm run typecheck:website` | TypeScript verification for Website |
+| `npm run build:erp` | Production build for ERP |
+| `npm run build:website` | Production build for Website |
 
-1. Add enum value to `AppModule` in `prisma/schema.prisma` if needed.
-2. Add nav entry in `src/lib/nav.ts`.
-3. Guard pages with `requirePermission(AppModule.X, "canRead")`.
-4. Guard APIs with `requireApiPermission` and call `logAudit` on writes.
+---
 
+## Deployment & Database Setup
+
+### ERP Environment Configuration
+In `erp/.env.local`:
+```bash
+DATABASE_URL="your-database-url"
+DATABASE_URL_UNPOOLED="your-direct-database-url"
+AUTH_SECRET="random-string-at-least-32-chars-long"
+```
+
+To run migrations and seed data in ERP:
+```bash
+cd erp
+npx prisma migrate deploy
+npm run db:seed
+```
