@@ -19,10 +19,7 @@ import {
 import type { SettingsNavItem } from "@/lib/nav";
 
 const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
-  "/parcels": IconBox,
-  "/warehouse": IconWarehouse,
-  "/delivery": IconTruck,
-  "/finance": IconWallet,
+  "/orders": IconBox,
 };
 
 function navItemClass(active: boolean) {
@@ -52,20 +49,20 @@ export function AppShell({
   const sidebarW = sidebarCollapsed ? "w-[4.5rem]" : "w-[var(--sidebar-width)]";
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg)]">
-      {/* Sidebar */}
+    <div className="flex h-screen h-dvh overflow-hidden bg-[var(--bg)]">
+      {/* Sidebar - Fixed to screen, non-scrollable */}
       <aside
-        className={`${sidebarW} flex shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] transition-[width] duration-200 select-none`}
+        className={`${sidebarW} flex h-full shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] transition-[width] duration-200 select-none z-30`}
       >
         {/* Brand Header */}
-        <div className={`flex items-center justify-between border-b border-[var(--border)] ${sidebarCollapsed ? "px-3 py-4" : "px-5 py-4"}`}>
+        <div className={`flex h-14 shrink-0 items-center justify-between border-b border-[var(--border)] ${sidebarCollapsed ? "px-3" : "px-5"}`}>
           <Link href="/dashboard" className="block focus:outline-none">
             <AppLogo compact={sidebarCollapsed} />
           </Link>
         </div>
 
         {/* Navigation Body */}
-        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Main Group */}
           <div>
             {!sidebarCollapsed && (
@@ -103,14 +100,7 @@ export function AppShell({
                       title={l.label}
                     >
                       <Icon className="h-4 w-4 shrink-0 opacity-75" />
-                      {!sidebarCollapsed && (
-                        <div className="flex flex-1 items-center justify-between">
-                          <span className="truncate">{l.label}</span>
-                          <span className="rounded bg-[var(--surface-raised)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--muted)]">
-                            Soon
-                          </span>
-                        </div>
-                      )}
+                      {!sidebarCollapsed && <span className="truncate flex-1">{l.label}</span>}
                     </Link>
                   );
                 })}
@@ -139,7 +129,7 @@ export function AppShell({
         </nav>
 
         {/* User Footer Card */}
-        <div className={`border-t border-[var(--border)] ${sidebarCollapsed ? "p-3 text-center" : "p-3.5"}`}>
+        <div className={`shrink-0 border-t border-[var(--border)] ${sidebarCollapsed ? "p-3 text-center" : "p-3.5"}`}>
           {sidebarCollapsed ? (
             <Link href="/profile" title={userName} className="inline-block">
               <UserAvatar name={userName} size="sm" />
@@ -181,9 +171,9 @@ export function AppShell({
       </aside>
 
       {/* Main Viewport */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
         {/* Floating Topbar */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--surface)]/80 px-6 backdrop-blur-md">
+        <header className="shrink-0 z-20 flex h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--surface)]/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -200,19 +190,13 @@ export function AppShell({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Operational Health Badge */}
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>System Operational</span>
-            </div>
-
-            {/* Aesthetic Theme Toggle */}
+            {/* Theme Toggle */}
             <ThemeToggle />
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-auto p-6 sm:p-8 lg:p-10">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-10">{children}</main>
       </div>
     </div>
   );

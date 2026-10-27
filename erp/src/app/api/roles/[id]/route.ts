@@ -21,7 +21,7 @@ const updateSchema = z.object({
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireApiPermission(AppModule.USERS, "canUpdate");
+    const user = await requireApiPermission(AppModule.SETTINGS, "canUpdate");
     const { id } = await ctx.params;
     const body = updateSchema.parse(await req.json());
     const role = await updateRole(id, body, user.id);
@@ -33,7 +33,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireApiPermission(AppModule.USERS, "canDelete");
+    const user = await requireApiPermission(AppModule.SETTINGS, "canDelete");
     const { id } = await ctx.params;
     await deleteRole(id, user.id);
     return NextResponse.json({ ok: true });

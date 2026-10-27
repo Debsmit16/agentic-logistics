@@ -6,7 +6,7 @@ import { AppModule } from "@prisma/client";
 export async function POST() {
   const user = await getSessionUser();
   if (user) {
-    await logAudit({ action: "LOGOUT", module: AppModule.PROFILE, entityId: user.id, userId: user.id });
+    await logAudit({ action: "LOGOUT", module: AppModule.SETTINGS, entityId: user.id, userId: user.id });
   }
   await destroySession();
   return NextResponse.json({ ok: true });

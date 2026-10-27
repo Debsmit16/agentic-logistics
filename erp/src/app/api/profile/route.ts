@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AppModule } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { requireApiPermission } from "@/lib/permissions";
+import { getSessionUser } from "@/lib/auth/session";
+import { ApiAuthError } from "@/lib/permissions";
 import { jsonError } from "@/lib/api/helpers";
 import { logAudit } from "@/lib/audit/log-audit";
 import { hashPassword, verifyPassword } from "@/lib/auth/crypto";
 
 export async function GET() {
   try {
-    const user = await requireApiPermission(AppModule.PROFILE, "canRead");
+    const user = await getSessionUser();
+    if (!user) throw new ApiAuthError("Unauthorized", 401);
     return NextResponse.json({
       user: {
         id: user.id,
@@ -33,7 +35,8 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   try {
-    const sessionUser = await requireApiPermission(AppModule.PROFILE, "canUpdate");
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) throw new ApiAuthError("Unauthorized", 401);
     const body = patchSchema.parse(await req.json());
 
     if (body.newPassword) {
@@ -59,7 +62,7 @@ export async function PATCH(req: Request) {
 
     await logAudit({
       action: "UPDATE_PROFILE",
-      module: AppModule.PROFILE,
+      module: AppModule.SETTINGS,
       entityId: updated.id,
       newValues: { displayName: updated.displayName, phone: updated.phone },
       userId: updated.id,

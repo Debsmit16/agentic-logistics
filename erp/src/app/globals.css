@@ -225,3 +225,40 @@ body {
 .badge-custom {
   @apply inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)];
 }
+
+/* Screen: Hide printable area */
+@media screen {
+  #printable-area {
+    display: none !important;
+  }
+}
+
+/* Print Styles: Clean isolation, hide application chrome and all interactive controls */
+@media print {
+  .no-print,
+  button,
+  nav,
+  aside,
+  header:not(.printable-header),
+  footer,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 0;
+  }
+}

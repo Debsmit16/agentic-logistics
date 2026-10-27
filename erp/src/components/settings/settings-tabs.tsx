@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   IconActivity,
   IconRole,
-  IconSliders,
   IconUsers,
 } from "@/components/icons/nav-icons";
 
@@ -14,7 +13,6 @@ const TABS = [
   { href: "/settings/users", label: "Users & Accounts", icon: IconUsers },
   { href: "/settings/roles", label: "Roles & Permissions", icon: IconRole },
   { href: "/settings/logs", label: "Audit Logs & Telemetry", icon: IconActivity },
-  { href: "/settings/general", label: "General Config", icon: IconSliders },
 ];
 
 export function SettingsTabs() {

@@ -36,7 +36,7 @@ export async function createUser(
 
   await logAudit({
     action: "USER_CREATE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: user.id,
     userId: actorId,
     newValues: { email: user.email, roleId: user.roleId },
@@ -81,7 +81,7 @@ export async function updateUser(
 
   await logAudit({
     action: "USER_UPDATE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: user.id,
     userId: actorId,
     newValues: { roleId: user.roleId, isActive: user.isActive },
@@ -113,7 +113,7 @@ export async function deleteUser(id: string, actorId: string) {
 
   await logAudit({
     action: "USER_DELETE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: id,
     userId: actorId,
     oldValues: { email: user.email, displayName: user.displayName },

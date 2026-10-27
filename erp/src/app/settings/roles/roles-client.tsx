@@ -31,14 +31,8 @@ const ACTIONS = [
 ];
 
 const MODULE_ORDER = [
-  "USERS",
+  "ORDERS",
   "SETTINGS",
-  "LOGS",
-  "PROFILE",
-  "PARCELS",
-  "WAREHOUSE",
-  "DELIVERY",
-  "FINANCE",
 ];
 
 function moduleLabel(module: string) {

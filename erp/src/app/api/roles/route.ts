@@ -25,7 +25,7 @@ export async function GET() {
     const actor = await requireApiPermission(AppModule.SETTINGS, "canRead");
     const [roles, permissions] = await Promise.all([
       listRoles(),
-      flagsForModule(actor.role?.name, AppModule.USERS),
+      flagsForModule(actor.role?.name, AppModule.SETTINGS),
     ]);
     return NextResponse.json({ roles, modules: Object.values(AppModule), permissions });
   } catch (e) {
@@ -35,7 +35,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireApiPermission(AppModule.USERS, "canCreate");
+    const user = await requireApiPermission(AppModule.SETTINGS, "canCreate");
     const body = createSchema.parse(await req.json());
     const role = await createRole(body, user.id);
     return NextResponse.json({ role }, { status: 201 });

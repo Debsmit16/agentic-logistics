@@ -4,18 +4,20 @@ import { hashPassword } from "../src/lib/auth/crypto";
 const prisma = new PrismaClient();
 
 const ADMIN_EMAIL = "admin@agenticlogistics.in";
-const ALL_MODULES = Object.values(AppModule);
+const ALL_MODULES = [AppModule.ORDERS, AppModule.SETTINGS];
 
 const FULL = { canCreate: true, canRead: true, canUpdate: true, canDelete: true };
 
 async function main() {
-  console.log("Seeding core roles & permissions...");
+  console.log("Seeding core roles & permissions (Orders & Settings)...");
+
+  // 1. System Admin Role
   const adminRole = await prisma.role.upsert({
     where: { name: "System Admin" },
-    update: { description: "Full access to all operational & settings modules", isSystem: true },
+    update: { description: "Full operational access to Orders and Settings", isSystem: true },
     create: {
       name: "System Admin",
-      description: "Full access to all operational & settings modules",
+      description: "Full operational access to Orders and Settings",
       isSystem: true,
     },
   });
@@ -28,41 +30,45 @@ async function main() {
     });
   }
 
-  const managerRole = await prisma.role.upsert({
-    where: { name: "Operations Manager" },
-    update: { description: "Manage warehouse, parcels, delivery and finance" },
-    create: { name: "Operations Manager", description: "Manage warehouse, parcels, delivery and finance" },
+  // 2. Operations Dispatcher Role
+  const dispatcherRole = await prisma.role.upsert({
+    where: { name: "Operations Dispatcher" },
+    update: { description: "Create, view and process customer orders and dispatches" },
+    create: { name: "Operations Dispatcher", description: "Create, view and process customer orders and dispatches" },
   });
 
-  for (const module of [
-    AppModule.PARCELS,
-    AppModule.WAREHOUSE,
-    AppModule.DELIVERY,
-    AppModule.FINANCE,
-    AppModule.LOGS,
-    AppModule.PROFILE,
-  ]) {
-    await prisma.rolePermission.upsert({
-      where: { roleId_module: { roleId: managerRole.id, module } },
-      update: FULL,
-      create: { roleId: managerRole.id, module, ...FULL },
-    });
-  }
-
-  const riderRole = await prisma.role.upsert({
-    where: { name: "Delivery Rider" },
-    update: { description: "Delivery dispatch access & proof of delivery" },
-    create: { name: "Delivery Rider", description: "Delivery dispatch access & proof of delivery" },
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: dispatcherRole.id, module: AppModule.ORDERS } },
+    update: { canCreate: true, canRead: true, canUpdate: true, canDelete: false },
+    create: { roleId: dispatcherRole.id, module: AppModule.ORDERS, canCreate: true, canRead: true, canUpdate: true, canDelete: false },
   });
 
-  for (const module of [AppModule.DELIVERY, AppModule.PROFILE]) {
-    await prisma.rolePermission.upsert({
-      where: { roleId_module: { roleId: riderRole.id, module } },
-      update: { canCreate: false, canRead: true, canUpdate: true, canDelete: false },
-      create: { roleId: riderRole.id, module, canCreate: false, canRead: true, canUpdate: true, canDelete: false },
-    });
-  }
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: dispatcherRole.id, module: AppModule.SETTINGS } },
+    update: { canCreate: false, canRead: true, canUpdate: false, canDelete: false },
+    create: { roleId: dispatcherRole.id, module: AppModule.SETTINGS, canCreate: false, canRead: true, canUpdate: false, canDelete: false },
+  });
 
+  // 3. Delivery Courier / Field Agent Role
+  const courierRole = await prisma.role.upsert({
+    where: { name: "Delivery Courier" },
+    update: { description: "View order run-sheets and record delivery completions" },
+    create: { name: "Delivery Courier", description: "View order run-sheets and record delivery completions" },
+  });
+
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: courierRole.id, module: AppModule.ORDERS } },
+    update: { canCreate: false, canRead: true, canUpdate: true, canDelete: false },
+    create: { roleId: courierRole.id, module: AppModule.ORDERS, canCreate: false, canRead: true, canUpdate: true, canDelete: false },
+  });
+
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: courierRole.id, module: AppModule.SETTINGS } },
+    update: { canCreate: false, canRead: false, canUpdate: false, canDelete: false },
+    create: { roleId: courierRole.id, module: AppModule.SETTINGS, canCreate: false, canRead: false, canUpdate: false, canDelete: false },
+  });
+
+  // 4. Default Admin & Rider Users
   const password = process.env.SEED_ADMIN_PASSWORD ?? "admin123";
   const passwordHash = await hashPassword(password);
 
@@ -82,40 +88,27 @@ async function main() {
     },
   });
 
-  const riderUser = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "rider@agenticlogistics.in" },
     update: {
-      displayName: "Vikram Malhotra (Rider #408)",
+      displayName: "Vikram Malhotra (Courier #408)",
       phone: "+91 98201 55432",
-      department: "Last Mile Delivery",
+      department: "Last Mile Operations",
       passwordHash,
-      roleId: riderRole.id,
+      roleId: courierRole.id,
       isActive: true,
     },
     create: {
       email: "rider@agenticlogistics.in",
-      displayName: "Vikram Malhotra (Rider #408)",
+      displayName: "Vikram Malhotra (Courier #408)",
       phone: "+91 98201 55432",
-      department: "Last Mile Delivery",
+      department: "Last Mile Operations",
       passwordHash,
-      roleId: riderRole.id,
+      roleId: courierRole.id,
     },
   });
 
-  console.log("Seeding system configuration...");
-  await prisma.systemSetting.upsert({
-    where: { key: "site_name" },
-    update: { value: "Agentic Logistics ERP" },
-    create: { key: "site_name", value: "Agentic Logistics ERP" },
-  });
-
-  await prisma.systemSetting.upsert({
-    where: { key: "log_retention_days" },
-    update: { value: "90" },
-    create: { key: "log_retention_days", value: "90" },
-  });
-
-  console.log(`Database seeded clean! Admin: ${adminUser.email}, Rider: ${riderUser.email}`);
+  console.log(`Seed complete! 2 core modules (ORDERS, SETTINGS), Admin: ${adminUser.email}`);
 }
 
 main()

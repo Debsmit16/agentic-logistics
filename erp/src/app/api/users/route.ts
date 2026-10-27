@@ -13,7 +13,7 @@ export async function GET() {
     const [users, roles, permissions] = await Promise.all([
       listUsers(),
       prisma.role.findMany({ orderBy: { name: "asc" } }),
-      flagsForModule(actor.role?.name, AppModule.USERS),
+      flagsForModule(actor.role?.name, AppModule.SETTINGS),
     ]);
     return NextResponse.json({
       users,
@@ -37,7 +37,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const actor = await requireApiPermission(AppModule.USERS, "canCreate");
+    const actor = await requireApiPermission(AppModule.SETTINGS, "canCreate");
     const body = createSchema.parse(await req.json());
     const user = await createUser(body, actor.id);
     return NextResponse.json({ user }, { status: 201 });

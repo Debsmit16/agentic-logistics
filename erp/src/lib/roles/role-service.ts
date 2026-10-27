@@ -40,7 +40,7 @@ export async function createRole(
 
   await logAudit({
     action: "CREATE_ROLE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: role.id,
     newValues: input as unknown as Prisma.InputJsonValue,
     userId: actorId,
@@ -83,7 +83,7 @@ export async function updateRole(
 
   await logAudit({
     action: "UPDATE_ROLE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: roleId,
     oldValues: { name: existing.name } as Prisma.InputJsonValue,
     newValues: input as unknown as Prisma.InputJsonValue,
@@ -103,7 +103,7 @@ export async function deleteRole(roleId: string, actorId: string) {
   await prisma.role.delete({ where: { id: roleId } });
   await logAudit({
     action: "DELETE_ROLE",
-    module: AppModule.USERS,
+    module: AppModule.SETTINGS,
     entityId: roleId,
     oldValues: { name: existing.name } as Prisma.InputJsonValue,
     userId: actorId,

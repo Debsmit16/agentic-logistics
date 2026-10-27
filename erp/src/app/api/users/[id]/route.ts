@@ -16,7 +16,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const actor = await requireApiPermission(AppModule.USERS, "canUpdate");
+    const actor = await requireApiPermission(AppModule.SETTINGS, "canUpdate");
     const { id } = await ctx.params;
     const body = patchSchema.parse(await req.json());
     const user = await updateUser(id, body, actor.id);
@@ -28,7 +28,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const actor = await requireApiPermission(AppModule.USERS, "canDelete");
+    const actor = await requireApiPermission(AppModule.SETTINGS, "canDelete");
     const { id } = await ctx.params;
     await deleteUser(id, actor.id);
     return NextResponse.json({ ok: true });

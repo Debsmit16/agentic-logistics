@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     await createSession(user.id, user.email, user.role.name);
     await logAudit({
       action: "LOGIN",
-      module: AppModule.PROFILE,
+      module: AppModule.SETTINGS,
       entityId: user.id,
       userId: user.id,
       httpMethod: "POST",
