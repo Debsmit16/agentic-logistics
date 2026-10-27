@@ -4,6 +4,16 @@ import { Modal } from "@/components/ui/modal";
 import { OrderStatus, PaymentMode, ServiceType } from "@prisma/client";
 import { IconPencil, IconPrinter, IconTrash } from "@/components/icons/nav-icons";
 
+export interface OrderMilestoneItem {
+  id: string;
+  status: OrderStatus;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  performedBy?: string | null;
+  createdAt: string;
+}
+
 export interface OrderDetail {
   id: string;
   orderNumber: string;
@@ -36,6 +46,10 @@ export interface OrderDetail {
 
   totalAmount: number;
   declaredValue: number;
+
+  deliveryNotes?: string | null;
+  ndrReason?: string | null;
+  milestones?: OrderMilestoneItem[];
 
   createdAt: string;
   createdBy?: { id: string; displayName: string; email: string } | null;
@@ -90,6 +104,7 @@ export function OrderDetailModal({
   if (!order) return null;
 
   const currentStepIndex = STATUS_STEPS.indexOf(order.status);
+  const milestones = order.milestones ?? [];
 
   return (
     <Modal
@@ -132,9 +147,7 @@ export function OrderDetailModal({
                   <div key={step} className="flex flex-col items-center text-center">
                     <div
                       className={`h-2 w-full rounded-full transition-colors ${
-                        isPassed
-                          ? "bg-[var(--primary)]"
-                          : "bg-[var(--border)]"
+                        isPassed ? "bg-[var(--primary)]" : "bg-[var(--border)]"
                       }`}
                     />
                     <span
@@ -154,6 +167,102 @@ export function OrderDetailModal({
             </div>
           </div>
         )}
+
+        {/* Milestone Tracking History Timeline (Point 1) */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                Milestone Tracking History & Chain of Custody
+              </span>
+              <p className="text-[11px] text-[var(--muted)]">
+                Chronological transit checkpoints and operational events
+              </p>
+            </div>
+            <span className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--primary)]">
+              {milestones.length} Checkpoints
+            </span>
+          </div>
+
+          {milestones.length === 0 ? (
+            <div className="py-4 text-center text-xs text-[var(--muted)]">
+              No historical milestones logged for this consignment yet.
+            </div>
+          ) : (
+            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border)]">
+              {milestones.map((m, idx) => {
+                const isLatest = idx === milestones.length - 1;
+                const isDelivered = m.status === OrderStatus.DELIVERED;
+                const isFailed = m.status === OrderStatus.CANCELLED || m.status === OrderStatus.RTO;
+
+                return (
+                  <div key={m.id} className="relative group">
+                    {/* Node Dot */}
+                    <div
+                      className={`absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 bg-white dark:bg-slate-900 transition-all ${
+                        isDelivered
+                          ? "border-emerald-500 text-emerald-500"
+                          : isFailed
+                          ? "border-rose-500 text-rose-500"
+                          : isLatest
+                          ? "border-blue-500 bg-blue-500 text-white animate-pulse"
+                          : "border-slate-400 text-slate-400"
+                      }`}
+                    >
+                      <div
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          isDelivered
+                            ? "bg-emerald-500"
+                            : isFailed
+                            ? "bg-rose-500"
+                            : isLatest
+                            ? "bg-blue-500"
+                            : "bg-slate-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Milestone Details */}
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/30 p-3 space-y-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-[var(--text)] font-semibold">{m.title}</strong>
+                          <span
+                            className={`rounded-full border px-2 py-0.2 text-[9px] font-bold ${statusColor(
+                              m.status,
+                            )}`}
+                          >
+                            {m.status.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[var(--muted)] font-mono">
+                          {new Date(m.createdAt).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+
+                      {m.description && (
+                        <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                          {m.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between pt-1 text-[10px] text-[var(--muted)] border-t border-[var(--border)]/40">
+                        <span>Hub: <strong className="text-[var(--text)]">{m.location || "In Transit"}</strong></span>
+                        <span>Logged by: <strong className="text-[var(--text)]">{m.performedBy || "System Dispatcher"}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Sender & Receiver Cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

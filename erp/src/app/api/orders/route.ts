@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const actor = await requireApiPermission(AppModule.ORDERS, "canCreate");
     const json = await req.json();
     const parsed = createOrderSchema.parse(json);
-    const order = await createOrder(parsed, actor.id);
+    const order = await createOrder(parsed, actor.id, actor.displayName);
     return NextResponse.json({ order }, { status: 201 });
   } catch (e) {
     return jsonError(e);

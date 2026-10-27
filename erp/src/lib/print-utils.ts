@@ -53,22 +53,14 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 4in !important;
-      height: 6in !important;
-      max-width: 4in !important;
-      max-height: 6in !important;
-      overflow: hidden !important;
       background: #ffffff !important;
       color: #000000 !important;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      page-break-after: avoid !important;
-      page-break-inside: avoid !important;
-      break-after: avoid !important;
-      break-inside: avoid !important;
     }
-    #thermal-shipping-label {
+    #thermal-shipping-label,
+    .thermal-shipping-label {
       width: 3.85in !important;
       max-width: 3.85in !important;
       height: 5.75in !important;
@@ -81,10 +73,15 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
       background: #ffffff !important;
       color: #000000 !important;
       overflow: hidden !important;
-      page-break-after: avoid !important;
+      page-break-after: always !important;
       page-break-inside: avoid !important;
-      break-after: avoid !important;
+      break-after: page !important;
       break-inside: avoid !important;
+    }
+    #thermal-shipping-label:last-child,
+    .thermal-shipping-label:last-child {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     /* Hide any buttons or interactive controls that might be inside */
     button, input, select, textarea, .no-print {

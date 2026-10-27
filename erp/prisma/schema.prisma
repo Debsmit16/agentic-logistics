@@ -135,8 +135,12 @@ model Order {
   totalAmount      Float        @default(0)
   declaredValue    Float        @default(0)
 
+  deliveryNotes    String?
+  ndrReason        String?
+
   createdById      String?
   createdBy        User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  milestones       OrderMilestone[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -144,4 +148,18 @@ model Order {
   @@index([senderPincode])
   @@index([receiverPincode])
   @@index([createdAt])
+}
+
+model OrderMilestone {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  title       String
+  description String?
+  location    String?
+  performedBy String?
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId, createdAt])
 }

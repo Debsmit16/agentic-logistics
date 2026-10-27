@@ -5,6 +5,7 @@ import { ErpPageHeader } from "@/components/ui/erp-page-header";
 import { Modal } from "@/components/ui/modal";
 import {
   IconBox,
+  IconDownload,
   IconEye,
   IconPencil,
   IconPlus,
@@ -12,6 +13,7 @@ import {
   IconSearch,
   IconTag,
   IconTrash,
+  IconUpload,
 } from "@/components/icons/nav-icons";
 import { OrderStatus, PaymentMode, ServiceType } from "@prisma/client";
 import { OrderFormModal, type OrderFormData } from "@/components/orders/order-form-modal";
@@ -19,6 +21,8 @@ import { OrderDetailModal, type OrderDetail } from "@/components/orders/order-de
 import { OrderPrintModal } from "@/components/orders/order-print-modal";
 import { OrderStatusModal } from "@/components/orders/order-status-modal";
 import { OrderLetterheadModal } from "@/components/orders/order-letterhead-modal";
+import { OrderBulkUploadModal } from "@/components/orders/order-bulk-upload-modal";
+import { OrderBatchStatusModal } from "@/components/orders/order-batch-status-modal";
 import type { ModulePermissionFlags } from "@/lib/permissions/user-module";
 
 export interface OrderItem {
@@ -54,6 +58,9 @@ export interface OrderItem {
   totalAmount: number;
   declaredValue: number;
 
+  deliveryNotes?: string | null;
+  ndrReason?: string | null;
+
   createdAt: string;
   createdBy?: { id: string; displayName: string; email: string } | null;
 }
@@ -69,7 +76,9 @@ interface OrdersResponse {
   metrics: {
     totalOrders: number;
     inPipeline: number;
+    outForDelivery: number;
     delivered: number;
+    rtoCount: number;
     totalRevenue: number;
   };
   permissions: ModulePermissionFlags;
@@ -84,6 +93,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: OrderStatus.DELIVERED, label: "Delivered" },
   { value: OrderStatus.DRAFT, label: "Draft" },
   { value: OrderStatus.CANCELLED, label: "Cancelled" },
+  { value: OrderStatus.RTO, label: "RTO" },
 ];
 
 function statusBadge(status: OrderStatus) {
@@ -104,21 +114,32 @@ function statusBadge(status: OrderStatus) {
   }
 }
 
+type TabKey = "ALL" | "PIPELINE" | "OUT_FOR_DELIVERY" | "DELIVERED" | "EXCEPTIONS";
+
 export function OrdersClient() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [metrics, setMetrics] = useState({
     totalOrders: 0,
     inPipeline: 0,
+    outForDelivery: 0,
     delivered: 0,
+    rtoCount: 0,
     totalRevenue: 0,
   });
   const [permissions, setPermissions] = useState<ModulePermissionFlags | null>(null);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
 
-  // Filters
+  // Filters & Tabs
+  const [activeTab, setActiveTab] = useState<TabKey>("ALL");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
+  // Multi-select / Batch Actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchPrintOrders, setBatchPrintOrders] = useState<OrderItem[]>([]);
+  const [batchPrintOpen, setBatchPrintOpen] = useState(false);
+  const [batchStatusOpen, setBatchStatusOpen] = useState(false);
 
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
@@ -136,6 +157,8 @@ export function OrdersClient() {
   const [letterheadOrder, setLetterheadOrder] = useState<OrderDetail | null>(null);
   const [letterheadOpen, setLetterheadOpen] = useState(false);
 
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+
   const [deleteTarget, setDeleteTarget] = useState<OrderItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -143,32 +166,62 @@ export function OrdersClient() {
   const canUpdate = permissions?.canUpdate ?? false;
   const canDelete = permissions?.canDelete ?? false;
 
-  const fetchOrders = useCallback(async (pageToLoad = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("page", String(pageToLoad));
-      if (search.trim()) params.set("search", search.trim());
-      if (statusFilter !== "ALL") params.set("status", statusFilter);
+  const fetchOrders = useCallback(
+    async (pageToLoad = 1) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("page", String(pageToLoad));
+        if (search.trim()) params.set("search", search.trim());
 
-      const res = await fetch(`/api/orders?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch orders");
+        // Resolve effective status from tab or dropdown
+        if (statusFilter !== "ALL") {
+          params.set("status", statusFilter);
+        } else if (activeTab === "OUT_FOR_DELIVERY") {
+          params.set("status", OrderStatus.OUT_FOR_DELIVERY);
+        } else if (activeTab === "DELIVERED") {
+          params.set("status", OrderStatus.DELIVERED);
+        } else if (activeTab === "EXCEPTIONS") {
+          params.set("status", OrderStatus.RTO);
+        } else if (activeTab === "PIPELINE") {
+          params.set("status", OrderStatus.IN_TRANSIT);
+        }
 
-      const data: OrdersResponse = await res.json();
-      setOrders(data.orders ?? []);
-      setMetrics(data.metrics ?? { totalOrders: 0, inPipeline: 0, delivered: 0, totalRevenue: 0 });
-      setPermissions(data.permissions ?? null);
-      setPagination(data.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 1 });
-    } catch (err) {
-      console.error("[OrdersClient] fetch error", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, statusFilter]);
+        const res = await fetch(`/api/orders?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch orders");
+
+        const data: OrdersResponse = await res.json();
+        setOrders(data.orders ?? []);
+        setMetrics(
+          data.metrics ?? {
+            totalOrders: 0,
+            inPipeline: 0,
+            outForDelivery: 0,
+            delivered: 0,
+            rtoCount: 0,
+            totalRevenue: 0,
+          },
+        );
+        setPermissions(data.permissions ?? null);
+        setPagination(data.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 1 });
+      } catch (err) {
+        console.error("[OrdersClient] fetch error", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [search, statusFilter, activeTab],
+  );
 
   useEffect(() => {
     fetchOrders(1);
   }, [fetchOrders]);
+
+  function handleTabSelect(tab: TabKey) {
+    setActiveTab(tab);
+    setStatusFilter("ALL");
+    setSelectedIds(new Set());
+  }
 
   function handleOpenCreate() {
     setEditingOrder(null);
@@ -181,9 +234,18 @@ export function OrdersClient() {
     setFormOpen(true);
   }
 
-  function handleOpenDetail(order: OrderItem) {
-    setDetailOrder(order);
+  async function handleOpenDetail(order: OrderItem) {
+    setDetailOrder(order as unknown as OrderDetail);
     setDetailOpen(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order) setDetailOrder(data.order);
+      }
+    } catch (err) {
+      console.error("Failed to load full milestones", err);
+    }
   }
 
   function handleOpenPrint(order: OrderItem) {
@@ -199,6 +261,61 @@ export function OrdersClient() {
   function handleOpenLetterhead(order: OrderDetail) {
     setLetterheadOrder(order);
     setLetterheadOpen(true);
+  }
+
+  // Multi-select helpers
+  const isAllSelected = orders.length > 0 && orders.every((o) => selectedIds.has(o.id));
+
+  function toggleSelectAll() {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(orders.map((o) => o.id)));
+    }
+  }
+
+  function toggleSelectRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleOpenBatchPrint() {
+    const list = orders.filter((o) => selectedIds.has(o.id));
+    if (list.length === 0) return;
+    setBatchPrintOrders(list);
+    setBatchPrintOpen(true);
+  }
+
+  function handleOpenBatchStatus() {
+    if (selectedIds.size === 0) return;
+    setBatchStatusOpen(true);
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  function handleExportCsv() {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (statusFilter !== "ALL") {
+      params.set("status", statusFilter);
+    } else if (activeTab === "OUT_FOR_DELIVERY") {
+      params.set("status", OrderStatus.OUT_FOR_DELIVERY);
+    } else if (activeTab === "DELIVERED") {
+      params.set("status", OrderStatus.DELIVERED);
+    } else if (activeTab === "EXCEPTIONS") {
+      params.set("status", OrderStatus.RTO);
+    } else if (activeTab === "PIPELINE") {
+      params.set("status", OrderStatus.IN_TRANSIT);
+    }
+
+    const exportUrl = `/api/orders/export?${params.toString()}`;
+    window.open(exportUrl, "_blank");
   }
 
   async function confirmDelete() {
@@ -217,6 +334,14 @@ export function OrdersClient() {
       setDeleting(false);
     }
   }
+
+  const STATUS_TABS: { id: TabKey; label: string; count: number }[] = [
+    { id: "ALL", label: "All Manifests", count: metrics.totalOrders },
+    { id: "PIPELINE", label: "In Pipeline", count: metrics.inPipeline },
+    { id: "OUT_FOR_DELIVERY", label: "Out for Delivery", count: metrics.outForDelivery },
+    { id: "DELIVERED", label: "Delivered", count: metrics.delivered },
+    { id: "EXCEPTIONS", label: "Exceptions / RTO", count: metrics.rtoCount },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -239,7 +364,7 @@ export function OrdersClient() {
 
         <div className="card p-4">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-            Active Dispatches
+            In Pipeline
           </div>
           <div className="mt-1 text-2xl font-bold tracking-tight text-amber-500">
             {metrics.inPipeline}
@@ -248,7 +373,7 @@ export function OrdersClient() {
 
         <div className="card p-4">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-            Delivered Shipments
+            Delivered Consignments
           </div>
           <div className="mt-1 text-2xl font-bold tracking-tight text-emerald-500">
             {metrics.delivered}
@@ -257,17 +382,17 @@ export function OrdersClient() {
 
         <div className="card p-4">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-            Freight Tariff Value
+            Freight Tariff Invoiced
           </div>
-          <div className="mt-1 text-2xl font-bold tracking-tight text-[var(--primary)]">
+          <div className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">
             ₹{metrics.totalRevenue.toLocaleString()}
           </div>
         </div>
       </div>
 
-      {/* Main Data Panel */}
+      {/* Main Consignment Manifest Panel */}
       <div className="data-panel">
-        {/* Panel Header & Action */}
+        {/* Panel Header & Actions */}
         <div className="data-panel-header">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
@@ -286,20 +411,77 @@ export function OrdersClient() {
             </div>
           </div>
 
-          {/* New Order Button — Strictly hidden if user lacks canCreate */}
-          {canCreate && (
+          {/* Action Button Row: Export CSV, Bulk Import, New Order */}
+          <div className="flex items-center gap-2">
+            {/* Export CSV Manifest (Point 2) */}
             <button
               type="button"
-              onClick={handleOpenCreate}
-              className="btn btn-primary btn-pill text-xs"
+              onClick={handleExportCsv}
+              className="btn btn-ghost text-xs"
+              title="Download full manifest report in CSV spreadsheet format"
             >
-              <IconPlus className="h-4 w-4" />
-              New Order
+              <IconDownload className="h-3.5 w-3.5" />
+              Export CSV
             </button>
-          )}
+
+            {/* Bulk CSV Upload (Point 2) */}
+            {canCreate && (
+              <button
+                type="button"
+                onClick={() => setBulkUploadOpen(true)}
+                className="btn btn-ghost text-xs"
+                title="Bulk import up to 200 consignments from CSV file"
+              >
+                <IconUpload className="h-3.5 w-3.5" />
+                Bulk Import
+              </button>
+            )}
+
+            {/* New Order Button */}
+            {canCreate && (
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="btn btn-primary btn-pill text-xs"
+              >
+                <IconPlus className="h-4 w-4" />
+                New Order
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Search & Filter Toolbar */}
+        {/* Quick Status Filter Tabs with Live Counter Badges (Point 3) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface-raised)]/20 px-5 py-2">
+          {STATUS_TABS.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabSelect(tab.id)}
+                className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+                  active
+                    ? "bg-[var(--primary)] text-white shadow-xs"
+                    : "text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-[var(--surface-raised)] text-[var(--muted)] border border-[var(--border)]"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search & Secondary Filter Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-raised)]/30 px-5 py-3">
           <div className="relative flex-1 min-w-[240px] max-w-md">
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted)]" />
@@ -322,7 +504,7 @@ export function OrdersClient() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-[var(--muted)] whitespace-nowrap">Status:</label>
+            <label className="text-xs font-medium text-[var(--muted)] whitespace-nowrap">Filter by Status:</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -350,11 +532,11 @@ export function OrdersClient() {
             </div>
             <h3 className="text-sm font-bold text-[var(--text)]">No consignments found</h3>
             <p className="mt-1 max-w-sm text-xs text-[var(--muted)] leading-relaxed">
-              {search || statusFilter !== "ALL"
-                ? "No orders match your filter criteria. Try clearing filters."
+              {search || statusFilter !== "ALL" || activeTab !== "ALL"
+                ? "No orders match your filter criteria. Try selecting another tab or clearing search."
                 : "No orders recorded in the system yet. Create your first consignment to start tracking freight."}
             </p>
-            {canCreate && !search && statusFilter === "ALL" && (
+            {canCreate && !search && statusFilter === "ALL" && activeTab === "ALL" && (
               <button
                 type="button"
                 onClick={handleOpenCreate}
@@ -372,6 +554,16 @@ export function OrdersClient() {
               <table className="erp-table">
                 <thead>
                   <tr>
+                    {/* Header Checkbox for Batch Selection (Point 5) */}
+                    <th className="w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        onChange={toggleSelectAll}
+                        className="perm-check"
+                        title="Select All Consignments"
+                      />
+                    </th>
                     <th>Consignment</th>
                     <th>Route (Origin &rarr; Destination)</th>
                     <th>Weight & Service</th>
@@ -381,234 +573,262 @@ export function OrdersClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((ord) => (
-                    <tr key={ord.id} className="hover:bg-[var(--surface-raised)]/40 transition-colors">
-                      {/* Consignment */}
-                      <td>
-                        <div className="space-y-0.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDetail(ord)}
-                            className="font-bold text-[var(--text)] hover:text-[var(--primary)] text-left transition-colors"
-                          >
-                            {ord.orderNumber}
-                          </button>
-                          <div className="text-[11px] font-mono text-[var(--muted)]">{ord.awbNumber}</div>
-                        </div>
-                      </td>
+                  {orders.map((ord) => {
+                    const isSelected = selectedIds.has(ord.id);
+                    return (
+                      <tr
+                        key={ord.id}
+                        className={`transition-colors ${
+                          isSelected
+                            ? "bg-[var(--primary-soft)]/50"
+                            : "hover:bg-[var(--surface-raised)]/40"
+                        }`}
+                      >
+                        {/* Row Checkbox (Point 5) */}
+                        <td className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectRow(ord.id)}
+                            className="perm-check"
+                          />
+                        </td>
 
-                      {/* Route */}
-                      <td>
-                        <div className="text-xs space-y-0.5">
-                          <div className="font-medium text-[var(--text)]">
-                            {ord.senderCity} &rarr; <span className="font-bold">{ord.receiverCity}</span>
+                        {/* Consignment */}
+                        <td>
+                          <div className="space-y-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDetail(ord)}
+                              className="font-bold text-[var(--text)] hover:text-[var(--primary)] text-left transition-colors"
+                            >
+                              {ord.orderNumber}
+                            </button>
+                            <div className="text-[11px] font-mono text-[var(--muted)]">{ord.awbNumber}</div>
                           </div>
-                          <div className="text-[11px] text-[var(--muted)] truncate max-w-[200px]">
-                            To: {ord.receiverName} ({ord.receiverPincode})
-                          </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Weight & Service */}
-                      <td>
-                        <div className="text-xs space-y-0.5">
-                          <div className="font-semibold text-[var(--text)]">
-                            {ord.chargeableWeight} kg <span className="text-[10px] font-normal text-[var(--muted)]">(chg)</span>
+                        {/* Route */}
+                        <td>
+                          <div className="space-y-0.5">
+                            <div className="font-semibold text-[var(--text)]">
+                              {ord.senderCity} &rarr; {ord.receiverCity}
+                            </div>
+                            <div className="text-[11px] text-[var(--muted)] truncate max-w-[200px]">
+                              To: {ord.receiverName} ({ord.receiverPincode})
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Weight & Service */}
+                        <td>
+                          <div className="space-y-0.5">
+                            <div className="font-semibold text-[var(--text)]">
+                              {ord.chargeableWeight} kg <span className="text-[11px] font-normal text-[var(--muted)]">chg.</span>
+                            </div>
+                            <div className="text-[11px] text-[var(--muted)] uppercase">
+                              {ord.serviceType.replace(/_/g, " ")} · {ord.paymentMode}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Tariff */}
+                        <td>
+                          <div className="font-bold text-[var(--text)]">
+                            ₹{ord.totalAmount.toLocaleString()}
                           </div>
                           <div className="text-[10px] text-[var(--muted)]">
-                            {ord.serviceType.replace(/_/g, " ")}
+                            Val: ₹{ord.declaredValue.toLocaleString()}
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Tariff */}
-                      <td>
-                        <div className="text-xs space-y-0.5">
-                          <div className="font-bold text-[var(--text)]">₹{ord.totalAmount.toLocaleString()}</div>
-                          <div className="text-[10px] font-medium text-[var(--muted)]">{ord.paymentMode}</div>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td>
-                        <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusBadge(
-                            ord.status
-                          )}`}
-                        >
-                          {ord.status.replace(/_/g, " ")}
-                        </span>
-                      </td>
-
-                      {/* Actions: View, Print Preview, Status Change, Edit, Delete */}
-                      <td className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* 1. View Detail Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDetail(ord)}
-                            className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)] transition-colors"
-                            title="View Consignment Details"
+                        {/* Status */}
+                        <td>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusBadge(
+                              ord.status,
+                            )}`}
                           >
-                            <IconEye className="h-4 w-4" />
-                          </button>
+                            {ord.status.replace(/_/g, " ")}
+                          </span>
+                        </td>
 
-                          {/* 2. Print Shipping Label Button (Opens 4x6 Preview) */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPrint(ord)}
-                            className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)] transition-colors"
-                            title="Print Shipping Label (4x6 AWB)"
-                          >
-                            <IconPrinter className="h-4 w-4" />
-                          </button>
-
-                          {/* 3. Status Change Button (Beside View, strictly guarded by canUpdate) */}
-                          {canUpdate && (
+                        {/* Actions: View, Print Preview, Status Change, Edit, Delete */}
+                        <td className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* 1. View Detail Button */}
                             <button
                               type="button"
-                              onClick={() => handleOpenStatus(ord)}
-                              className="rounded-lg p-2 text-[var(--muted)] hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-                              title="Update Shipment Status"
+                              onClick={() => handleOpenDetail(ord)}
+                              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)] transition-colors"
+                              title="View Consignment Details"
                             >
-                              <IconTag className="h-4 w-4" />
+                              <IconEye className="h-4 w-4" />
                             </button>
-                          )}
 
-                          {/* 4. Edit Button — Strictly hidden if canUpdate is false */}
-                          {canUpdate && (
+                            {/* 2. Print Shipping Label Button (Opens 4x6 Preview) */}
                             <button
                               type="button"
-                              onClick={() => handleOpenEdit(ord)}
-                              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--primary)] transition-colors"
-                              title="Edit Consignment"
+                              onClick={() => handleOpenPrint(ord)}
+                              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)] transition-colors"
+                              title="Print Shipping Label (4x6 AWB)"
                             >
-                              <IconPencil className="h-4 w-4" />
+                              <IconPrinter className="h-4 w-4" />
                             </button>
-                          )}
 
-                          {/* 5. Delete Button — Strictly hidden if canDelete is false */}
-                          {canDelete && (
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTarget(ord)}
-                              className="rounded-lg p-2 text-[var(--muted)] hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                              title="Delete Consignment"
-                            >
-                              <IconTrash className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {/* 3. Status Change Button (Beside View, strictly guarded by canUpdate) */}
+                            {canUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenStatus(ord)}
+                                className="rounded-lg p-2 text-[var(--muted)] hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                                title="Update Shipment Status & Log Milestone"
+                              >
+                                <IconTag className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            {/* 4. Edit Button */}
+                            {canUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(ord)}
+                                className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--primary)] transition-colors"
+                                title="Edit Consignment"
+                              >
+                                <IconPencil className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            {/* 5. Delete Button */}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => setDeleteTarget(ord)}
+                                className="rounded-lg p-2 text-[var(--muted)] hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                                title="Delete Consignment"
+                              >
+                                <IconTrash className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* Mobile Card View (Optimized for Phones & Handheld Devices) */}
+            {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-[var(--border)]">
-              {orders.map((ord) => (
-                <div key={ord.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDetail(ord)}
-                        className="text-xs font-bold text-[var(--text)] hover:text-[var(--primary)] text-left"
+              {orders.map((ord) => {
+                const isSelected = selectedIds.has(ord.id);
+                return (
+                  <div key={ord.id} className={`p-4 space-y-3 ${isSelected ? "bg-[var(--primary-soft)]/40" : ""}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectRow(ord.id)}
+                          className="perm-check"
+                        />
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetail(ord)}
+                            className="text-xs font-bold text-[var(--text)] hover:text-[var(--primary)] text-left"
+                          >
+                            {ord.orderNumber}
+                          </button>
+                          <p className="text-[10px] font-mono text-[var(--muted)]">{ord.awbNumber}</p>
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold ${statusBadge(
+                          ord.status,
+                        )}`}
                       >
-                        {ord.orderNumber}
-                      </button>
-                      <p className="text-[10px] font-mono text-[var(--muted)]">{ord.awbNumber}</p>
-                    </div>
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold ${statusBadge(
-                        ord.status
-                      )}`}
-                    >
-                      {ord.status.replace(/_/g, " ")}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase text-[var(--muted)]">Route</span>
-                      <p className="font-medium text-[var(--text)]">
-                        {ord.senderCity} &rarr; {ord.receiverCity}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase text-[var(--muted)]">Weight</span>
-                      <p className="font-medium text-[var(--text)]">{ord.chargeableWeight} kg</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-[var(--border)]/50">
-                    <div>
-                      <span className="font-bold text-[var(--text)]">₹{ord.totalAmount}</span>
-                      <span className="text-[10px] text-[var(--muted)] ml-1.5 font-medium">({ord.paymentMode})</span>
+                        {ord.status.replace(/_/g, " ")}
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      {/* View Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDetail(ord)}
-                        className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
-                        title="View Details"
-                      >
-                        <IconEye className="h-4 w-4" />
-                      </button>
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase text-[var(--muted)]">Route</span>
+                        <p className="font-medium text-[var(--text)]">
+                          {ord.senderCity} &rarr; {ord.receiverCity}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase text-[var(--muted)]">Weight</span>
+                        <p className="font-medium text-[var(--text)]">{ord.chargeableWeight} kg</p>
+                      </div>
+                    </div>
 
-                      {/* Print Shipping Label (Beside View) */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenPrint(ord)}
-                        className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
-                        title="Print Shipping Label"
-                      >
-                        <IconPrinter className="h-4 w-4" />
-                      </button>
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-[var(--border)]/50">
+                      <div>
+                        <span className="font-bold text-[var(--text)]">₹{ord.totalAmount}</span>
+                        <span className="text-[10px] text-[var(--muted)] ml-1.5 font-medium">({ord.paymentMode})</span>
+                      </div>
 
-                      {/* Status Change (Beside View, guarded by canUpdate) */}
-                      {canUpdate && (
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => handleOpenStatus(ord)}
-                          className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-amber-500/10 hover:text-amber-600"
-                          title="Change Status"
+                          onClick={() => handleOpenDetail(ord)}
+                          className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
+                          title="View Details"
                         >
-                          <IconTag className="h-4 w-4" />
+                          <IconEye className="h-4 w-4" />
                         </button>
-                      )}
 
-                      {/* Edit Button */}
-                      {canUpdate && (
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(ord)}
-                          className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--primary)]"
-                          title="Edit"
+                          onClick={() => handleOpenPrint(ord)}
+                          className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
+                          title="Print Shipping Label"
                         >
-                          <IconPencil className="h-4 w-4" />
+                          <IconPrinter className="h-4 w-4" />
                         </button>
-                      )}
 
-                      {/* Delete Button */}
-                      {canDelete && (
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(ord)}
-                          className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-rose-500/10 hover:text-rose-600"
-                          title="Delete"
-                        >
-                          <IconTrash className="h-4 w-4" />
-                        </button>
-                      )}
+                        {canUpdate && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStatus(ord)}
+                            className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-amber-500/10 hover:text-amber-600"
+                            title="Change Status"
+                          >
+                            <IconTag className="h-4 w-4" />
+                          </button>
+                        )}
+
+                        {canUpdate && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(ord)}
+                            className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--primary)]"
+                            title="Edit"
+                          >
+                            <IconPencil className="h-4 w-4" />
+                          </button>
+                        )}
+
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(ord)}
+                            className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-rose-500/10 hover:text-rose-600"
+                            title="Delete"
+                          >
+                            <IconTrash className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination Controls */}
@@ -642,6 +862,52 @@ export function OrdersClient() {
         )}
       </div>
 
+      {/* Floating Batch Multi-Select Action Bar (Point 5) */}
+      {selectedIds.size > 0 && (
+        <div className="sticky bottom-4 z-40 mx-auto flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]/95 p-3.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--primary)] text-xs font-bold text-white">
+              {selectedIds.size}
+            </span>
+            <span className="text-xs font-bold text-[var(--text)]">
+              {selectedIds.size === 1 ? "1 Consignment Selected" : `${selectedIds.size} Consignments Selected`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenBatchPrint}
+              className="btn btn-primary text-xs"
+              title="Print thermal shipping labels for all selected orders"
+            >
+              <IconPrinter className="h-3.5 w-3.5" />
+              Batch Print Labels
+            </button>
+
+            {canUpdate && (
+              <button
+                type="button"
+                onClick={handleOpenBatchStatus}
+                className="btn btn-ghost text-xs text-amber-600 dark:text-amber-400"
+                title="Bulk update shipment status"
+              >
+                <IconTag className="h-3.5 w-3.5" />
+                Bulk Status
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="btn btn-ghost text-xs text-[var(--muted)]"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Order Creation & Edit Modal */}
       {formOpen && (
         <OrderFormModal
@@ -655,7 +921,7 @@ export function OrdersClient() {
         />
       )}
 
-      {/* Order Detail Modal (Pure View Area: No print, no status change controls inside) */}
+      {/* Order Detail Modal with Milestone Tracking Stepper (Point 1) */}
       {detailOpen && (
         <OrderDetailModal
           open={detailOpen}
@@ -684,7 +950,7 @@ export function OrdersClient() {
         />
       )}
 
-      {/* Shipping Label Print Preview Modal */}
+      {/* Single Shipping Label Print Preview Modal */}
       {printOpen && (
         <OrderPrintModal
           open={printOpen}
@@ -696,7 +962,20 @@ export function OrdersClient() {
         />
       )}
 
-      {/* Quick Status Change Modal */}
+      {/* Batch Shipping Label Print Modal (Point 5) */}
+      {batchPrintOpen && (
+        <OrderPrintModal
+          open={batchPrintOpen}
+          order={null}
+          orders={batchPrintOrders}
+          onClose={() => {
+            setBatchPrintOpen(false);
+            setBatchPrintOrders([]);
+          }}
+        />
+      )}
+
+      {/* Single Status Change Modal with POD & NDR (Point 4) */}
       {statusOpen && (
         <OrderStatusModal
           open={statusOpen}
@@ -706,6 +985,28 @@ export function OrdersClient() {
             setStatusOrder(null);
           }}
           onUpdated={() => fetchOrders(pagination.page)}
+        />
+      )}
+
+      {/* Batch Status Update Modal (Point 5) */}
+      {batchStatusOpen && (
+        <OrderBatchStatusModal
+          open={batchStatusOpen}
+          orderIds={Array.from(selectedIds)}
+          onClose={() => {
+            setBatchStatusOpen(false);
+            clearSelection();
+          }}
+          onUpdated={() => fetchOrders(pagination.page)}
+        />
+      )}
+
+      {/* Bulk CSV Upload Modal (Point 2) */}
+      {bulkUploadOpen && (
+        <OrderBulkUploadModal
+          open={bulkUploadOpen}
+          onClose={() => setBulkUploadOpen(false)}
+          onImported={() => fetchOrders(1)}
         />
       )}
 

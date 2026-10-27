@@ -32,6 +32,9 @@ const patchOrderSchema = z.object({
 
   totalAmount: z.coerce.number().min(0).optional(),
   declaredValue: z.coerce.number().min(0).optional(),
+  deliveryNotes: z.string().max(300).optional(),
+  ndrReason: z.string().max(200).optional(),
+  statusLocation: z.string().max(100).optional(),
 });
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -53,7 +56,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     const actor = await requireApiPermission(AppModule.ORDERS, "canUpdate");
     const { id } = await ctx.params;
     const body = patchOrderSchema.parse(await req.json());
-    const order = await updateOrder(id, body, actor.id);
+    const order = await updateOrder(id, body, actor.id, actor.displayName);
     return NextResponse.json({ order });
   } catch (e) {
     return jsonError(e);
