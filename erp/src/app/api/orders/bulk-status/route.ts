@@ -10,6 +10,8 @@ const bulkStatusSchema = z.object({
   status: z.nativeEnum(OrderStatus),
   notes: z.string().max(250).optional(),
   location: z.string().max(100).optional(),
+  thirdPartyName: z.string().max(100).optional(),
+  thirdPartyTracking: z.string().max(100).optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -23,6 +25,8 @@ export async function PATCH(req: Request) {
       location: parsed.location,
       actorId: actor.id,
       actorName: actor.displayName,
+      thirdPartyName: parsed.thirdPartyName,
+      thirdPartyTracking: parsed.thirdPartyTracking,
     });
 
     return NextResponse.json({

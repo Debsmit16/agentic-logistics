@@ -87,6 +87,7 @@ enum OrderStatus {
   IN_TRANSIT
   OUT_FOR_DELIVERY
   DELIVERED
+  HANDED_TO_THIRD_PARTY
   CANCELLED
   RTO
 }
@@ -137,6 +138,8 @@ model Order {
 
   deliveryNotes    String?
   ndrReason        String?
+  thirdPartyName   String?
+  thirdPartyTracking String?
 
   createdById      String?
   createdBy        User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)

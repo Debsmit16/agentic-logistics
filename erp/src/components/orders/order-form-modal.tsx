@@ -35,6 +35,9 @@ export interface OrderFormData {
 
   totalAmount: number;
   declaredValue: number;
+
+  thirdPartyName?: string | null;
+  thirdPartyTracking?: string | null;
 }
 
 interface OrderFormModalProps {
@@ -74,6 +77,8 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
 
     totalAmount: order?.totalAmount ?? 150,
     declaredValue: order?.declaredValue ?? 1000,
+    thirdPartyName: order?.thirdPartyName ?? "",
+    thirdPartyTracking: order?.thirdPartyTracking ?? "",
   }));
 
   const [parcelPhoto, setParcelPhoto] = useState<{
@@ -574,21 +579,54 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
         </div>
 
         {isEditing && (
-          <div>
-            <label className="text-[11px] font-medium text-[var(--muted)]">Consignment Lifecycle Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as OrderStatus })}
-              className="input mt-1 h-9 text-xs"
-            >
-              <option value={OrderStatus.DRAFT}>Draft</option>
-              <option value={OrderStatus.CONFIRMED}>Confirmed (Ready for Pickup)</option>
-              <option value={OrderStatus.IN_TRANSIT}>In Transit (Hub Linehaul)</option>
-              <option value={OrderStatus.OUT_FOR_DELIVERY}>Out for Delivery</option>
-              <option value={OrderStatus.DELIVERED}>Delivered (Signed e-POD)</option>
-              <option value={OrderStatus.CANCELLED}>Cancelled</option>
-              <option value={OrderStatus.RTO}>Return to Origin (RTO)</option>
-            </select>
+          <div className="space-y-3">
+            <div>
+              <label className="text-[11px] font-medium text-[var(--muted)]">Consignment Lifecycle Status</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as OrderStatus })}
+                className="input mt-1 h-9 text-xs"
+              >
+                <option value={OrderStatus.DRAFT}>Draft</option>
+                <option value={OrderStatus.CONFIRMED}>Confirmed (Ready for Pickup)</option>
+                <option value={OrderStatus.IN_TRANSIT}>In Transit (Hub Linehaul)</option>
+                <option value={OrderStatus.HANDED_TO_THIRD_PARTY}>Handed to Third-Party (3PL Transfer)</option>
+                <option value={OrderStatus.OUT_FOR_DELIVERY}>Out for Delivery</option>
+                <option value={OrderStatus.DELIVERED}>Delivered (Signed e-POD)</option>
+                <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                <option value={OrderStatus.RTO}>Return to Origin (RTO)</option>
+              </select>
+            </div>
+
+            {formData.status === OrderStatus.HANDED_TO_THIRD_PARTY && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
+                <div>
+                  <label className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
+                    Third-Party Platform Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.thirdPartyName ?? ""}
+                    onChange={(e) => setFormData({ ...formData, thirdPartyName: e.target.value })}
+                    placeholder="e.g. BlueDart, Delhivery, DTDC, Shadowfax"
+                    className="input mt-1 h-9 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-[var(--muted)]">
+                    Partner AWB / Tracking Ref (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.thirdPartyTracking ?? ""}
+                    onChange={(e) => setFormData({ ...formData, thirdPartyTracking: e.target.value })}
+                    placeholder="e.g. BLU-987654321"
+                    className="input mt-1 h-9 text-xs"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -40,6 +40,8 @@ const patchOrderSchema = z.object({
   stepPhotoCaption: z.string().optional(),
   parcelPhotoBase64: z.string().optional(),
   parcelPhotoName: z.string().optional(),
+  thirdPartyName: z.string().max(100).optional(),
+  thirdPartyTracking: z.string().max(100).optional(),
 });
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {

@@ -60,6 +60,8 @@ export interface OrderItem {
 
   deliveryNotes?: string | null;
   ndrReason?: string | null;
+  thirdPartyName?: string | null;
+  thirdPartyTracking?: string | null;
 
   createdAt: string;
   createdBy?: { id: string; displayName: string; email: string } | null;
@@ -89,6 +91,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "ALL", label: "All Statuses" },
   { value: OrderStatus.CONFIRMED, label: "Confirmed" },
   { value: OrderStatus.IN_TRANSIT, label: "In Transit" },
+  { value: OrderStatus.HANDED_TO_THIRD_PARTY, label: "Handed to Third-Party" },
   { value: OrderStatus.OUT_FOR_DELIVERY, label: "Out for Delivery" },
   { value: OrderStatus.DELIVERED, label: "Delivered" },
   { value: OrderStatus.DRAFT, label: "Draft" },
@@ -102,6 +105,8 @@ function statusBadge(status: OrderStatus) {
       return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
     case OrderStatus.IN_TRANSIT:
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+    case OrderStatus.HANDED_TO_THIRD_PARTY:
+      return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20";
     case OrderStatus.OUT_FOR_DELIVERY:
       return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
     case OrderStatus.DELIVERED:
@@ -664,13 +669,23 @@ export function OrdersClient() {
 
                         {/* Status */}
                         <td>
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusBadge(
-                              ord.status,
-                            )}`}
-                          >
-                            {ord.status.replace(/_/g, " ")}
-                          </span>
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusBadge(
+                                ord.status,
+                              )}`}
+                            >
+                              {ord.status === OrderStatus.HANDED_TO_THIRD_PARTY
+                                ? "Handed to Third-Party"
+                                : ord.status.replace(/_/g, " ")}
+                            </span>
+                            {ord.status === OrderStatus.HANDED_TO_THIRD_PARTY && ord.thirdPartyName && (
+                              <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
+                                via {ord.thirdPartyName}
+                                {ord.thirdPartyTracking ? ` (${ord.thirdPartyTracking})` : ""}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Actions: View, Print Preview, Status Change, Edit, Delete */}
@@ -765,13 +780,22 @@ export function OrdersClient() {
                           <p className="text-[10px] font-mono text-[var(--muted)]">{ord.awbNumber}</p>
                         </div>
                       </div>
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold ${statusBadge(
-                          ord.status,
-                        )}`}
-                      >
-                        {ord.status.replace(/_/g, " ")}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold ${statusBadge(
+                            ord.status,
+                          )}`}
+                        >
+                          {ord.status === OrderStatus.HANDED_TO_THIRD_PARTY
+                            ? "Handed to Third-Party"
+                            : ord.status.replace(/_/g, " ")}
+                        </span>
+                        {ord.status === OrderStatus.HANDED_TO_THIRD_PARTY && ord.thirdPartyName && (
+                          <span className="text-[9px] font-medium text-indigo-600 dark:text-indigo-400">
+                            via {ord.thirdPartyName}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between text-xs">

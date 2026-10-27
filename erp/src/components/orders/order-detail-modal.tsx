@@ -61,6 +61,8 @@ export interface OrderDetail {
 
   deliveryNotes?: string | null;
   ndrReason?: string | null;
+  thirdPartyName?: string | null;
+  thirdPartyTracking?: string | null;
   milestones?: OrderMilestoneItem[];
   attachments?: OrderAttachmentItem[];
 
@@ -92,6 +94,8 @@ function statusColor(status: OrderStatus) {
       return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
     case OrderStatus.IN_TRANSIT:
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+    case OrderStatus.HANDED_TO_THIRD_PARTY:
+      return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20";
     case OrderStatus.OUT_FOR_DELIVERY:
       return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
     case OrderStatus.DELIVERED:
@@ -137,7 +141,7 @@ export function OrderDetailModal({
             <span
               className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusColor(order.status)}`}
             >
-              {order.status.replace(/_/g, " ")}
+              {order.status === OrderStatus.HANDED_TO_THIRD_PARTY ? "Handed to Third-Party" : order.status.replace(/_/g, " ")}
             </span>
             <span className="text-xs text-[var(--muted)]">
               {order.serviceType.replace(/_/g, " ")} · {order.paymentMode}
@@ -148,6 +152,39 @@ export function OrderDetailModal({
             AWB: <strong className="text-[var(--text)] font-mono">{order.awbNumber}</strong>
           </div>
         </div>
+
+        {/* Third-Party Partner Handoff Banner (if applicable) */}
+        {(order.status === OrderStatus.HANDED_TO_THIRD_PARTY || order.thirdPartyName) && (
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-indigo-500/25 bg-indigo-500/10 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                3PL
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[var(--text)]">
+                    External Carrier Handoff: {order.thirdPartyName || "Third-Party Logistics"}
+                  </span>
+                  <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 text-[9px] font-semibold text-indigo-600 dark:text-indigo-400">
+                    Partner Network
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--muted)]">
+                  Consignment handed off to partner platform for linehaul routing and final mile delivery.
+                </p>
+              </div>
+            </div>
+
+            {order.thirdPartyTracking && (
+              <div className="text-right shrink-0">
+                <span className="text-[10px] uppercase font-bold text-[var(--muted)] block">Carrier Ref / AWB</span>
+                <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-white/70 dark:bg-slate-900/70 px-2.5 py-1 rounded-md border border-indigo-500/20 inline-block mt-0.5">
+                  {order.thirdPartyTracking}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Consignment Parcel Registration Photo Banner (if present) */}
         {registrationPhoto && (

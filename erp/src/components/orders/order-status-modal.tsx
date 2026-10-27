@@ -19,6 +19,7 @@ const STATUS_DESCRIPTIONS: Record<OrderStatus, string> = {
   [OrderStatus.IN_TRANSIT]: "Shipment moving between sorting hubs and primary linehaul.",
   [OrderStatus.OUT_FOR_DELIVERY]: "Assigned to last-mile courier run-sheet for delivery.",
   [OrderStatus.DELIVERED]: "Package successfully delivered and digital e-POD recorded.",
+  [OrderStatus.HANDED_TO_THIRD_PARTY]: "Shipment transferred to external 3PL or partner logistics platform for delivery.",
   [OrderStatus.CANCELLED]: "Consignment terminated prior to completion.",
   [OrderStatus.RTO]: "Failed delivery attempts; returning shipment to origin facility.",
 };
@@ -40,6 +41,12 @@ function getStepPhotoDetails(status: OrderStatus) {
         title: "Proof of Delivery (e-POD) Photo",
         hint: "Customer signature, doorstep package handover, or gate receiving receipt",
         badge: "e-POD Verification",
+      };
+    case OrderStatus.HANDED_TO_THIRD_PARTY:
+      return {
+        title: "3PL Partner Handover / Manifest Photo",
+        hint: "Docket receipt, partner manifest copy, or transfer handover proof",
+        badge: "3PL Handover",
       };
     case OrderStatus.IN_TRANSIT:
       return {
@@ -75,6 +82,8 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
   const [ndrReason, setNdrReason] = useState(order?.ndrReason ?? NDR_REASONS[0]);
   const [customNdrNotes, setCustomNdrNotes] = useState("");
   const [location, setLocation] = useState(order ? `${order.receiverCity} Hub` : "Operational Hub");
+  const [thirdPartyName, setThirdPartyName] = useState(order?.thirdPartyName ?? "");
+  const [thirdPartyTracking, setThirdPartyTracking] = useState(order?.thirdPartyTracking ?? "");
 
   const [stepPhoto, setStepPhoto] = useState<{
     dataUrl: string;
@@ -130,6 +139,12 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
       }
     }
 
+    if (selectedStatus === OrderStatus.HANDED_TO_THIRD_PARTY && !thirdPartyName.trim()) {
+      setError("Please enter the name of the third-party platform");
+      setUpdating(false);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PATCH",
@@ -141,6 +156,9 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
             selectedStatus === OrderStatus.CANCELLED || selectedStatus === OrderStatus.RTO
               ? finalNdr
               : undefined,
+          thirdPartyName: selectedStatus === OrderStatus.HANDED_TO_THIRD_PARTY ? thirdPartyName.trim() : undefined,
+          thirdPartyTracking:
+            selectedStatus === OrderStatus.HANDED_TO_THIRD_PARTY ? thirdPartyTracking.trim() || undefined : undefined,
           statusLocation: location.trim(),
           stepPhotoBase64: stepPhoto?.dataUrl,
           stepPhotoName: stepPhoto?.fileName,
@@ -194,7 +212,7 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className={`text-xs font-bold ${active ? "text-[var(--primary)]" : "text-[var(--text)]"}`}>
-                        {status.replace(/_/g, " ")}
+                        {status === OrderStatus.HANDED_TO_THIRD_PARTY ? "Handed to Third-Party" : status.replace(/_/g, " ")}
                       </span>
                       {order.status === status && (
                         <span className="rounded-full bg-[var(--surface-raised)] border border-[var(--border)] px-1.5 py-0.2 text-[9px] font-semibold text-[var(--muted)]">
@@ -233,6 +251,46 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                 value={deliveryNotes}
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="e.g. Received by Consignee (Signature & OTP Verified) or Security Gate"
+                className="input text-xs"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Handed to Third-Party Details Form */}
+        {selectedStatus === OrderStatus.HANDED_TO_THIRD_PARTY && (
+          <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3.5 space-y-3 text-xs animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-indigo-700 dark:text-indigo-400">
+                Third-Party Partner Handover
+              </span>
+              <span className="rounded-full bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.2 text-[9px] font-semibold text-indigo-600 dark:text-indigo-400">
+                Required
+              </span>
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
+                Third-Party Platform / Carrier Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={thirdPartyName}
+                onChange={(e) => setThirdPartyName(e.target.value)}
+                placeholder="e.g. BlueDart, Delhivery, DTDC, Shadowfax, XpressBees"
+                className="input text-xs"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
+                Third-Party AWB / Tracking Reference (Optional)
+              </label>
+              <input
+                type="text"
+                value={thirdPartyTracking}
+                onChange={(e) => setThirdPartyTracking(e.target.value)}
+                placeholder="e.g. BD789123456IN, DEL12345678"
                 className="input text-xs"
               />
             </div>

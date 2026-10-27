@@ -14,6 +14,7 @@ interface OrderBatchStatusModalProps {
 const STATUS_OPTIONS = [
   { value: OrderStatus.CONFIRMED, label: "Confirmed", desc: "Ready for shipper pickup" },
   { value: OrderStatus.IN_TRANSIT, label: "In Transit", desc: "Moving in primary linehaul network" },
+  { value: OrderStatus.HANDED_TO_THIRD_PARTY, label: "Handed to Third-Party", desc: "Transferred to partner 3PL carrier platform" },
   { value: OrderStatus.OUT_FOR_DELIVERY, label: "Out for Delivery", desc: "Assigned to courier run-sheet" },
   { value: OrderStatus.DELIVERED, label: "Delivered", desc: "All selected consignments delivered" },
   { value: OrderStatus.RTO, label: "Return to Origin", desc: "Return packages to shipper facility" },
@@ -24,12 +25,19 @@ export function OrderBatchStatusModal({ open, orderIds, onClose, onUpdated }: Or
   const [targetStatus, setTargetStatus] = useState<OrderStatus>(OrderStatus.IN_TRANSIT);
   const [location, setLocation] = useState("Kolkata Sorting Hub");
   const [notes, setNotes] = useState("");
+  const [thirdPartyName, setThirdPartyName] = useState("");
+  const [thirdPartyTracking, setThirdPartyTracking] = useState("");
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (orderIds.length === 0) return null;
 
   async function handleBatchUpdate() {
+    if (targetStatus === OrderStatus.HANDED_TO_THIRD_PARTY && !thirdPartyName.trim()) {
+      setError("Please specify the third-party carrier / platform name (e.g. BlueDart, Delhivery, DTDC).");
+      return;
+    }
+
     setUpdating(true);
     setError(null);
 
@@ -42,6 +50,12 @@ export function OrderBatchStatusModal({ open, orderIds, onClose, onUpdated }: Or
           status: targetStatus,
           location: location.trim(),
           notes: notes.trim() || undefined,
+          thirdPartyName:
+            targetStatus === OrderStatus.HANDED_TO_THIRD_PARTY ? thirdPartyName.trim() : undefined,
+          thirdPartyTracking:
+            targetStatus === OrderStatus.HANDED_TO_THIRD_PARTY && thirdPartyTracking.trim()
+              ? thirdPartyTracking.trim()
+              : undefined,
         }),
       });
 
@@ -103,6 +117,46 @@ export function OrderBatchStatusModal({ open, orderIds, onClose, onUpdated }: Or
             })}
           </div>
         </div>
+
+        {targetStatus === OrderStatus.HANDED_TO_THIRD_PARTY && (
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3.5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-500/20 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                3PL
+              </span>
+              <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                Third-Party Partner Information
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[var(--text)] mb-1">
+                Third-Party Platform / Carrier Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={thirdPartyName}
+                onChange={(e) => setThirdPartyName(e.target.value)}
+                placeholder="e.g. BlueDart, Delhivery, DTDC, Shadowfax"
+                className="input text-xs"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
+                Batch Consignment / Partner Tracking Ref (Optional)
+              </label>
+              <input
+                type="text"
+                value={thirdPartyTracking}
+                onChange={(e) => setThirdPartyTracking(e.target.value)}
+                placeholder="e.g. BATCH-3PL-98214"
+                className="input text-xs"
+              />
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--muted)] mb-1">

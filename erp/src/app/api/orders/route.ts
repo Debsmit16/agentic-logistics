@@ -34,6 +34,8 @@ const createOrderSchema = z.object({
   status: z.nativeEnum(OrderStatus).optional(),
   parcelPhotoBase64: z.string().optional(),
   parcelPhotoName: z.string().optional(),
+  thirdPartyName: z.string().max(100).optional(),
+  thirdPartyTracking: z.string().max(100).optional(),
 });
 
 export async function GET(req: Request) {

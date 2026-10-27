@@ -37,6 +37,8 @@ export interface CreateOrderInput {
   status?: OrderStatus;
   parcelPhotoBase64?: string;
   parcelPhotoName?: string;
+  thirdPartyName?: string;
+  thirdPartyTracking?: string;
 }
 
 export interface UpdateOrderInput extends Partial<CreateOrderInput> {
@@ -47,6 +49,8 @@ export interface UpdateOrderInput extends Partial<CreateOrderInput> {
   stepPhotoBase64?: string;
   stepPhotoName?: string;
   stepPhotoCaption?: string;
+  thirdPartyName?: string;
+  thirdPartyTracking?: string;
 }
 
 export function computeWeights(deadWeight: number, lengthCm: number, widthCm: number, heightCm: number) {
@@ -76,6 +80,8 @@ function getDefaultMilestoneTitle(status: OrderStatus): string {
       return "Out for Delivery";
     case OrderStatus.DELIVERED:
       return "Successfully Delivered";
+    case OrderStatus.HANDED_TO_THIRD_PARTY:
+      return "Handed Over to Third-Party Partner";
     case OrderStatus.CANCELLED:
       return "Consignment Cancelled";
     case OrderStatus.RTO:
@@ -97,6 +103,8 @@ function getDefaultMilestoneDescription(status: OrderStatus, awb: string): strin
       return "Consignment assigned to courier agent for final-mile destination delivery.";
     case OrderStatus.DELIVERED:
       return "Consignment received and acknowledged by consignee.";
+    case OrderStatus.HANDED_TO_THIRD_PARTY:
+      return "Consignment transferred to third-party partner platform for onward transit.";
     case OrderStatus.CANCELLED:
       return "Order cancelled per shipper or operational request.";
     case OrderStatus.RTO:
@@ -151,7 +159,7 @@ export async function listOrders(params: OrderFilterParams = {}) {
       prisma.order.count({ where }),
       prisma.order.count(),
       prisma.order.count({
-        where: { status: { in: [OrderStatus.CONFIRMED, OrderStatus.IN_TRANSIT] } },
+        where: { status: { in: [OrderStatus.CONFIRMED, OrderStatus.IN_TRANSIT, OrderStatus.HANDED_TO_THIRD_PARTY] } },
       }),
       prisma.order.count({
         where: { status: OrderStatus.OUT_FOR_DELIVERY },
@@ -269,6 +277,8 @@ export async function createOrder(input: CreateOrderInput, actorId: string, acto
 
       totalAmount: input.totalAmount,
       declaredValue: input.declaredValue,
+      thirdPartyName: input.thirdPartyName?.trim() || null,
+      thirdPartyTracking: input.thirdPartyTracking?.trim() || null,
       createdById: actorId,
 
       milestones: {
@@ -369,6 +379,8 @@ export async function updateOrder(
     ...(input.declaredValue !== undefined && { declaredValue: input.declaredValue }),
     ...(input.deliveryNotes !== undefined && { deliveryNotes: input.deliveryNotes }),
     ...(input.ndrReason !== undefined && { ndrReason: input.ndrReason }),
+    ...(input.thirdPartyName !== undefined && { thirdPartyName: input.thirdPartyName }),
+    ...(input.thirdPartyTracking !== undefined && { thirdPartyTracking: input.thirdPartyTracking }),
     ...(input.parcelPhotoBase64 && {
       attachments: {
         create: {
@@ -393,6 +405,8 @@ export async function updateOrder(
     let desc = input.deliveryNotes || input.ndrReason || getDefaultMilestoneDescription(input.status, existing.awbNumber);
     if (input.status === OrderStatus.DELIVERED && input.deliveryNotes) {
       desc = `Delivered. Notes: ${input.deliveryNotes}`;
+    } else if (input.status === OrderStatus.HANDED_TO_THIRD_PARTY && input.thirdPartyName) {
+      desc = `Handed over to ${input.thirdPartyName}${input.thirdPartyTracking ? ` (Ref / AWB: ${input.thirdPartyTracking})` : ""}.`;
     } else if ((input.status === OrderStatus.CANCELLED || input.status === OrderStatus.RTO) && input.ndrReason) {
       desc = `Exception Reason: ${input.ndrReason}`;
     }
@@ -550,7 +564,14 @@ export async function bulkCreateOrders(
 export async function bulkUpdateOrderStatus(
   orderIds: string[],
   status: OrderStatus,
-  options: { notes?: string; location?: string; actorId: string; actorName?: string },
+  options: {
+    notes?: string;
+    location?: string;
+    actorId: string;
+    actorName?: string;
+    thirdPartyName?: string;
+    thirdPartyTracking?: string;
+  },
 ) {
   const title = getDefaultMilestoneTitle(status);
 
@@ -566,11 +587,16 @@ export async function bulkUpdateOrderStatus(
         data: {
           status,
           ...(options.notes && { deliveryNotes: options.notes }),
+          ...(options.thirdPartyName && { thirdPartyName: options.thirdPartyName }),
+          ...(options.thirdPartyTracking && { thirdPartyTracking: options.thirdPartyTracking }),
           milestones: {
             create: {
               status,
               title,
-              description: options.notes || getDefaultMilestoneDescription(status, ord.awbNumber),
+              description:
+                status === OrderStatus.HANDED_TO_THIRD_PARTY && options.thirdPartyName
+                  ? `Handed over to ${options.thirdPartyName}${options.thirdPartyTracking ? ` (Ref / AWB: ${options.thirdPartyTracking})` : ""}.`
+                  : options.notes || getDefaultMilestoneDescription(status, ord.awbNumber),
               location: options.location || `${ord.receiverCity} Hub`,
               performedBy: options.actorName || "Batch Dispatch Action",
             },
@@ -645,6 +671,8 @@ export async function getOrdersForExport(params: { search?: string; status?: Ord
       chargeableWeight: true,
       totalAmount: true,
       declaredValue: true,
+      thirdPartyName: true,
+      thirdPartyTracking: true,
       createdAt: true,
     },
   });
