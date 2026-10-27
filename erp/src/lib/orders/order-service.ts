@@ -35,6 +35,8 @@ export interface CreateOrderInput {
   totalAmount: number;
   declaredValue: number;
   status?: OrderStatus;
+  parcelPhotoBase64?: string;
+  parcelPhotoName?: string;
 }
 
 export interface UpdateOrderInput extends Partial<CreateOrderInput> {
@@ -42,6 +44,9 @@ export interface UpdateOrderInput extends Partial<CreateOrderInput> {
   deliveryNotes?: string;
   ndrReason?: string;
   statusLocation?: string;
+  stepPhotoBase64?: string;
+  stepPhotoName?: string;
+  stepPhotoCaption?: string;
 }
 
 export function computeWeights(deadWeight: number, lengthCm: number, widthCm: number, heightCm: number) {
@@ -188,8 +193,33 @@ export async function getOrderById(id: string) {
       createdBy: {
         select: { id: true, displayName: true, email: true },
       },
-      milestones: {
+      attachments: {
+        select: {
+          id: true,
+          type: true,
+          fileName: true,
+          mimeType: true,
+          sizeBytes: true,
+          caption: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: "asc" },
+      },
+      milestones: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          attachments: {
+            select: {
+              id: true,
+              type: true,
+              fileName: true,
+              mimeType: true,
+              sizeBytes: true,
+              caption: true,
+              createdAt: true,
+            },
+          },
+        },
       },
     },
   });
@@ -250,9 +280,27 @@ export async function createOrder(input: CreateOrderInput, actorId: string, acto
           performedBy: actorName || "Operations Dispatcher",
         },
       },
+      ...(input.parcelPhotoBase64 && {
+        attachments: {
+          create: {
+            type: "ORDER_REGISTRATION",
+            fileName: input.parcelPhotoName || "consignment-parcel-photo.webp",
+            mimeType: "image/webp",
+            sizeBytes: Math.round(
+              (input.parcelPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, "").length * 3) / 4,
+            ),
+            data: Buffer.from(
+              input.parcelPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, ""),
+              "base64",
+            ),
+            caption: `Consignment Registration Parcel Photo - ${orderNumber}`,
+          },
+        },
+      }),
     },
     include: {
       milestones: true,
+      attachments: true,
     },
   });
 
@@ -321,6 +369,23 @@ export async function updateOrder(
     ...(input.declaredValue !== undefined && { declaredValue: input.declaredValue }),
     ...(input.deliveryNotes !== undefined && { deliveryNotes: input.deliveryNotes }),
     ...(input.ndrReason !== undefined && { ndrReason: input.ndrReason }),
+    ...(input.parcelPhotoBase64 && {
+      attachments: {
+        create: {
+          type: "ORDER_REGISTRATION",
+          fileName: input.parcelPhotoName || "consignment-parcel-photo.webp",
+          mimeType: "image/webp",
+          sizeBytes: Math.round(
+            (input.parcelPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, "").length * 3) / 4,
+          ),
+          data: Buffer.from(
+            input.parcelPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, ""),
+            "base64",
+          ),
+          caption: `Consignment Registration Parcel Photo - ${existing.orderNumber}`,
+        },
+      },
+    }),
   };
 
   if (statusChanged && input.status) {
@@ -332,6 +397,10 @@ export async function updateOrder(
       desc = `Exception Reason: ${input.ndrReason}`;
     }
 
+    const stepPhotoBuffer = input.stepPhotoBase64
+      ? Buffer.from(input.stepPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, ""), "base64")
+      : null;
+
     data.milestones = {
       create: {
         status: input.status,
@@ -339,6 +408,19 @@ export async function updateOrder(
         description: desc,
         location: input.statusLocation?.trim() || `${existing.receiverCity} Distribution Hub`,
         performedBy: actorName || "Operations Dispatcher",
+        ...(stepPhotoBuffer && {
+          attachments: {
+            create: {
+              orderId: id,
+              type: "MILESTONE_STEP",
+              fileName: input.stepPhotoName || `step-${input.status.toLowerCase()}.webp`,
+              mimeType: "image/webp",
+              sizeBytes: stepPhotoBuffer.length,
+              data: stepPhotoBuffer,
+              caption: input.stepPhotoCaption || `Milestone verification photo for ${input.status}`,
+            },
+          },
+        }),
       },
     };
   }

@@ -32,6 +32,8 @@ const createOrderSchema = z.object({
   totalAmount: z.coerce.number().min(0, "Amount cannot be negative"),
   declaredValue: z.coerce.number().min(0, "Declared value cannot be negative"),
   status: z.nativeEnum(OrderStatus).optional(),
+  parcelPhotoBase64: z.string().optional(),
+  parcelPhotoName: z.string().optional(),
 });
 
 export async function GET(req: Request) {

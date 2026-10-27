@@ -1,8 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { OrderStatus, PaymentMode, ServiceType } from "@prisma/client";
 import { IconPencil, IconPrinter, IconTrash } from "@/components/icons/nav-icons";
+
+export interface OrderAttachmentItem {
+  id: string;
+  type: "ORDER_REGISTRATION" | "MILESTONE_STEP";
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  caption?: string | null;
+  createdAt: string;
+}
 
 export interface OrderMilestoneItem {
   id: string;
@@ -11,6 +22,7 @@ export interface OrderMilestoneItem {
   description?: string | null;
   location?: string | null;
   performedBy?: string | null;
+  attachments?: OrderAttachmentItem[];
   createdAt: string;
 }
 
@@ -50,6 +62,7 @@ export interface OrderDetail {
   deliveryNotes?: string | null;
   ndrReason?: string | null;
   milestones?: OrderMilestoneItem[];
+  attachments?: OrderAttachmentItem[];
 
   createdAt: string;
   createdBy?: { id: string; displayName: string; email: string } | null;
@@ -101,10 +114,13 @@ export function OrderDetailModal({
   onDelete,
   onPrintLetterhead,
 }: OrderDetailModalProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<OrderAttachmentItem | null>(null);
+
   if (!order) return null;
 
   const currentStepIndex = STATUS_STEPS.indexOf(order.status);
   const milestones = order.milestones ?? [];
+  const registrationPhoto = order.attachments?.find((a) => a.type === "ORDER_REGISTRATION") || order.attachments?.[0];
 
   return (
     <Modal
@@ -132,6 +148,58 @@ export function OrderDetailModal({
             AWB: <strong className="text-[var(--text)] font-mono">{order.awbNumber}</strong>
           </div>
         </div>
+
+        {/* Consignment Parcel Registration Photo Banner (if present) */}
+        {registrationPhoto && (
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <button
+                type="button"
+                onClick={() => setSelectedPhoto(registrationPhoto)}
+                className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--border)] bg-black/5 hover:opacity-90 transition-all"
+                title="Click to view full photo"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/attachments/${registrationPhoto.id}`}
+                  alt="Registered Consignment Parcel"
+                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    <line x1="11" y1="8" x2="11" y2="14" />
+                    <line x1="8" y1="11" x2="14" y2="11" />
+                  </svg>
+                </div>
+              </button>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[var(--text)]">Consignment Registration Parcel Photo</span>
+                  <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.2 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {(registrationPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--muted)] truncate max-w-md">
+                  {registrationPhoto.caption || registrationPhoto.fileName}
+                </p>
+                <p className="text-[10px] text-[var(--muted)]">
+                  Captured at booking · Stored compressed in Neon DB · Click to enlarge
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedPhoto(registrationPhoto)}
+              className="btn btn-ghost text-xs text-[var(--primary)] border border-[var(--border)] shrink-0"
+            >
+              View Photo
+            </button>
+          </div>
+        )}
 
         {/* Lifecycle Progress Bar */}
         {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RTO && (
@@ -250,6 +318,41 @@ export function OrderDetailModal({
                         <p className="text-[11px] text-[var(--muted)] leading-relaxed">
                           {m.description}
                         </p>
+                      )}
+
+                      {/* Milestone Step Verification Photo Proofs */}
+                      {m.attachments && m.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                          {m.attachments.map((att) => (
+                            <button
+                              key={att.id}
+                              type="button"
+                              onClick={() => setSelectedPhoto(att)}
+                              className="group/photo relative flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]/20 transition-all text-left"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={`/api/attachments/${att.id}`}
+                                alt={att.caption || att.fileName}
+                                className="h-11 w-11 rounded-lg object-cover border border-[var(--border)] shrink-0"
+                                loading="lazy"
+                              />
+                              <div className="text-[10px] space-y-0.5 pr-2">
+                                <div className="flex items-center gap-1 font-semibold text-[var(--text)] group-hover/photo:text-[var(--primary)]">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                    <circle cx="12" cy="13" r="4" />
+                                  </svg>
+                                  <span>Step Verification Photo</span>
+                                </div>
+                                <p className="text-[var(--muted)] truncate max-w-[150px]">{att.caption || att.fileName}</p>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[9px]">
+                                  {(att.sizeBytes / 1024).toFixed(1)} KB WebP
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       )}
 
                       <div className="flex items-center justify-between pt-1 text-[10px] text-[var(--muted)] border-t border-[var(--border)]/40">
@@ -401,6 +504,81 @@ export function OrderDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Lightbox / High-Res Image Preview Modal */}
+      {selectedPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full max-h-[90vh] flex flex-col rounded-2xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-slate-950/70">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  {selectedPhoto.type === "ORDER_REGISTRATION" ? "Parcel Registration Photo" : "Milestone Step Proof"}
+                </span>
+                <span className="text-xs font-mono text-slate-300 truncate max-w-xs">
+                  {selectedPhoto.fileName}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`/api/attachments/${selectedPhoto.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  download={selectedPhoto.fileName}
+                  className="text-xs text-blue-400 hover:text-blue-300 underline font-medium"
+                >
+                  Download
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPhoto(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Image Preview Container */}
+            <div className="relative flex-1 flex items-center justify-center p-4 bg-black/50 overflow-auto min-h-[320px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/attachments/${selectedPhoto.id}`}
+                alt={selectedPhoto.caption || selectedPhoto.fileName}
+                className="max-h-[65vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
+              />
+            </div>
+
+            {/* Footer with Metadata */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-2.5 bg-slate-950/70 text-xs text-slate-400">
+              <div>
+                {selectedPhoto.caption && (
+                  <p className="text-white font-medium mb-0.5">{selectedPhoto.caption}</p>
+                )}
+                <span className="text-[11px] text-slate-400">
+                  Logged on {new Date(selectedPhoto.createdAt).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[11px]">
+                <span className="text-emerald-400 font-mono font-semibold">
+                  {(selectedPhoto.sizeBytes / 1024).toFixed(1)} KB (Neon DB WebP)
+                </span>
+                <span className="text-slate-500">·</span>
+                <span>Optimized raw BYTEA</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Modal>
   );
 }

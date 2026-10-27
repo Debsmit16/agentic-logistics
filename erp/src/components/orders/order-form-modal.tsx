@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { OrderStatus, PaymentMode, ServiceType } from "@prisma/client";
+import { compressImageToWebP } from "@/lib/image-compression";
 
 export interface OrderFormData {
   id?: string;
@@ -75,6 +76,16 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
     declaredValue: order?.declaredValue ?? 1000,
   }));
 
+  const [parcelPhoto, setParcelPhoto] = useState<{
+    dataUrl: string;
+    base64: string;
+    sizeBytes: number;
+    fileName: string;
+    originalSizeBytes?: number;
+  } | null>(null);
+  const [compressingImage, setCompressingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +96,31 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
     return { volWeight: vol, chargeableWeight: chg };
   }, [formData.lengthCm, formData.widthCm, formData.heightCm, formData.packageWeight]);
 
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please select a valid image file (JPG, PNG, WebP)");
+      return;
+    }
+
+    try {
+      setCompressingImage(true);
+      setImageError(null);
+      const compressed = await compressImageToWebP(file, 800, 0.75);
+      setParcelPhoto({
+        ...compressed,
+        originalSizeBytes: file.size,
+      });
+    } catch (err) {
+      console.error("Compression failed", err);
+      setImageError("Failed to compress image. Please try another photo.");
+    } finally {
+      setCompressingImage(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -94,10 +130,20 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
       const url = isEditing ? `/api/orders/${order?.id}` : "/api/orders";
       const method = isEditing ? "PATCH" : "POST";
 
+      const payload = {
+        ...formData,
+        ...(parcelPhoto
+          ? {
+              parcelPhotoBase64: parcelPhoto.dataUrl,
+              parcelPhotoName: parcelPhoto.fileName,
+            }
+          : {}),
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -388,6 +434,96 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               <p className="text-sm font-bold text-[var(--primary)]">{chargeableWeight} kg</p>
             </div>
           </div>
+        </div>
+
+        {/* Consignment Registration Parcel Photo */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]/40 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                Consignment / Parcel Photo
+              </span>
+              <p className="text-[10px] text-[var(--muted)]">
+                Upload parcel photo at booking. High-efficiency WebP compression (~25 KB) for zero cloud cost.
+              </p>
+            </div>
+            {parcelPhoto && (
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                {(parcelPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+              </span>
+            )}
+          </div>
+
+          {imageError && (
+            <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2 text-[11px] text-rose-600 dark:text-rose-400">
+              {imageError}
+            </div>
+          )}
+
+          {parcelPhoto ? (
+            <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={parcelPhoto.dataUrl}
+                alt="Parcel Preview"
+                className="h-16 w-16 rounded-lg object-cover border border-[var(--border)] shadow-sm shrink-0"
+              />
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-xs font-semibold text-[var(--text)] truncate">{parcelPhoto.fileName}</p>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--muted)]">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    Optimized: {(parcelPhoto.sizeBytes / 1024).toFixed(1)} KB
+                  </span>
+                  {parcelPhoto.originalSizeBytes && (
+                    <span>
+                      (Saved {Math.max(0, Math.round((1 - parcelPhoto.sizeBytes / parcelPhoto.originalSizeBytes) * 100))}% space)
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setParcelPhoto(null)}
+                className="btn btn-ghost text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)]/50 p-4 hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]/20 cursor-pointer transition-all">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                disabled={compressingImage}
+                className="hidden"
+              />
+              {compressingImage ? (
+                <div className="flex items-center gap-2 text-xs font-medium text-[var(--primary)]">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+                  Compressing photo to WebP...
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-[var(--primary)] hover:underline">
+                      Upload or Take Parcel Photo
+                    </span>
+                    <span className="text-xs text-[var(--muted)]"> (Optional)</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted)]">
+                    PNG, JPG, HEIC, WebP · Auto-optimized to ~25 KB
+                  </p>
+                </div>
+              )}
+            </label>
+          )}
         </div>
 
         {/* Commercial & Service Mode */}

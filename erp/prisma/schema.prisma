@@ -141,6 +141,7 @@ model Order {
   createdById      String?
   createdBy        User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
   milestones       OrderMilestone[]
+  attachments      OrderAttachment[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -159,7 +160,31 @@ model OrderMilestone {
   description String?
   location    String?
   performedBy String?
+  attachments OrderAttachment[]
   createdAt   DateTime    @default(now())
 
   @@index([orderId, createdAt])
+}
+
+enum AttachmentType {
+  ORDER_REGISTRATION
+  MILESTONE_STEP
+}
+
+model OrderAttachment {
+  id          String          @id @default(cuid())
+  orderId     String
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  milestoneId String?
+  milestone   OrderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  type        AttachmentType  @default(ORDER_REGISTRATION)
+  fileName    String          @default("consignment-photo.webp")
+  mimeType    String          @default("image/webp")
+  sizeBytes   Int             @default(0)
+  data        Bytes           // Raw PostgreSQL BYTEA binary
+  caption     String?
+  createdAt   DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([milestoneId])
 }
