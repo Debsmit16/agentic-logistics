@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AppLogo } from "@/components/brand/app-logo";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import { LOGO } from "@/lib/brand";
 import {
@@ -190,23 +191,25 @@ export function AppShell({
             <Breadcrumbs />
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Theme Toggle */}
-            
+          <div className="flex items-center gap-2.5">
+            {/* Theme Mode Switcher */}
+            <ThemeToggle />
+
+            {/* Desktop App Download Button */}
             <a
               href="/api/download"
               download="Agentic-Logistics-Setup.exe"
               title="Download Agentic Logistics for Windows"
-              className="group inline-flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--text)] shadow-sm backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-[var(--surface-raised)] hover:shadow-md active:scale-95"
+              className="group inline-flex h-8 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-2.5 sm:px-3 text-xs font-semibold text-[var(--text)] shadow-sm backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-[var(--surface-raised)] hover:shadow-md active:scale-95"
             >
               <Image
                 src={LOGO.sm}
                 alt="Agentic Logistics"
-                width={20}
-                height={20}
+                width={18}
+                height={18}
                 className="shrink-0 object-contain transition-transform group-hover:scale-110"
               />
-              <span>Download</span>
+              <span className="hidden sm:inline">Download</span>
               <svg
                 width="14"
                 height="14"

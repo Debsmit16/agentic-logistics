@@ -23,10 +23,8 @@ const exeFile = files.find((f) => f.endsWith('.exe') && f.includes('Setup'));
 if (exeFile) {
   const src = path.join(desktopDist, exeFile);
   const destExe = path.join(downloadsDir, 'Agentic-Logistics-Setup.exe');
-  const destRootExe = path.join(erpPublic, 'Agentic-Logistics-Setup.exe');
 
   fs.copyFileSync(src, destExe);
-  fs.copyFileSync(src, destRootExe);
 
   const stats = fs.statSync(src);
   const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);

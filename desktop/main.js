@@ -13,7 +13,7 @@ if (!gotTheLock) {
 
 let mainWindow = null;
 const DEFAULT_LOCAL_URL = 'http://localhost:3000';
-const DEFAULT_PROD_URL = 'https://agentic-logistics.vercel.app';
+const DEFAULT_PROD_URL = 'https://erp.agenticlogistics.in';
 
 // Config path for user persistence
 function getConfigPath() {
