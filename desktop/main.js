@@ -4,6 +4,25 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 
+// Append switches for enterprise SSL & local testing
+app.commandLine.appendSwitch('ignore-certificate-errors', 'true');
+app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
+
+// Trust certificates for platform domains
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  if (
+    url.includes('agenticlogistics.in') ||
+    url.includes('vercel.app') ||
+    url.includes('localhost') ||
+    url.includes('127.0.0.1')
+  ) {
+    event.preventDefault();
+    callback(true);
+  } else {
+    callback(false);
+  }
+});
+
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -47,8 +66,13 @@ function checkUrlReachability(testUrl) {
   return new Promise((resolve) => {
     try {
       const parsed = new URL(testUrl);
-      const client = parsed.protocol === 'https:' ? https : http;
-      const req = client.get(testUrl, { timeout: 1500 }, (res) => {
+      const isHttps = parsed.protocol === 'https:';
+      const client = isHttps ? https : http;
+      const options = {
+        timeout: 1500,
+        rejectUnauthorized: false,
+      };
+      const req = client.get(testUrl, options, (res) => {
         resolve(res.statusCode >= 200 && res.statusCode < 500);
       });
       req.on('error', () => resolve(false));
@@ -120,9 +144,16 @@ function createMainWindow() {
   // Load the application
   loadTargetApplication();
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-  });
+  const showWindowSafely = () => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  };
+
+  mainWindow.once('ready-to-show', showWindowSafely);
+  // Failsafe: guarantee window is always displayed even if network is slow
+  setTimeout(showWindowSafely, 1500);
 
   // Track window bounds
   mainWindow.on('close', () => {
@@ -143,7 +174,6 @@ function createMainWindow() {
   // Open external links in default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http:') || url.startsWith('https:')) {
-      // Check if external or navigation
       const currentUrl = mainWindow.webContents.getURL();
       try {
         const parsedCurrent = new URL(currentUrl);
@@ -161,6 +191,7 @@ function createMainWindow() {
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
     console.warn(`[Desktop] Page failed to load: ${errorCode} - ${errorDescription} (${validatedURL})`);
     if (errorCode === -3) return; // ignore ABORTED errors (e.g. user navigation)
+    if (validatedURL && validatedURL.includes('offline.html')) return;
     loadOfflinePage();
   });
 }
@@ -170,7 +201,9 @@ async function loadTargetApplication() {
   const targetUrl = await resolveInitialUrl();
   console.log(`[Desktop] Loading target: ${targetUrl}`);
 
-  mainWindow.loadURL(targetUrl).catch((err) => {
+  mainWindow.loadURL(targetUrl).then(() => {
+    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
+  }).catch((err) => {
     console.error(`[Desktop] Failed to load URL:`, err.message);
     loadOfflinePage();
   });
@@ -179,7 +212,9 @@ async function loadTargetApplication() {
 function loadOfflinePage() {
   if (!mainWindow) return;
   const offlinePath = path.join(__dirname, 'offline.html');
-  mainWindow.loadFile(offlinePath);
+  mainWindow.loadFile(offlinePath).finally(() => {
+    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
+  });
 }
 
 function setupApplicationMenu() {
