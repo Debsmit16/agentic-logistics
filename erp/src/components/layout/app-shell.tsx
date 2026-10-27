@@ -248,6 +248,21 @@ export function AppShell({
 
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 lg:p-10">{children}</main>
+
+        {/* Sleek Enterprise Footer */}
+        <footer className="shrink-0 z-10 flex h-9 items-center justify-between border-t border-[var(--border)] bg-[var(--surface)]/90 px-6 text-[11px] text-[var(--muted)] backdrop-blur-md select-none">
+          <div className="flex items-center gap-2">
+            <span>© {new Date().getFullYear()} Agentic Logistics Inc. All rights reserved.</span>
+          </div>
+          <div className="flex items-center gap-3 font-mono text-[10px]">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="hidden sm:inline">System Operational</span>
+            </span>
+            <span className="text-[var(--border)]">•</span>
+            <span className="rounded bg-[var(--surface-raised)] px-1.5 py-0.5 font-semibold text-[var(--text)]">v1.0.0</span>
+          </div>
+        </footer>
       </div>
     </div>
   );
