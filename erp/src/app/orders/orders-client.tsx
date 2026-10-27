@@ -299,23 +299,43 @@ export function OrdersClient() {
     setSelectedIds(new Set());
   }
 
-  function handleExportCsv() {
-    const params = new URLSearchParams();
-    if (search.trim()) params.set("search", search.trim());
-    if (statusFilter !== "ALL") {
-      params.set("status", statusFilter);
-    } else if (activeTab === "OUT_FOR_DELIVERY") {
-      params.set("status", OrderStatus.OUT_FOR_DELIVERY);
-    } else if (activeTab === "DELIVERED") {
-      params.set("status", OrderStatus.DELIVERED);
-    } else if (activeTab === "EXCEPTIONS") {
-      params.set("status", OrderStatus.RTO);
-    } else if (activeTab === "PIPELINE") {
-      params.set("status", OrderStatus.IN_TRANSIT);
-    }
+  async function handleExportCsv() {
+    try {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      if (statusFilter !== "ALL") {
+        params.set("status", statusFilter);
+      } else if (activeTab === "OUT_FOR_DELIVERY") {
+        params.set("status", OrderStatus.OUT_FOR_DELIVERY);
+      } else if (activeTab === "DELIVERED") {
+        params.set("status", OrderStatus.DELIVERED);
+      } else if (activeTab === "EXCEPTIONS") {
+        params.set("status", OrderStatus.RTO);
+      } else if (activeTab === "PIPELINE") {
+        params.set("status", OrderStatus.IN_TRANSIT);
+      }
 
-    const exportUrl = `/api/orders/export?${params.toString()}`;
-    window.open(exportUrl, "_blank");
+      const res = await fetch(`/api/orders/export?${params.toString()}`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({ error: "Export failed" }));
+        alert(`Export failed: ${errJson.error || res.statusText}`);
+        return;
+      }
+
+      const blob = await res.blob();
+      const filename = `agentic_manifest_${new Date().toISOString().slice(0, 10)}.csv`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("[OrdersClient] export error", err);
+      alert("Failed to export manifest. Please check your network connection.");
+    }
   }
 
   async function confirmDelete() {

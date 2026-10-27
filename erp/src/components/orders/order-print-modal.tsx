@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { IconPrinter } from "@/components/icons/nav-icons";
 import { printIsolatedElement } from "@/lib/print-utils";
+import { SvgBarcode } from "@/components/orders/svg-barcode";
 import type { OrderItem } from "@/app/orders/orders-client";
 
 interface OrderPrintModalProps {
@@ -13,103 +13,336 @@ interface OrderPrintModalProps {
   onClose: () => void;
 }
 
-function ThermalLabelContent({ order }: { order: OrderItem }) {
+export function ThermalLabelContent({
+  order,
+  index,
+}: {
+  order: OrderItem;
+  index?: number;
+}) {
   return (
     <div
-      id="thermal-shipping-label"
-      className="thermal-shipping-label w-full max-w-[390px] border-2 border-black bg-white text-black p-5 font-mono text-xs shadow-md select-none mx-auto mb-4"
+      id={index !== undefined ? `thermal-shipping-label-${index}` : "thermal-shipping-label"}
+      className="thermal-shipping-label select-none"
+      style={{
+        width: "3.8in",
+        maxWidth: "3.8in",
+        height: "5.6in",
+        maxHeight: "5.6in",
+        boxSizing: "border-box",
+        margin: "0 auto",
+        padding: "8px 10px",
+        backgroundColor: "#ffffff",
+        color: "#000000",
+        fontFamily: 'Arial, Helvetica, "Liberation Sans", sans-serif',
+        fontSize: "11px",
+        lineHeight: "1.25",
+        border: "2px solid #000000",
+        overflow: "hidden",
+        pageBreakAfter: "always",
+        pageBreakInside: "avoid",
+        breakAfter: "page",
+        breakInside: "avoid",
+      }}
     >
-      {/* Header: Carrier Logo & Mode */}
-      <div className="flex items-center justify-between border-b-2 border-black pb-2.5">
+      {/* 1. Carrier Header & Service Mode */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "2px solid #000000",
+          paddingBottom: "5px",
+          marginBottom: "5px",
+        }}
+      >
         <div>
-          <div className="text-base font-black tracking-widest leading-none">AGENTIC LOGISTICS</div>
-          <div className="text-[10px] font-bold text-slate-700 tracking-wider mt-0.5">EXPRESS FREIGHT SYSTEM</div>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: "900",
+              letterSpacing: "1.5px",
+              lineHeight: "1.1",
+              color: "#000000",
+            }}
+          >
+            AGENTIC LOGISTICS
+          </div>
+          <div
+            style={{
+              fontSize: "9px",
+              fontWeight: "700",
+              letterSpacing: "0.8px",
+              color: "#333333",
+              marginTop: "2px",
+            }}
+          >
+            EXPRESS FREIGHT SYSTEM
+          </div>
         </div>
-        <div className="text-right">
-          <span className="inline-block border-2 border-black px-2 py-0.5 text-xs font-black uppercase">
+        <div style={{ textAlign: "right" }}>
+          <div
+            style={{
+              display: "inline-block",
+              border: "1.5px solid #000000",
+              padding: "1px 6px",
+              fontSize: "11px",
+              fontWeight: "900",
+              textTransform: "uppercase",
+              lineHeight: "1.2",
+              backgroundColor: "#ffffff",
+              color: "#000000",
+            }}
+          >
             {order.serviceType}
-          </span>
-          <div className="text-[10px] font-bold mt-0.5">{order.paymentMode}</div>
+          </div>
+          <div
+            style={{
+              fontSize: "10px",
+              fontWeight: "800",
+              marginTop: "2px",
+              textTransform: "uppercase",
+              color: "#000000",
+            }}
+          >
+            {order.paymentMode}
+          </div>
         </div>
       </div>
 
-      {/* High-Contrast AWB Barcode Simulation */}
-      <div className="py-3 text-center border-b-2 border-black">
-        <div className="flex justify-center items-end gap-[2px] h-14 mx-auto px-2">
-          {[
-            3, 1, 4, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 4, 1, 2, 1, 4, 3, 1, 2, 4, 1,
-            3, 2, 1, 4, 1, 3, 2, 4, 1, 2, 4, 3, 1, 2, 1, 4, 2, 3, 1, 4, 2, 1, 3, 2,
-          ].map((w, idx) => (
-            <div
-              key={idx}
-              className="bg-black"
-              style={{
-                width: `${w * 1.5}px`,
-                height: `${40 + (idx % 3) * 6}px`,
-              }}
-            />
-          ))}
+      {/* 2. Vector SVG Barcode & AWB Code */}
+      <div
+        style={{
+          textAlign: "center",
+          borderBottom: "2px solid #000000",
+          paddingBottom: "5px",
+          marginBottom: "5px",
+        }}
+      >
+        <SvgBarcode value={order.awbNumber || "AWB-0000"} height={40} />
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: "900",
+            letterSpacing: "2px",
+            marginTop: "3px",
+            fontFamily: "monospace",
+            color: "#000000",
+          }}
+        >
+          {order.awbNumber}
         </div>
-        <div className="mt-1.5 text-xs font-black tracking-widest">{order.awbNumber}</div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "9px",
+            fontWeight: "800",
+            color: "#333333",
+            padding: "0 2px",
+            marginTop: "2px",
+          }}
+        >
+          <span>HUB: {order.receiverCity?.slice(0, 3).toUpperCase() || "DEL"}</span>
+          <span>DEST PIN: {order.receiverPincode}</span>
+          <span>ROUTING: EXP-S1</span>
+        </div>
       </div>
 
-      {/* Origin & Destination Addresses */}
-      <div className="grid grid-cols-2 gap-3 border-b-2 border-black py-3 text-[11px] leading-tight">
-        {/* Deliver To */}
-        <div className="pr-2 border-r border-black">
-          <div className="font-black text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+      {/* 3. Origin & Destination Addresses (Two Column) */}
+      <div
+        style={{
+          display: "flex",
+          borderBottom: "2px solid #000000",
+          paddingBottom: "5px",
+          marginBottom: "5px",
+          gap: "8px",
+          fontSize: "10px",
+          lineHeight: "1.25",
+        }}
+      >
+        {/* Consignee (Deliver To) */}
+        <div
+          style={{
+            flex: 1,
+            borderRight: "1.5px solid #000000",
+            paddingRight: "6px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "8.5px",
+              fontWeight: "900",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              color: "#444444",
+              marginBottom: "2px",
+            }}
+          >
             DELIVER TO (CONSIGNEE):
           </div>
-          <div className="font-black text-xs text-black">{order.receiverName}</div>
-          <div className="mt-1">{order.receiverAddress}</div>
-          <div className="font-black mt-1">
+          <div
+            style={{
+              fontSize: "12px",
+              fontWeight: "900",
+              color: "#000000",
+              lineHeight: "1.2",
+            }}
+          >
+            {order.receiverName}
+          </div>
+          <div style={{ marginTop: "2px", color: "#111111" }}>
+            {order.receiverAddress}
+          </div>
+          <div style={{ fontWeight: "700", marginTop: "2px" }}>
             {order.receiverCity}, {order.receiverState}
           </div>
-          <div className="font-black text-sm text-black mt-0.5 tracking-wider">
+          <div
+            style={{
+              fontSize: "12px",
+              fontWeight: "900",
+              color: "#000000",
+              marginTop: "2px",
+              letterSpacing: "0.5px",
+            }}
+          >
             PIN: {order.receiverPincode}
           </div>
-          <div className="mt-1 text-[10px]">TEL: {order.receiverPhone}</div>
+          <div
+            style={{
+              marginTop: "2px",
+              fontSize: "9.5px",
+              fontWeight: "700",
+            }}
+          >
+            TEL: {order.receiverPhone}
+          </div>
         </div>
 
-        {/* Return If Undelivered */}
-        <div className="pl-1">
-          <div className="font-black text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+        {/* Shipper (Return if Undelivered) */}
+        <div style={{ flex: 1, paddingLeft: "2px" }}>
+          <div
+            style={{
+              fontSize: "8.5px",
+              fontWeight: "900",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              color: "#444444",
+              marginBottom: "2px",
+            }}
+          >
             RETURN IF UNDELIVERED:
           </div>
-          <div className="font-bold text-black">{order.senderName}</div>
-          <div className="mt-1">{order.senderAddress}</div>
-          <div className="mt-1">
+          <div style={{ fontWeight: "800", color: "#000000" }}>
+            {order.senderName}
+          </div>
+          <div style={{ marginTop: "2px", color: "#222222" }}>
+            {order.senderAddress}
+          </div>
+          <div style={{ marginTop: "2px" }}>
             {order.senderCity}, {order.senderState} - {order.senderPincode}
           </div>
-          <div className="mt-1 text-[10px]">TEL: {order.senderPhone}</div>
+          <div style={{ marginTop: "2px", fontSize: "9.5px" }}>
+            TEL: {order.senderPhone}
+          </div>
         </div>
       </div>
 
-      {/* Package Contents & Dimensions */}
-      <div className="border-b-2 border-black py-2 text-[10px] space-y-1">
-        <div className="flex justify-between">
-          <span>ITEM: <strong>{order.itemDescription}</strong></span>
+      {/* 4. Package Dimensions & Weight */}
+      <div
+        style={{
+          borderBottom: "2px solid #000000",
+          paddingBottom: "4px",
+          marginBottom: "5px",
+          fontSize: "9.5px",
+          lineHeight: "1.3",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span>
+            ITEM: <strong>{order.itemDescription}</strong>
+          </span>
+          <span>
+            VAL: <strong>₹{order.declaredValue?.toLocaleString() || "0"}</strong>
+          </span>
         </div>
-        <div className="flex justify-between text-[11px]">
-          <span>DIMS: {order.lengthCm}x{order.widthCm}x{order.heightCm} cm</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "2px",
+            fontSize: "10px",
+          }}
+        >
+          <span>
+            DIMS: {order.lengthCm}x{order.widthCm}x{order.heightCm} cm
+          </span>
           <span>ACTUAL WT: {order.packageWeight} kg</span>
         </div>
       </div>
 
-      {/* Commercial Routing Footer */}
-      <div className="pt-2.5 flex items-center justify-between text-xs font-black">
+      {/* 5. Commercial Routing Footer */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          fontSize: "10px",
+          fontWeight: "800",
+        }}
+      >
         <div>
-          <div className="text-[9px] text-slate-600 font-bold uppercase">CHARGEABLE WT</div>
-          <div className="text-sm font-black">{order.chargeableWeight} KG</div>
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              color: "#444444",
+            }}
+          >
+            CHARGEABLE WT
+          </div>
+          <div style={{ fontSize: "12px", fontWeight: "900", marginTop: "1px" }}>
+            {order.chargeableWeight} KG
+          </div>
         </div>
-        <div className="text-center">
-          <div className="text-[9px] text-slate-600 font-bold uppercase">ORDER REF</div>
-          <div className="text-xs font-black">{order.orderNumber}</div>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              color: "#444444",
+            }}
+          >
+            ORDER REF
+          </div>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: "900",
+              fontFamily: "monospace",
+              marginTop: "1px",
+            }}
+          >
+            {order.orderNumber}
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-[9px] text-slate-600 font-bold uppercase">COLLECT / TARIFF</div>
-          <div className="text-sm font-black">
-            {order.paymentMode === "COD" ? `COD: ₹${order.totalAmount}` : `PAID: ₹${order.totalAmount}`}
+        <div style={{ textAlign: "right" }}>
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              color: "#444444",
+            }}
+          >
+            COLLECT / TARIFF
+          </div>
+          <div style={{ fontSize: "12px", fontWeight: "900", marginTop: "1px" }}>
+            {order.paymentMode === "COD"
+              ? `COD: ₹${order.totalAmount}`
+              : `PAID: ₹${order.totalAmount}`}
           </div>
         </div>
       </div>
@@ -117,89 +350,64 @@ function ThermalLabelContent({ order }: { order: OrderItem }) {
   );
 }
 
-export function OrderPrintModal({ open, order, orders, onClose }: OrderPrintModalProps) {
-  const isBatch = Boolean(orders && orders.length > 1);
-  const orderList = isBatch ? (orders as OrderItem[]) : order ? [order] : [];
-  const [activeIdx, setActiveIdx] = useState(0);
+export function OrderPrintModal({
+  open,
+  order,
+  orders,
+  onClose,
+}: OrderPrintModalProps) {
+  const orderList: OrderItem[] =
+    orders && orders.length > 0 ? orders : order ? [order] : [];
+  const isBatch = orderList.length > 1;
 
   if (orderList.length === 0) return null;
 
-  const currentOrder = orderList[activeIdx] || orderList[0];
-
   function handlePrint() {
-    if (isBatch) {
-      printIsolatedElement("thermal-shipping-labels-batch", "thermal");
-    } else {
-      printIsolatedElement("thermal-shipping-label", "thermal");
-    }
+    printIsolatedElement("thermal-shipping-labels-container", "thermal");
   }
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={isBatch ? `Batch Shipping Labels (${orderList.length} Selected)` : "Shipping Label Preview"}
+      title={
+        isBatch
+          ? `Batch Shipping Labels (${orderList.length} Selected)`
+          : "Shipping Label Preview"
+      }
       description={
         isBatch
-          ? `Bundle printing ${orderList.length} thermal labels sequentially.`
-          : `AWB Manifest: ${currentOrder.awbNumber} · Standard 4x6 Thermal Label`
+          ? `Bundle preview of ${orderList.length} thermal labels. Will print 1 label per sheet.`
+          : `AWB Manifest: ${orderList[0].awbNumber} · Standard 4x6 Thermal Label`
       }
       wide
     >
       <div className="space-y-5">
-        {/* Batch selector controls */}
-        {isBatch && (
-          <div className="flex items-center justify-between bg-[var(--surface-raised)]/60 px-4 py-2.5 rounded-xl border border-[var(--border)] text-xs">
-            <span className="font-semibold text-[var(--text)]">
-              Previewing Label {activeIdx + 1} of {orderList.length} ({currentOrder.orderNumber})
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                disabled={activeIdx === 0}
-                onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
-                className="btn btn-ghost h-7 px-2 text-[11px] disabled:opacity-40"
-              >
-                &larr; Prev
-              </button>
-              <button
-                type="button"
-                disabled={activeIdx === orderList.length - 1}
-                onClick={() => setActiveIdx((i) => Math.min(orderList.length - 1, i + 1))}
-                className="btn btn-ghost h-7 px-2 text-[11px] disabled:opacity-40"
-              >
-                Next &rarr;
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Printable 4x6 Thermal AWB Label Container */}
-        <div className="flex justify-center bg-[var(--surface-raised)]/50 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto max-h-[460px] overflow-y-auto">
-          {/* Visible Single Label Preview */}
-          {!isBatch ? (
-            <ThermalLabelContent order={currentOrder} />
-          ) : (
-            <div className="w-full">
-              {/* On screen: show currently selected label */}
-              <ThermalLabelContent order={currentOrder} />
-
-              {/* Hidden container containing ALL selected labels for batch printing */}
-              <div id="thermal-shipping-labels-batch" className="hidden">
-                {orderList.map((ord) => (
-                  <ThermalLabelContent key={ord.id} order={ord} />
-                ))}
+        <div className="bg-[var(--surface-raised)]/50 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto max-h-[500px] overflow-y-auto">
+          <div id="thermal-shipping-labels-container" className="w-full space-y-6">
+            {orderList.map((ord, idx) => (
+              <div key={ord.id} className="thermal-label-page space-y-1">
+                {isBatch && (
+                  <div className="no-print flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)] border-b border-[var(--border)]/60 pb-1 mb-2">
+                    <span>
+                      Consignment {idx + 1} of {orderList.length}: {ord.orderNumber}
+                    </span>
+                    <span className="font-mono">{ord.awbNumber}</span>
+                  </div>
+                )}
+                <ThermalLabelContent order={ord} index={idx} />
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Modal Controls */}
         <div className="no-print flex items-center justify-between border-t border-[var(--border)] pt-4">
           <p className="text-xs text-[var(--muted)]">
             {isBatch
-              ? `Prints ${orderList.length} labels across ${orderList.length} pages in 1 spool job.`
-              : "Prints isolated on standard 4\" x 6\" thermal label printers without modal frames."}
+              ? `Prints ${orderList.length} labels across ${orderList.length} pages in 1 clean spool job.`
+              : 'Prints isolated on standard 4" x 6" thermal label printers without modal frames.'}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -215,7 +423,9 @@ export function OrderPrintModal({ open, order, orders, onClose }: OrderPrintModa
               className="btn btn-primary text-xs"
             >
               <IconPrinter className="h-4 w-4" />
-              {isBatch ? `Print All ${orderList.length} Labels` : "Print Shipping Label"}
+              {isBatch
+                ? `Print All ${orderList.length} Labels`
+                : "Print Shipping Label"}
             </button>
           </div>
         </div>

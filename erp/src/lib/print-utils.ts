@@ -1,11 +1,14 @@
 "use client";
 
 /**
- * Isolates and prints an HTML element cleanly in exactly 1 single page.
+ * Isolates and prints an HTML element cleanly with zero UI debris.
  * Uses a dedicated, isolated print iframe to ensure ZERO modal chrome,
  * ZERO dashboard tables, ZERO backdrops, and ZERO multi-page overflows.
  */
-export function printIsolatedElement(elementId: string, pageType: "thermal" | "a4" = "thermal") {
+export function printIsolatedElement(
+  elementId: string,
+  pageType: "thermal" | "a4" = "thermal"
+) {
   if (typeof window === "undefined") return;
 
   const el = document.getElementById(elementId);
@@ -14,14 +17,13 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     return;
   }
 
-  // 1. Remove any previous print iframe
+  // 1. Remove any previous print iframe to avoid duplicate DOM clutter
   const existingIframe = document.getElementById("erp-print-iframe");
   if (existingIframe && existingIframe.parentNode) {
     existingIframe.parentNode.removeChild(existingIframe);
   }
 
   // 2. Create an isolated iframe with explicit physical dimensions
-  // This prevents Chromium from assuming a 0px viewport which causes multi-page text wrapping
   const iframe = document.createElement("iframe");
   iframe.id = "erp-print-iframe";
   iframe.style.position = "fixed";
@@ -36,10 +38,12 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
   document.body.appendChild(iframe);
 
   // 3. Extract active stylesheets and styles from document head
-  const styleNodes = Array.from(document.querySelectorAll("link[rel='stylesheet'], style"));
+  const styleNodes = Array.from(
+    document.querySelectorAll("link[rel='stylesheet'], style")
+  );
   const styleSheets = styleNodes.map((node) => node.outerHTML).join("\n");
 
-  // 4. Strict CSS enforcing exactly 1 single page without any overflow
+  // 4. Strict CSS enforcing single-page fidelity and print color accuracy
   const strictPrintCss =
     pageType === "thermal"
       ? `
@@ -53,35 +57,52 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     html, body {
       margin: 0 !important;
       padding: 0 !important;
+      width: 4in !important;
       background: #ffffff !important;
       color: #000000 !important;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+      font-family: Arial, Helvetica, "Liberation Sans", sans-serif !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    #thermal-shipping-labels-container {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .thermal-label-page {
+      width: 4in !important;
+      height: 6in !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      page-break-after: always !important;
+      page-break-inside: avoid !important;
+      break-after: page !important;
+      break-inside: avoid !important;
+    }
+    .thermal-label-page:last-child {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     #thermal-shipping-label,
     .thermal-shipping-label {
-      width: 3.85in !important;
-      max-width: 3.85in !important;
-      height: 5.75in !important;
-      max-height: 5.75in !important;
-      margin: 0.1in auto !important;
-      padding: 10px !important;
+      width: 3.8in !important;
+      max-width: 3.8in !important;
+      height: 5.6in !important;
+      max-height: 5.6in !important;
+      margin: 0.15in auto !important;
+      padding: 8px 10px !important;
       box-sizing: border-box !important;
       border: 2px solid #000000 !important;
       box-shadow: none !important;
       background: #ffffff !important;
       color: #000000 !important;
       overflow: hidden !important;
-      page-break-after: always !important;
       page-break-inside: avoid !important;
-      break-after: page !important;
       break-inside: avoid !important;
-    }
-    #thermal-shipping-label:last-child,
-    .thermal-shipping-label:last-child {
-      page-break-after: avoid !important;
-      break-after: avoid !important;
     }
     /* Hide any buttons or interactive controls that might be inside */
     button, input, select, textarea, .no-print {
@@ -105,6 +126,7 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
       font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      color-adjust: exact !important;
       page-break-after: avoid !important;
       page-break-inside: avoid !important;
       break-after: avoid !important;
@@ -115,7 +137,7 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
       max-width: 194mm !important;
       margin: 0 auto !important;
       padding: 16px !important;
-      border: 1px solid #cbd5e1 !important;
+      border: 1.5px solid #000000 !important;
       box-shadow: none !important;
       background: #ffffff !important;
       color: #000000 !important;
@@ -129,12 +151,14 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     }
   `;
 
-  // 5. Populate iframe document
+  // 5. Populate iframe document with base href to correctly resolve assets
   const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
   if (!iframeDoc) {
     console.error("Unable to access print iframe document");
     return;
   }
+
+  const baseHref = window.location.origin;
 
   iframeDoc.open();
   iframeDoc.write(`
@@ -142,6 +166,7 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     <html lang="en">
       <head>
         <meta charset="utf-8" />
+        <base href="${baseHref}/" />
         <title>${pageType === "thermal" ? "Shipping Label" : "Internal Manifest"}</title>
         ${styleSheets}
         <style>
@@ -155,7 +180,7 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
   `);
   iframeDoc.close();
 
-  // 6. Focus and trigger print after styles and fonts parse
+  // 6. Focus and trigger print after checking all image assets are loaded
   const triggerPrint = () => {
     try {
       iframe.contentWindow?.focus();
@@ -172,6 +197,16 @@ export function printIsolatedElement(elementId: string, pageType: "thermal" | "a
     }
   };
 
-  // Give images (like logo in letterhead) and CSS fonts 250ms to ensure full fidelity
-  setTimeout(triggerPrint, 250);
+  // Wait for images inside iframe to complete loading before invoking print
+  const checkReadyAndPrint = () => {
+    const imgs = Array.from(iframeDoc.images || []);
+    const allLoaded = imgs.length === 0 || imgs.every((img) => img.complete);
+    if (allLoaded) {
+      triggerPrint();
+    } else {
+      setTimeout(triggerPrint, 300);
+    }
+  };
+
+  setTimeout(checkReadyAndPrint, 250);
 }

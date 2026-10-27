@@ -3,6 +3,7 @@
 import { Modal } from "@/components/ui/modal";
 import { IconPrinter } from "@/components/icons/nav-icons";
 import { printIsolatedElement } from "@/lib/print-utils";
+import { SvgBarcode } from "@/components/orders/svg-barcode";
 import type { OrderDetail } from "@/components/orders/order-detail-modal";
 
 interface OrderLetterheadModalProps {
@@ -11,7 +12,11 @@ interface OrderLetterheadModalProps {
   onClose: () => void;
 }
 
-export function OrderLetterheadModal({ open, order, onClose }: OrderLetterheadModalProps) {
+export function OrderLetterheadModal({
+  open,
+  order,
+  onClose,
+}: OrderLetterheadModalProps) {
   if (!order) return null;
 
   function handlePrint() {
@@ -39,117 +44,299 @@ export function OrderLetterheadModal({ open, order, onClose }: OrderLetterheadMo
         <div className="flex justify-center bg-slate-100 dark:bg-slate-900/60 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto">
           <div
             id="internal-manifest-letterhead"
-            className="w-full max-w-[760px] bg-white text-black p-8 font-sans text-xs shadow-lg rounded-sm border border-slate-200 select-none"
+            className="w-full max-w-[760px] bg-white text-black p-8 font-sans text-xs shadow-lg rounded-sm border border-slate-300 select-none"
+            style={{
+              backgroundColor: "#ffffff",
+              color: "#000000",
+              boxSizing: "border-box",
+            }}
           >
             {/* Header: Official Company Letterhead */}
-            <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-              <div className="flex items-start gap-3">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #000000",
+                paddingBottom: "12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
                 {/* Logo Image */}
                 <img
                   src="/logo-128.png"
                   alt="Agentic Logistics"
-                  className="h-12 w-12 object-contain rounded-lg"
+                  style={{
+                    height: "48px",
+                    width: "48px",
+                    objectFit: "contain",
+                    borderRadius: "6px",
+                  }}
                 />
                 <div>
-                  <h1 className="text-base font-black tracking-tight text-slate-950 uppercase leading-none">
+                  <h1
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "900",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      lineHeight: "1.1",
+                      margin: 0,
+                      color: "#000000",
+                    }}
+                  >
                     AGENTIC LOGISTICS INDIA PRIVATE LIMITED
                   </h1>
-                  <p className="text-[10px] font-bold text-slate-600 mt-0.5 tracking-wider uppercase">
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      color: "#334155",
+                      marginTop: "2px",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                    }}
+                  >
                     Autonomous Freight Management & Supply Chain Infrastructure
                   </p>
-                  <p className="text-[10px] text-slate-700 mt-1 leading-snug">
+                  <p style={{ fontSize: "10px", color: "#1e293b", marginTop: "4px", lineHeight: "1.3" }}>
                     <strong>Registered Operations Office:</strong> Ayantika Apartment, 76/B Selimpur Lane, Kolkata - 700031, West Bengal, India
                   </p>
-                  <p className="text-[9px] text-slate-500 mt-0.5">
+                  <p style={{ fontSize: "9px", color: "#64748b", marginTop: "2px" }}>
                     CIN: U63090WB2026PTC288910 · GSTIN: 19AAACA9876Q1Z2 · Helpline: +91 33 2415 8890
                   </p>
                 </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <span className="inline-block bg-slate-900 text-white font-mono text-[10px] font-black px-2.5 py-1 tracking-wider uppercase rounded-xs">
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    border: "2px solid #000000",
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    fontFamily: "monospace",
+                    fontSize: "10px",
+                    fontWeight: "900",
+                    padding: "2px 8px",
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
+                  }}
+                >
                   INTERNAL NOTE
                 </span>
-                <div className="mt-1 text-[11px] font-mono font-bold text-slate-900">
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    fontWeight: "800",
+                    color: "#000000",
+                  }}
+                >
                   REF: {manifestRef}
                 </div>
-                <div className="text-[10px] text-slate-600 mt-0.5">
+                <div style={{ fontSize: "10px", color: "#475569", marginTop: "2px" }}>
                   Date: {bookingDate}
                 </div>
               </div>
             </div>
 
             {/* Document Title Banner */}
-            <div className="mt-3.5 mb-3 bg-slate-100 border-l-4 border-slate-900 px-3 py-1.5 flex items-center justify-between">
+            <div
+              style={{
+                marginTop: "12px",
+                marginBottom: "12px",
+                borderLeft: "4px solid #000000",
+                borderTop: "1px solid #cbd5e1",
+                borderRight: "1px solid #cbd5e1",
+                borderBottom: "1px solid #cbd5e1",
+                padding: "6px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                backgroundColor: "#f8fafc",
+              }}
+            >
               <div>
-                <span className="font-black text-xs uppercase tracking-wider text-slate-900">
+                <span
+                  style={{
+                    fontWeight: "900",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    color: "#000000",
+                  }}
+                >
                   CONSIGNMENT DISPATCH NOTE & INTERNAL CUSTODY MANIFEST
                 </span>
-                <p className="text-[10px] text-slate-600">
+                <p style={{ fontSize: "9.5px", color: "#475569", margin: "1px 0 0" }}>
                   Authorized for Hub Staging, Primary Linehaul Transfer & Last-Mile Delivery Runs
                 </p>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold uppercase text-slate-700">Lifecycle Status: </span>
-                <span className="text-[11px] font-black text-slate-950 border border-slate-400 px-2 py-0.5 bg-white uppercase">
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "9.5px", fontWeight: "700", textTransform: "uppercase", color: "#334155" }}>
+                  Lifecycle Status:{" "}
+                </span>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "900",
+                    color: "#000000",
+                    border: "1.5px solid #000000",
+                    padding: "1px 6px",
+                    backgroundColor: "#ffffff",
+                    textTransform: "uppercase",
+                  }}
+                >
                   {order.status.replace(/_/g, " ")}
                 </span>
               </div>
             </div>
 
-            {/* Consignment Identification Bar */}
-            <div className="grid grid-cols-4 gap-2 border border-slate-300 bg-white p-2.5 mb-3 text-[11px]">
+            {/* Consignment Identification Bar with Barcode */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1.2fr 1.5fr 1fr 1fr",
+                gap: "8px",
+                border: "1px solid #000000",
+                backgroundColor: "#ffffff",
+                padding: "8px 10px",
+                marginBottom: "12px",
+                fontSize: "11px",
+                alignItems: "center",
+              }}
+            >
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">ORDER NUMBER</span>
-                <p className="font-mono font-bold text-slate-900">{order.orderNumber}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  ORDER NUMBER
+                </span>
+                <p style={{ fontFamily: "monospace", fontWeight: "800", color: "#000000", margin: "2px 0 0" }}>
+                  {order.orderNumber}
+                </p>
               </div>
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">AWB NUMBER</span>
-                <p className="font-mono font-bold text-slate-900">{order.awbNumber}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  AWB NUMBER & BARCODE
+                </span>
+                <p style={{ fontFamily: "monospace", fontWeight: "900", color: "#000000", margin: "1px 0 2px" }}>
+                  {order.awbNumber}
+                </p>
+                <SvgBarcode value={order.awbNumber} height={24} />
               </div>
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">SERVICE CATEGORY</span>
-                <p className="font-bold text-slate-900">{order.serviceType.replace(/_/g, " ")}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  SERVICE CATEGORY
+                </span>
+                <p style={{ fontWeight: "800", color: "#000000", margin: "2px 0 0" }}>
+                  {order.serviceType.replace(/_/g, " ")}
+                </p>
               </div>
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">PAYMENT MODE</span>
-                <p className="font-bold text-slate-900">{order.paymentMode}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  PAYMENT MODE
+                </span>
+                <p style={{ fontWeight: "800", color: "#000000", margin: "2px 0 0" }}>
+                  {order.paymentMode}
+                </p>
               </div>
             </div>
 
             {/* Bilateral Routing: Shipper Origin & Consignee Destination */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+                marginBottom: "12px",
+              }}
+            >
               {/* Origin Facility */}
-              <div className="border border-slate-300 p-3 bg-slate-50/50">
-                <div className="flex items-center justify-between border-b border-slate-300 pb-1 mb-1.5">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
+              <div
+                style={{
+                  border: "1px solid #000000",
+                  padding: "10px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "1px solid #000000",
+                    paddingBottom: "4px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      fontWeight: "900",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      color: "#334155",
+                    }}
+                  >
                     ORIGIN / SHIPPER FACILITY
                   </span>
-                  <span className="text-[10px] font-bold text-slate-900">{order.senderCity}</span>
+                  <span style={{ fontSize: "10px", fontWeight: "800", color: "#000000" }}>
+                    {order.senderCity}
+                  </span>
                 </div>
-                <div className="space-y-0.5 text-[11px] text-slate-800">
-                  <p className="font-black text-black">{order.senderName}</p>
-                  <p className="text-[10px]">Contact: {order.senderPhone}</p>
-                  <p className="leading-snug">{order.senderAddress}</p>
-                  <p className="font-bold text-slate-950">
+                <div style={{ fontSize: "10.5px", lineHeight: "1.35", color: "#1e293b" }}>
+                  <p style={{ fontWeight: "900", color: "#000000", margin: "0 0 2px" }}>
+                    {order.senderName}
+                  </p>
+                  <p style={{ fontSize: "9.5px", margin: "0 0 2px" }}>Contact: {order.senderPhone}</p>
+                  <p style={{ margin: "0 0 2px" }}>{order.senderAddress}</p>
+                  <p style={{ fontWeight: "800", color: "#000000", margin: 0 }}>
                     {order.senderCity}, {order.senderState} - {order.senderPincode}
                   </p>
                 </div>
               </div>
 
               {/* Destination Facility */}
-              <div className="border border-slate-300 p-3 bg-slate-50/50">
-                <div className="flex items-center justify-between border-b border-slate-300 pb-1 mb-1.5">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
+              <div
+                style={{
+                  border: "1px solid #000000",
+                  padding: "10px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "1px solid #000000",
+                    paddingBottom: "4px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      fontWeight: "900",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      color: "#334155",
+                    }}
+                  >
                     DESTINATION / CONSIGNEE POINT
                   </span>
-                  <span className="text-[10px] font-bold text-slate-900">{order.receiverCity}</span>
+                  <span style={{ fontSize: "10px", fontWeight: "800", color: "#000000" }}>
+                    {order.receiverCity}
+                  </span>
                 </div>
-                <div className="space-y-0.5 text-[11px] text-slate-800">
-                  <p className="font-black text-black">{order.receiverName}</p>
-                  <p className="text-[10px]">Contact: {order.receiverPhone}</p>
-                  <p className="leading-snug">{order.receiverAddress}</p>
-                  <p className="font-bold text-slate-950">
+                <div style={{ fontSize: "10.5px", lineHeight: "1.35", color: "#1e293b" }}>
+                  <p style={{ fontWeight: "900", color: "#000000", margin: "0 0 2px" }}>
+                    {order.receiverName}
+                  </p>
+                  <p style={{ fontSize: "9.5px", margin: "0 0 2px" }}>Contact: {order.receiverPhone}</p>
+                  <p style={{ margin: "0 0 2px" }}>{order.receiverAddress}</p>
+                  <p style={{ fontWeight: "800", color: "#000000", margin: 0 }}>
                     {order.receiverCity}, {order.receiverState} - {order.receiverPincode}
                   </p>
                 </div>
@@ -157,79 +344,175 @@ export function OrderLetterheadModal({ open, order, onClose }: OrderLetterheadMo
             </div>
 
             {/* Package Telemetry & Volumetric Scale Audit Table */}
-            <div className="border border-slate-300 mb-3">
-              <div className="bg-slate-100 px-3 py-1 border-b border-slate-300 font-bold text-[10px] uppercase tracking-wider text-slate-700">
+            <div
+              style={{
+                border: "1px solid #000000",
+                marginBottom: "12px",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f1f5f9",
+                  padding: "6px 10px",
+                  borderBottom: "1px solid #000000",
+                  fontWeight: "800",
+                  fontSize: "9.5px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  color: "#1e293b",
+                }}
+              >
                 Package & Dimensional Telemetry Audit
               </div>
-              <table className="w-full text-[11px]">
+              <table style={{ width: "100%", fontSize: "11px", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-left text-[9px] uppercase font-bold text-slate-600">
-                    <th className="py-1.5 px-3">Item Description</th>
-                    <th className="py-1.5 px-2">Dimensions (L×W×H)</th>
-                    <th className="py-1.5 px-2 text-right">Dead Wt</th>
-                    <th className="py-1.5 px-2 text-right">Volumetric Wt</th>
-                    <th className="py-1.5 px-3 text-right">Chargeable Wt</th>
+                  <tr
+                    style={{
+                      borderBottom: "1px solid #cbd5e1",
+                      backgroundColor: "#f8fafc",
+                      textAlign: "left",
+                      fontSize: "9px",
+                      textTransform: "uppercase",
+                      fontWeight: "800",
+                      color: "#475569",
+                    }}
+                  >
+                    <th style={{ padding: "6px 10px" }}>Item Description</th>
+                    <th style={{ padding: "6px 8px" }}>Dimensions (L×W×H)</th>
+                    <th style={{ padding: "6px 8px", textAlign: "right" }}>Dead Wt</th>
+                    <th style={{ padding: "6px 8px", textAlign: "right" }}>Volumetric Wt</th>
+                    <th style={{ padding: "6px 10px", textAlign: "right" }}>Chargeable Wt</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-900">{order.itemDescription}</td>
-                    <td className="py-2 px-2 font-mono">{order.lengthCm} × {order.widthCm} × {order.heightCm} cm</td>
-                    <td className="py-2 px-2 text-right">{order.packageWeight} kg</td>
-                    <td className="py-2 px-2 text-right">{order.volumetricWeight} kg</td>
-                    <td className="py-2 px-3 text-right font-black text-black">{order.chargeableWeight} kg</td>
+                    <td style={{ padding: "8px 10px", fontWeight: "700", color: "#000000" }}>
+                      {order.itemDescription}
+                    </td>
+                    <td style={{ padding: "8px 8px", fontFamily: "monospace" }}>
+                      {order.lengthCm} × {order.widthCm} × {order.heightCm} cm
+                    </td>
+                    <td style={{ padding: "8px 8px", textAlign: "right" }}>{order.packageWeight} kg</td>
+                    <td style={{ padding: "8px 8px", textAlign: "right" }}>{order.volumetricWeight} kg</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", fontWeight: "900", color: "#000000" }}>
+                      {order.chargeableWeight} kg
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Commercials Ledger */}
-            <div className="grid grid-cols-3 gap-2 border border-slate-300 p-2.5 mb-4 text-[11px] bg-slate-50/30">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1.2fr",
+                gap: "8px",
+                border: "1px solid #000000",
+                padding: "8px 12px",
+                marginBottom: "14px",
+                fontSize: "11px",
+                backgroundColor: "#ffffff",
+              }}
+            >
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">FREIGHT TARIFF</span>
-                <p className="text-sm font-black text-slate-950">₹{order.totalAmount.toLocaleString()}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  FREIGHT TARIFF
+                </span>
+                <p style={{ fontSize: "13px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                  ₹{order.totalAmount.toLocaleString()}
+                </p>
               </div>
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">DECLARED VALUE</span>
-                <p className="text-sm font-bold text-slate-800">₹{order.declaredValue.toLocaleString()}</p>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  DECLARED VALUE
+                </span>
+                <p style={{ fontSize: "13px", fontWeight: "800", color: "#1e293b", margin: "2px 0 0" }}>
+                  ₹{order.declaredValue.toLocaleString()}
+                </p>
               </div>
               <div>
-                <span className="text-[9px] font-bold uppercase text-slate-500">CUSTODY COLLECTION</span>
-                <p className="text-sm font-black text-slate-950">
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  CUSTODY COLLECTION
+                </span>
+                <p style={{ fontSize: "13px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
                   {order.paymentMode === "COD" ? `COD DUE: ₹${order.totalAmount}` : "PREPAID / NIL"}
                 </p>
               </div>
             </div>
 
             {/* Operational Sign-off & Chain of Custody */}
-            <div className="border border-slate-300 p-3 mb-3 bg-white">
-              <div className="text-[9px] font-black uppercase tracking-wider text-slate-600 mb-2">
+            <div
+              style={{
+                border: "1px solid #000000",
+                padding: "10px 12px",
+                marginBottom: "12px",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "9px",
+                  fontWeight: "900",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  color: "#334155",
+                  marginBottom: "8px",
+                }}
+              >
                 OPERATIONAL HANDOVER & CHAIN OF CUSTODY VERIFICATION
               </div>
-              <div className="grid grid-cols-3 gap-4 pt-2">
-                <div className="border-t border-dashed border-slate-400 pt-1 text-center">
-                  <p className="text-[10px] font-bold text-slate-900">Origin Dispatch Officer</p>
-                  <p className="text-[9px] text-slate-500">Seal Verified & Handed Over</p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "16px",
+                  paddingTop: "6px",
+                }}
+              >
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Origin Dispatch Officer
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#64748b", margin: "2px 0 0" }}>
+                    Seal Verified & Handed Over
+                  </p>
                 </div>
-                <div className="border-t border-dashed border-slate-400 pt-1 text-center">
-                  <p className="text-[10px] font-bold text-slate-900">Linehaul Pilot / Driver</p>
-                  <p className="text-[9px] text-slate-500">Vehicle Seal & Manifest Ack</p>
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Linehaul Pilot / Driver
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#64748b", margin: "2px 0 0" }}>
+                    Vehicle Seal & Manifest Ack
+                  </p>
                 </div>
-                <div className="border-t border-dashed border-slate-400 pt-1 text-center">
-                  <p className="text-[10px] font-bold text-slate-900">Last-Mile Hub Supervisor</p>
-                  <p className="text-[9px] text-slate-500">Received for Courier Dispatch</p>
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Last-Mile Hub Supervisor
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#64748b", margin: "2px 0 0" }}>
+                    Received for Courier Dispatch
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Internal Audit Footer Disclaimer */}
-            <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-[9px] text-slate-500">
-              <p>
+            <div
+              style={{
+                borderTop: "1px solid #cbd5e1",
+                paddingTop: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "9px",
+                color: "#64748b",
+              }}
+            >
+              <p style={{ margin: 0 }}>
                 This internal manifest is generated automatically by Agentic Logistics ERP for inventory & transit governance.
               </p>
-              <p className="font-mono">
-                PAGE 1 OF 1 · AUDIT COMPLIANT
-              </p>
+              <p style={{ fontFamily: "monospace", margin: 0 }}>PAGE 1 OF 1 · AUDIT COMPLIANT</p>
             </div>
           </div>
         </div>

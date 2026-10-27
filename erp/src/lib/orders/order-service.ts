@@ -543,6 +543,8 @@ export async function getOrdersForExport(params: { search?: string; status?: Ord
       paymentMode: true,
       serviceType: true,
       senderName: true,
+      senderPhone: true,
+      senderAddress: true,
       senderCity: true,
       senderState: true,
       senderPincode: true,

@@ -34,6 +34,8 @@ export async function GET(req: Request) {
       "Dead Weight (KG)",
       "Chargeable Weight (KG)",
       "Sender Name",
+      "Sender Phone",
+      "Sender Address",
       "Sender City",
       "Sender State",
       "Sender PIN",
@@ -43,7 +45,7 @@ export async function GET(req: Request) {
       "Receiver City",
       "Receiver State",
       "Receiver PIN",
-      "Tariff / Amount (INR)",
+      "Tariff Amount (INR)",
       "Declared Value (INR)",
       "Booking Date (UTC)",
     ];
@@ -58,6 +60,8 @@ export async function GET(req: Request) {
       escapeCsvCell(o.packageWeight),
       escapeCsvCell(o.chargeableWeight),
       escapeCsvCell(o.senderName),
+      escapeCsvCell(o.senderPhone),
+      escapeCsvCell(o.senderAddress),
       escapeCsvCell(o.senderCity),
       escapeCsvCell(o.senderState),
       escapeCsvCell(o.senderPincode),
@@ -72,7 +76,9 @@ export async function GET(req: Request) {
       escapeCsvCell(o.createdAt.toISOString()),
     ]);
 
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    const headerLine = headers.map(escapeCsvCell).join(",");
+    const dataLines = rows.map((r) => r.join(",")).join("\r\n");
+    const csvContent = "\uFEFF" + (dataLines ? `${headerLine}\r\n${dataLines}` : headerLine);
     const filename = `agentic_manifest_${new Date().toISOString().slice(0, 10)}.csv`;
 
     return new Response(csvContent, {
@@ -80,6 +86,8 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,
+        "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
+        Pragma: "no-cache",
       },
     });
   } catch (e) {

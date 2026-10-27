@@ -34,7 +34,77 @@ interface ParsedRow {
   declaredValue: number;
 }
 
-export function OrderBulkUploadModal({ open, onClose, onImported }: OrderBulkUploadModalProps) {
+/**
+ * RFC 4180 compliant CSV parser handling quotes, commas, and newlines.
+ */
+function parseCsv(text: string): string[][] {
+  const lines: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let inQuotes = false;
+
+  // Strip leading UTF-8 BOM if present
+  const cleanText = text.replace(/^\uFEFF/, "");
+
+  for (let i = 0; i < cleanText.length; i++) {
+    const char = cleanText[i];
+    const nextChar = cleanText[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        cell += '"';
+        i++; // skip escaped quote
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        cell += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ",") {
+        row.push(cell.trim());
+        cell = "";
+      } else if (char === "\r") {
+        // skip carriage return
+      } else if (char === "\n") {
+        row.push(cell.trim());
+        if (row.some((c) => c !== "")) {
+          lines.push(row);
+        }
+        row = [];
+        cell = "";
+      } else {
+        cell += char;
+      }
+    }
+  }
+
+  if (cell !== "" || row.length > 0) {
+    row.push(cell.trim());
+    if (row.some((c) => c !== "")) {
+      lines.push(row);
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * Normalizes a header string (e.g. "Sender Name", "sender_name", "senderName")
+ * into a standard token for reliable lookup.
+ */
+function normalizeHeaderKey(header: string): string {
+  return header
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+export function OrderBulkUploadModal({
+  open,
+  onClose,
+  onImported,
+}: OrderBulkUploadModalProps) {
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [parsingError, setParsingError] = useState<string | null>(null);
@@ -43,88 +113,94 @@ export function OrderBulkUploadModal({ open, onClose, onImported }: OrderBulkUpl
 
   function downloadSampleCsv() {
     const headers = [
-      "senderName",
-      "senderPhone",
-      "senderAddress",
-      "senderCity",
-      "senderState",
-      "senderPincode",
-      "receiverName",
-      "receiverPhone",
-      "receiverAddress",
-      "receiverCity",
-      "receiverState",
-      "receiverPincode",
-      "itemDescription",
-      "packageWeight",
-      "lengthCm",
-      "widthCm",
-      "heightCm",
-      "paymentMode",
-      "serviceType",
-      "totalAmount",
-      "declaredValue",
+      "Sender Name",
+      "Sender Phone",
+      "Sender Address",
+      "Sender City",
+      "Sender State",
+      "Sender Pincode",
+      "Receiver Name",
+      "Receiver Phone",
+      "Receiver Address",
+      "Receiver City",
+      "Receiver State",
+      "Receiver Pincode",
+      "Item Description",
+      "Package Weight (KG)",
+      "Length (CM)",
+      "Width (CM)",
+      "Height (CM)",
+      "Payment Mode",
+      "Service Category",
+      "Tariff Amount (INR)",
+      "Declared Value (INR)",
     ];
 
     const sampleRow1 = [
-      "Plexi Warehouse Tech",
-      "+919830112233",
-      "76/B Selimpur Lane",
-      "Kolkata",
-      "West Bengal",
-      "700031",
-      "Apex Robotics Labs",
-      "+919876543210",
-      "Plot 44 Electronic City",
-      "Bengaluru",
-      "Karnataka",
-      "560100",
-      "Precision Avionics Sensors",
+      '"Plexi Warehouse Tech"',
+      '"+91 98301 12233"',
+      '"Ayantika Apartment, 76/B Selimpur Lane"',
+      '"Kolkata"',
+      '"West Bengal"',
+      '"700031"',
+      '"Apex Robotics Labs"',
+      '"+91 98765 43210"',
+      '"Plot 44, Electronic City Phase 1"',
+      '"Bengaluru"',
+      '"Karnataka"',
+      '"560100"',
+      '"Precision Avionics Sensors"',
       "2.5",
       "25",
       "20",
       "15",
-      "PREPAID",
-      "EXPRESS",
+      '"PREPAID"',
+      '"EXPRESS"',
       "1850",
       "25000",
     ];
 
     const sampleRow2 = [
-      "Kolkata Textile Mills",
-      "+919830998877",
-      "12 Park Street",
-      "Kolkata",
-      "West Bengal",
-      "700016",
-      "Metro Retail Hub",
-      "+919123456780",
-      "88 Marine Drive",
-      "Mumbai",
-      "Maharashtra",
-      "400020",
-      "Export Cotton Garments",
+      '"Kolkata Textile Mills"',
+      '"+91 98309 98877"',
+      '"12 Park Street, Camac Area"',
+      '"Kolkata"',
+      '"West Bengal"',
+      '"700016"',
+      '"Metro Retail Hub"',
+      '"+91 91234 56780"',
+      '"88 Marine Drive, Nariman Point"',
+      '"Mumbai"',
+      '"Maharashtra"',
+      '"400020"',
+      '"Export Cotton Garments"',
       "8.0",
       "50",
       "40",
       "30",
-      "COD",
-      "STANDARD",
+      '"COD"',
+      '"STANDARD"',
       "3200",
       "45000",
     ];
 
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), sampleRow1.join(","), sampleRow2.join(",")].join("\r\n");
+    const csvLines = [
+      headers.map((h) => `"${h}"`).join(","),
+      sampleRow1.join(","),
+      sampleRow2.join(","),
+    ].join("\r\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob(["\uFEFF" + csvLines], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "agentic_bulk_orders_template.csv");
+    link.href = url;
+    link.download = "agentic_bulk_orders_template.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -139,62 +215,108 @@ export function OrderBulkUploadModal({ open, onClose, onImported }: OrderBulkUpl
     reader.onload = (evt) => {
       try {
         const text = evt.target?.result as string;
-        if (!text) throw new Error("File is empty");
+        if (!text || !text.trim()) throw new Error("File is empty");
 
-        const lines = text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter(Boolean);
-
-        if (lines.length < 2) {
-          throw new Error("CSV must include a header row and at least 1 consignment data row");
+        const matrix = parseCsv(text);
+        if (matrix.length < 2) {
+          throw new Error(
+            "CSV must include a header row and at least 1 consignment data row"
+          );
         }
 
-        const headers = lines[0].split(",").map((h) => h.replace(/^["']|["']$/g, "").trim());
+        const rawHeaders = matrix[0];
+        const normalizedHeaders = rawHeaders.map(normalizeHeaderKey);
+
+        // Helper to locate column index by aliases
+        const findCol = (...aliases: string[]): number => {
+          for (const alias of aliases) {
+            const norm = normalizeHeaderKey(alias);
+            const idx = normalizedHeaders.findIndex((h) => h === norm || h.includes(norm));
+            if (idx !== -1) return idx;
+          }
+          return -1;
+        };
+
+        const colIdx = {
+          senderName: findCol("sendername", "sender"),
+          senderPhone: findCol("senderphone", "sendercontact", "originphone"),
+          senderAddress: findCol("senderaddress", "originaddress"),
+          senderCity: findCol("sendercity", "origincity"),
+          senderState: findCol("senderstate", "originstate"),
+          senderPincode: findCol("senderpincode", "senderpin", "originpin"),
+
+          receiverName: findCol("receivername", "consigneename", "receiver"),
+          receiverPhone: findCol("receiverphone", "consigneephone", "destphone"),
+          receiverAddress: findCol("receiveraddress", "consigneeaddress", "destaddress"),
+          receiverCity: findCol("receivercity", "consigneecity", "destcity"),
+          receiverState: findCol("receiverstate", "consigneestate", "deststate"),
+          receiverPincode: findCol("receiverpincode", "receiverpin", "destpin", "pincode"),
+
+          itemDescription: findCol("itemdescription", "item", "description", "contents"),
+          packageWeight: findCol("packageweight", "packageweightkg", "deadweight", "weight", "wt"),
+          lengthCm: findCol("length", "lengthcm"),
+          widthCm: findCol("width", "widthcm"),
+          heightCm: findCol("height", "heightcm"),
+
+          paymentMode: findCol("paymentmode", "payment", "mode"),
+          serviceType: findCol("servicecategory", "servicetype", "service"),
+          totalAmount: findCol("tariffamount", "tariffamountinr", "tariff", "totalamount", "amount"),
+          declaredValue: findCol("declaredvalue", "declaredvalueinr", "value"),
+        };
+
         const rows: ParsedRow[] = [];
 
-        for (let i = 1; i < lines.length; i++) {
-          // Parse CSV line handling potential quotes
-          const rawCols = lines[i].split(",").map((c) => c.replace(/^["']|["']$/g, "").trim());
-          if (rawCols.length < 13) continue;
+        for (let i = 1; i < matrix.length; i++) {
+          const row = matrix[i];
+          if (!row || row.length === 0 || row.every((c) => !c.trim())) continue;
 
-          const rowObj: any = {};
-          headers.forEach((h, colIdx) => {
-            rowObj[h] = rawCols[colIdx] ?? "";
-          });
+          const getVal = (idx: number, fallback = ""): string => {
+            return idx !== -1 && row[idx] !== undefined ? row[idx].trim() : fallback;
+          };
 
-          const pMode = rowObj.paymentMode?.toUpperCase() === "COD" ? PaymentMode.COD : PaymentMode.PREPAID;
+          const pModeRaw = getVal(colIdx.paymentMode, "PREPAID").toUpperCase();
+          const pMode = pModeRaw.includes("COD") ? PaymentMode.COD : PaymentMode.PREPAID;
+
+          const sTypeRaw = getVal(colIdx.serviceType, "STANDARD").toUpperCase();
           let sType: ServiceType = ServiceType.STANDARD;
-          if (rowObj.serviceType?.toUpperCase() === "EXPRESS") sType = ServiceType.EXPRESS;
-          if (rowObj.serviceType?.toUpperCase() === "COLD_CHAIN") sType = ServiceType.COLD_CHAIN;
+          if (sTypeRaw.includes("EXPRESS")) sType = ServiceType.EXPRESS;
+          if (sTypeRaw.includes("COLD")) sType = ServiceType.COLD_CHAIN;
+
+          const receiverName = getVal(colIdx.receiverName);
+          if (!receiverName) continue; // skip invalid or empty rows
 
           rows.push({
-            senderName: rowObj.senderName || "Default Shipper",
-            senderPhone: rowObj.senderPhone || "+919830000000",
-            senderAddress: rowObj.senderAddress || "Central Logistics Hub",
-            senderCity: rowObj.senderCity || "Kolkata",
-            senderState: rowObj.senderState || "West Bengal",
-            senderPincode: rowObj.senderPincode || "700001",
-            receiverName: rowObj.receiverName || "Consignee",
-            receiverPhone: rowObj.receiverPhone || "+919830000001",
-            receiverAddress: rowObj.receiverAddress || "Consignee Address",
-            receiverCity: rowObj.receiverCity || "Destination City",
-            receiverState: rowObj.receiverState || "Destination State",
-            receiverPincode: rowObj.receiverPincode || "110001",
-            itemDescription: rowObj.itemDescription || "General Cargo",
-            packageWeight: Math.max(0.1, Number(rowObj.packageWeight) || 1.0),
-            lengthCm: Math.max(1, Number(rowObj.lengthCm) || 15),
-            widthCm: Math.max(1, Number(rowObj.widthCm) || 10),
-            heightCm: Math.max(1, Number(rowObj.heightCm) || 10),
+            senderName: getVal(colIdx.senderName, "Agentic Hub Shipper"),
+            senderPhone: getVal(colIdx.senderPhone, "+91 98300 00000"),
+            senderAddress: getVal(colIdx.senderAddress, "Ayantika Apartment, 76/B Selimpur Lane"),
+            senderCity: getVal(colIdx.senderCity, "Kolkata"),
+            senderState: getVal(colIdx.senderState, "West Bengal"),
+            senderPincode: getVal(colIdx.senderPincode, "700031"),
+
+            receiverName,
+            receiverPhone: getVal(colIdx.receiverPhone, "+91 98000 00000"),
+            receiverAddress: getVal(colIdx.receiverAddress, "Destination Delivery Address"),
+            receiverCity: getVal(colIdx.receiverCity, "Kolkata"),
+            receiverState: getVal(colIdx.receiverState, "West Bengal"),
+            receiverPincode: getVal(colIdx.receiverPincode, "700001"),
+
+            itemDescription: getVal(colIdx.itemDescription, "General Commercial Cargo"),
+            packageWeight: Math.max(0.1, Number(getVal(colIdx.packageWeight)) || 1.0),
+            lengthCm: Math.max(1, Number(getVal(colIdx.lengthCm)) || 20),
+            widthCm: Math.max(1, Number(getVal(colIdx.widthCm)) || 15),
+            heightCm: Math.max(1, Number(getVal(colIdx.heightCm)) || 10),
+
             paymentMode: pMode,
             serviceType: sType,
-            totalAmount: Math.max(0, Number(rowObj.totalAmount) || 0),
-            declaredValue: Math.max(0, Number(rowObj.declaredValue) || 0),
+            totalAmount: Math.max(0, Number(getVal(colIdx.totalAmount)) || 0),
+            declaredValue: Math.max(0, Number(getVal(colIdx.declaredValue)) || 0),
           });
         }
 
         if (rows.length === 0) {
-          throw new Error("No valid data rows found in CSV. Please verify column formatting.");
+          throw new Error(
+            "No valid consignment rows found. Please ensure Receiver Name and required columns are present."
+          );
         }
 
         setParsedRows(rows);
