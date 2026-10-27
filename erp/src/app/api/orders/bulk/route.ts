@@ -31,6 +31,8 @@ const bulkOrderRowSchema = z.object({
   totalAmount: z.coerce.number().min(0).default(0),
   declaredValue: z.coerce.number().min(0).default(0),
   status: z.nativeEnum(OrderStatus).optional(),
+  thirdPartyName: z.string().max(100).optional(),
+  thirdPartyTracking: z.string().max(100).optional(),
 });
 
 const bulkImportSchema = z.object({

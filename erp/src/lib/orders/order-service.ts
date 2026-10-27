@@ -531,6 +531,8 @@ export async function bulkCreateOrders(
 
         totalAmount: input.totalAmount,
         declaredValue: input.declaredValue,
+        thirdPartyName: input.thirdPartyName ? input.thirdPartyName.trim() : null,
+        thirdPartyTracking: input.thirdPartyTracking ? input.thirdPartyTracking.trim() : null,
         createdById: actorId,
 
         milestones: {

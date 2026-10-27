@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     });
 
     // 1. Title Banner (Row 1)
-    worksheet.mergeCells("A1:X1");
+    worksheet.mergeCells("A1:Z1");
     const titleCell = worksheet.getCell("A1");
     titleCell.value = "AGENTIC LOGISTICS ERP — OFFICIAL CONSIGNMENT MANIFEST";
     titleCell.font = { name: "Segoe UI", size: 14, bold: true, color: { argb: "FFFFFFFF" } };
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     worksheet.getRow(1).height = 36;
 
     // 2. Metadata Bar (Row 2)
-    worksheet.mergeCells("A2:X2");
+    worksheet.mergeCells("A2:Z2");
     const metaCell = worksheet.getCell("A2");
     const genDate = new Date().toLocaleString("en-IN", {
       dateStyle: "medium",
@@ -57,6 +57,8 @@ export async function GET(req: Request) {
       "Order Number",
       "AWB Number",
       "Status",
+      "3PL Carrier Name",
+      "3PL Tracking Ref",
       "Payment Mode",
       "Service Category",
       "Item Description",
@@ -104,7 +106,9 @@ export async function GET(req: Request) {
       const rowData = [
         o.orderNumber,
         o.awbNumber,
-        o.status,
+        o.status === OrderStatus.HANDED_TO_THIRD_PARTY ? "Handed to Third-Party" : o.status,
+        o.thirdPartyName || "-",
+        o.thirdPartyTracking || "-",
         o.paymentMode,
         o.serviceType,
         o.itemDescription,
@@ -146,16 +150,16 @@ export async function GET(req: Request) {
         }
 
         // Center specific codes
-        if ([1, 2, 4, 5, 11, 15, 17, 21, 24].includes(colNumber)) {
+        if ([1, 2, 4, 5, 6, 7, 13, 17, 19, 23, 26].includes(colNumber)) {
           cell.alignment = { vertical: "middle", horizontal: "center" };
         }
 
         // Numbers & Currencies
-        if ([7, 8, 9].includes(colNumber)) {
+        if ([9, 10, 11].includes(colNumber)) {
           cell.numFmt = "0.00";
           cell.alignment = { vertical: "middle", horizontal: "right" };
         }
-        if ([22, 23].includes(colNumber)) {
+        if ([24, 25].includes(colNumber)) {
           cell.numFmt = "₹#,##0.00";
           cell.alignment = { vertical: "middle", horizontal: "right" };
         }
@@ -167,6 +171,9 @@ export async function GET(req: Request) {
           if (st === OrderStatus.DELIVERED) {
             cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF166534" } };
             cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+          } else if (st === OrderStatus.HANDED_TO_THIRD_PARTY) {
+            cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF3730A3" } };
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE0E7FF" } };
           } else if (st === OrderStatus.IN_TRANSIT || st === OrderStatus.OUT_FOR_DELIVERY) {
             cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF1E40AF" } };
             cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDBEAFE" } };
@@ -185,28 +192,30 @@ export async function GET(req: Request) {
     const colWidths = [
       18, // A: Order Number
       18, // B: AWB Number
-      18, // C: Status
-      16, // D: Payment Mode
-      18, // E: Service Category
-      28, // F: Item Description
-      15, // G: Dead Wt
-      15, // H: Vol Wt
-      18, // I: Chargeable Wt
-      24, // J: Sender Name
-      18, // K: Sender Phone
-      36, // L: Sender Address
-      18, // M: Sender City
-      18, // N: Sender State
-      14, // O: Sender PIN
-      24, // P: Receiver Name
-      18, // Q: Receiver Phone
-      36, // R: Receiver Address
-      18, // S: Receiver City
-      18, // T: Receiver State
-      14, // U: Receiver PIN
-      20, // V: Tariff Amount
-      20, // W: Declared Value
-      22, // X: Booking Date
+      20, // C: Status
+      20, // D: 3PL Carrier Name
+      20, // E: 3PL Tracking Ref
+      16, // F: Payment Mode
+      18, // G: Service Category
+      28, // H: Item Description
+      15, // I: Dead Wt
+      15, // J: Vol Wt
+      18, // K: Chargeable Wt
+      24, // L: Sender Name
+      18, // M: Sender Phone
+      36, // N: Sender Address
+      18, // O: Sender City
+      18, // P: Sender State
+      14, // Q: Sender PIN
+      24, // R: Receiver Name
+      18, // S: Receiver Phone
+      36, // T: Receiver Address
+      18, // U: Receiver City
+      18, // V: Receiver State
+      14, // W: Receiver PIN
+      20, // X: Tariff Amount
+      20, // Y: Declared Value
+      22, // Z: Booking Date
     ];
 
     colWidths.forEach((w, idx) => {
