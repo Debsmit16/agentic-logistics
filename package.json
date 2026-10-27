@@ -4,14 +4,21 @@
   "private": true,
   "workspaces": [
     "erp",
-    "website"
+    "website",
+    "desktop"
   ],
   "scripts": {
     "dev:erp": "npm run dev --workspace=erp",
     "dev:website": "npm run dev --workspace=website",
+    "dev:desktop": "npm run start --workspace=desktop",
     "build:erp": "npm run build --workspace=erp",
     "build:website": "npm run build --workspace=website",
+    "build:desktop": "npm run dist --workspace=desktop",
+    "package:desktop": "node scripts/sync-desktop-dist.mjs",
     "typecheck:erp": "npm run typecheck --workspace=erp",
     "typecheck:website": "npm run typecheck --workspace=website"
+  },
+  "devDependencies": {
+    "app-builder-bin": "^5.0.0-alpha.10"
   }
 }

@@ -48,6 +48,8 @@ __pycache__/
 
 # electron
 /dist-electron
+desktop/dist/
+desktop/node_modules/
 .neon
 
 .vercel

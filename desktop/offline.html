@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Logistics | Connecting</title>
+  <style>
+    :root {
+      --bg: #060913;
+      --surface: #0d1527;
+      --surface-raised: #142038;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(59, 130, 246, 0.3);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --emerald: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #111e3b 0%, var(--bg) 70%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    /* Subtle grid background */
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px -10px var(--primary-glow);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-wrapper {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-pulse {
+      position: absolute;
+      inset: -8px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(16, 185, 129, 0.25));
+      filter: blur(14px);
+      animation: pulse 3s infinite ease-in-out;
+    }
+
+    .logo-img {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+      border-radius: 16px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(0.96); }
+      50% { opacity: 0.9; transform: scale(1.06); }
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 10px #f59e0b;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--surface-raised);
+      color: #94a3b8;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-accent);
+    }
+
+    .config-box {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+      display: none;
+    }
+
+    .config-box.open {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-pattern"></div>
+
+  <div class="container">
+    <div class="logo-wrapper">
+      <div class="logo-pulse"></div>
+      <img src="assets/icon.png" alt="Agentic Logistics" class="logo-img" />
+    </div>
+
+    <h1>Connecting to Agentic Logistics</h1>
+    <p class="subtitle">Unable to reach the platform server. Retrying connection automatically...</p>
+
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span id="status-text">Retrying in <strong id="countdown">5</strong>s...</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="retry-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        Retry Now
+      </button>
+
+      <button class="btn btn-secondary" id="config-toggle-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Server Endpoint Configuration
+      </button>
+    </div>
+
+    <div class="config-box" id="config-box">
+      <label for="server-url">Target Server URL</label>
+      <input type="text" id="server-url" placeholder="http://localhost:3000 or https://..." />
+      <button class="btn btn-primary" id="save-url-btn" style="width: 100%;">Save & Connect</button>
+    </div>
+
+    <div class="footer-note">
+      Agentic Logistics Enterprise Desktop v1.0.0
+    </div>
+  </div>
+
+  <script>
+    let countdown = 5;
+    const countdownEl = document.getElementById('countdown');
+    const retryBtn = document.getElementById('retry-btn');
+    const configToggleBtn = document.getElementById('config-toggle-btn');
+    const configBox = document.getElementById('config-box');
+    const serverUrlInput = document.getElementById('server-url');
+    const saveUrlBtn = document.getElementById('save-url-btn');
+
+    // Load current target URL if exposed by preload
+    if (window.desktopClient && window.desktopClient.getTargetUrl) {
+      window.desktopClient.getTargetUrl().then(url => {
+        serverUrlInput.value = url;
+      });
+    }
+
+    const timer = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = 5;
+        triggerRetry();
+      }
+      countdownEl.innerText = countdown;
+    }, 1000);
+
+    function triggerRetry() {
+      if (window.desktopClient && window.desktopClient.retryConnection) {
+        window.desktopClient.retryConnection();
+      } else {
+        window.location.reload();
+      }
+    }
+
+    retryBtn.addEventListener('click', () => {
+      triggerRetry();
+    });
+
+    configToggleBtn.addEventListener('click', () => {
+      configBox.classList.toggle('open');
+    });
+
+    saveUrlBtn.addEventListener('click', () => {
+      const val = serverUrlInput.value.trim();
+      if (val && window.desktopClient && window.desktopClient.setTargetUrl) {
+        window.desktopClient.setTargetUrl(val);
+      }
+    });
+  </script>
+</body>
+</html>

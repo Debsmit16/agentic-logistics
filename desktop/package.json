@@ -1,0 +1,60 @@
+{
+  "name": "agentic-logistics-desktop",
+  "version": "1.0.0",
+  "description": "Agentic Logistics Enterprise Desktop Client",
+  "main": "main.js",
+  "author": "Agentic Logistics",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis && node ../scripts/sync-desktop-dist.mjs",
+    "dist:portable": "electron-builder --win portable",
+    "dist:all": "electron-builder --win && node ../scripts/sync-desktop-dist.mjs"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "electronVersion": "33.4.11",
+    "appId": "com.agenticlogistics.desktop",
+    "productName": "Agentic Logistics",
+    "copyright": "Copyright © 2026 Agentic Logistics",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "offline.html",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Agentic Logistics",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeader": "assets/installerHeader.bmp",
+      "installerSidebar": "assets/installerSidebar.bmp",
+      "uninstallerSidebar": "assets/installerSidebar.bmp",
+      "artifactName": "Agentic-Logistics-Setup-${version}.${ext}"
+    }
+  }
+}

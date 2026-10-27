@@ -7,7 +7,8 @@ import { useState } from "react";
 import { AppLogo } from "@/components/brand/app-logo";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import Image from "next/image";
+import { LOGO } from "@/lib/brand";
 import {
   IconBox,
   IconDashboard,
@@ -191,7 +192,37 @@ export function AppShell({
 
           <div className="flex items-center gap-3">
             {/* Theme Toggle */}
-            <ThemeToggle />
+            
+            <a
+              href="/api/download"
+              download="Agentic-Logistics-Setup.exe"
+              title="Download Agentic Logistics for Windows"
+              className="group inline-flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--text)] shadow-sm backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-[var(--surface-raised)] hover:shadow-md active:scale-95"
+            >
+              <Image
+                src={LOGO.sm}
+                alt="Agentic Logistics"
+                width={20}
+                height={20}
+                className="shrink-0 object-contain transition-transform group-hover:scale-110"
+              />
+              <span>Download</span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-emerald-500 transition-transform group-hover:translate-y-0.5"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </a>
           </div>
         </header>
 

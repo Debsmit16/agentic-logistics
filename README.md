@@ -44,6 +44,8 @@ npm run dev:website
 |---|---|
 | `npm run dev:erp` | Start ERP dev server on port `3000` |
 | `npm run dev:website` | Start Website dev server on port `3001` |
+| `npm run dev:desktop` | Launch Electron desktop wrapper |
+| `npm run build:desktop` | Build customized Windows NSIS desktop installer |
 | `npm run typecheck:erp` | TypeScript verification for ERP |
 | `npm run typecheck:website` | TypeScript verification for Website |
 | `npm run build:erp` | Production build for ERP |
