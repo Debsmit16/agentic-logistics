@@ -323,7 +323,7 @@ export function OrdersClient() {
       }
 
       const blob = await res.blob();
-      const filename = `agentic_manifest_${new Date().toISOString().slice(0, 10)}.csv`;
+      const filename = `agentic_manifest_${new Date().toISOString().slice(0, 10)}.xlsx`;
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -431,29 +431,29 @@ export function OrdersClient() {
             </div>
           </div>
 
-          {/* Action Button Row: Export CSV, Bulk Import, New Order */}
+          {/* Action Button Row: Export Excel, Bulk Import, New Order */}
           <div className="flex items-center gap-2">
-            {/* Export CSV Manifest (Point 2) */}
+            {/* Export Excel Manifest */}
             <button
               type="button"
               onClick={handleExportCsv}
               className="btn btn-ghost text-xs"
-              title="Download full manifest report in CSV spreadsheet format"
+              title="Download beautified manifest report in official Excel (.xlsx) format"
             >
               <IconDownload className="h-3.5 w-3.5" />
-              Export CSV
+              Export Excel (.xlsx)
             </button>
 
-            {/* Bulk CSV Upload (Point 2) */}
+            {/* Bulk Excel/CSV Upload */}
             {canCreate && (
               <button
                 type="button"
                 onClick={() => setBulkUploadOpen(true)}
                 className="btn btn-ghost text-xs"
-                title="Bulk import up to 200 consignments from CSV file"
+                title="Bulk import consignments from Excel (.xlsx) or CSV spreadsheet"
               >
                 <IconUpload className="h-3.5 w-3.5" />
-                Bulk Import
+                Bulk Import (Excel / CSV)
               </button>
             )}
 
