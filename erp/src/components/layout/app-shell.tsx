@@ -196,7 +196,7 @@ export function AppShell({
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-10">{children}</main>
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 lg:p-10">{children}</main>
       </div>
     </div>
   );

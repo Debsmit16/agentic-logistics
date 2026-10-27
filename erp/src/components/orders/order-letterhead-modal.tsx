@@ -41,7 +41,7 @@ export function OrderLetterheadModal({
     >
       <div className="space-y-6">
         {/* Printable Letterhead Document Container */}
-        <div className="flex justify-center bg-slate-100 dark:bg-slate-900/60 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto">
+        <div className="flex justify-center bg-slate-100 dark:bg-slate-900/60 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto custom-scrollbar">
           <div
             id="internal-manifest-letterhead"
             className="w-full max-w-[760px] bg-white text-black p-8 font-sans text-xs shadow-lg rounded-sm border border-slate-300 select-none"

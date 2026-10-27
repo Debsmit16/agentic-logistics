@@ -210,7 +210,7 @@ export function OrderBulkUploadModal({
               <span className="text-[11px] text-[var(--muted)]">Showing first 4 rows</span>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-[var(--border)] max-h-48">
+            <div className="overflow-x-auto custom-scrollbar rounded-xl border border-[var(--border)] max-h-48">
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-[var(--surface-raised)] border-b border-[var(--border)] text-[10px] uppercase font-bold text-[var(--muted)]">
                   <tr>

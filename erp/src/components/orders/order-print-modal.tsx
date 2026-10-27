@@ -384,7 +384,7 @@ export function OrderPrintModal({
     >
       <div className="space-y-5">
         {/* Printable 4x6 Thermal AWB Label Container */}
-        <div className="bg-[var(--surface-raised)]/50 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto max-h-[500px] overflow-y-auto">
+        <div className="bg-[var(--surface-raised)]/50 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
           <div id="thermal-shipping-labels-container" className="w-full space-y-6">
             {orderList.map((ord, idx) => (
               <div key={ord.id} className="thermal-label-page space-y-1">

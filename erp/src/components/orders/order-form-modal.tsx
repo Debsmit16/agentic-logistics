@@ -444,12 +444,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
                 Consignment / Parcel Photo
               </span>
               <p className="text-[10px] text-[var(--muted)]">
-                Upload parcel photo at booking. High-efficiency WebP compression (~25 KB) for zero cloud cost.
+                Attach an optional photo of the consignment parcel at origin booking.
               </p>
             </div>
             {parcelPhoto && (
               <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                {(parcelPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+                Photo Attached
               </span>
             )}
           </div>
@@ -472,13 +472,8 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
                 <p className="text-xs font-semibold text-[var(--text)] truncate">{parcelPhoto.fileName}</p>
                 <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--muted)]">
                   <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Optimized: {(parcelPhoto.sizeBytes / 1024).toFixed(1)} KB
+                    {(parcelPhoto.sizeBytes / 1024).toFixed(1)} KB
                   </span>
-                  {parcelPhoto.originalSizeBytes && (
-                    <span>
-                      (Saved {Math.max(0, Math.round((1 - parcelPhoto.sizeBytes / parcelPhoto.originalSizeBytes) * 100))}% space)
-                    </span>
-                  )}
                 </div>
               </div>
               <button
@@ -501,7 +496,7 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               {compressingImage ? (
                 <div className="flex items-center gap-2 text-xs font-medium text-[var(--primary)]">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
-                  Compressing photo to WebP...
+                  Processing photo...
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-1.5 text-center">
@@ -518,7 +513,7 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
                     <span className="text-xs text-[var(--muted)]"> (Optional)</span>
                   </div>
                   <p className="text-[10px] text-[var(--muted)]">
-                    PNG, JPG, HEIC, WebP · Auto-optimized to ~25 KB
+                    Take photo or choose an image file (PNG, JPG, HEIC)
                   </p>
                 </div>
               )}

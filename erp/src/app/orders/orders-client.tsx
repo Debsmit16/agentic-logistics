@@ -472,7 +472,7 @@ export function OrdersClient() {
         </div>
 
         {/* Quick Status Filter Tabs with Live Counter Badges (Point 3) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface-raised)]/20 px-5 py-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-[var(--border)] bg-[var(--surface-raised)]/20 px-5 py-2">
           {STATUS_TABS.map((tab) => {
             const active = activeTab === tab.id;
             return (
@@ -570,7 +570,7 @@ export function OrdersClient() {
         ) : (
           <>
             {/* Desktop / Tablet View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto custom-scrollbar">
               <table className="erp-table">
                 <thead>
                   <tr>

@@ -179,14 +179,14 @@ export function OrderDetailModal({
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[var(--text)]">Consignment Registration Parcel Photo</span>
                   <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.2 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                    {(registrationPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+                    {(registrationPhoto.sizeBytes / 1024).toFixed(1)} KB
                   </span>
                 </div>
                 <p className="text-[11px] text-[var(--muted)] truncate max-w-md">
                   {registrationPhoto.caption || registrationPhoto.fileName}
                 </p>
                 <p className="text-[10px] text-[var(--muted)]">
-                  Captured at booking · Stored compressed in Neon DB · Click to enlarge
+                  Captured during booking · Click to inspect full resolution
                 </p>
               </div>
             </div>
@@ -347,7 +347,7 @@ export function OrderDetailModal({
                                 </div>
                                 <p className="text-[var(--muted)] truncate max-w-[150px]">{att.caption || att.fileName}</p>
                                 <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[9px]">
-                                  {(att.sizeBytes / 1024).toFixed(1)} KB WebP
+                                  {(att.sizeBytes / 1024).toFixed(1)} KB
                                 </span>
                               </div>
                             </button>
@@ -569,11 +569,11 @@ export function OrderDetailModal({
                 </span>
               </div>
               <div className="flex items-center gap-3 text-[11px]">
-                <span className="text-emerald-400 font-mono font-semibold">
-                  {(selectedPhoto.sizeBytes / 1024).toFixed(1)} KB (Neon DB WebP)
+                <span className="text-slate-300 font-medium">
+                  {(selectedPhoto.sizeBytes / 1024).toFixed(1)} KB
                 </span>
                 <span className="text-slate-500">·</span>
-                <span>Optimized raw BYTEA</span>
+                <span className="text-emerald-400 font-medium">High Resolution Photo</span>
               </div>
             </div>
           </div>

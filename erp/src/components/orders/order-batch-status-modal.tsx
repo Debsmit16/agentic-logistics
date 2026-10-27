@@ -75,7 +75,7 @@ export function OrderBatchStatusModal({ open, orderIds, onClose, onUpdated }: Or
           <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
             Target Lifecycle Status
           </label>
-          <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar pr-1.5">
             {STATUS_OPTIONS.map((opt) => {
               const active = targetStatus === opt.value;
               return (

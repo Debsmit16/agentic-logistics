@@ -177,7 +177,7 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
           <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
             Select Lifecycle Stage
           </label>
-          <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar pr-1.5">
             {Object.values(OrderStatus).map((status) => {
               const active = selectedStatus === status;
               return (
@@ -295,7 +295,7 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                 </div>
                 {stepPhoto && (
                   <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                    {(stepPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+                    Photo Attached
                   </span>
                 )}
               </div>
@@ -319,13 +319,8 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                       <p className="text-xs font-semibold text-[var(--text)] truncate">{stepPhoto.fileName}</p>
                       <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--muted)]">
                         <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                          {(stepPhoto.sizeBytes / 1024).toFixed(1)} KB WebP
+                          {(stepPhoto.sizeBytes / 1024).toFixed(1)} KB
                         </span>
-                        {stepPhoto.originalSizeBytes && (
-                          <span>
-                            (Saved {Math.max(0, Math.round((1 - stepPhoto.sizeBytes / stepPhoto.originalSizeBytes) * 100))}% space)
-                          </span>
-                        )}
                       </div>
                     </div>
                     <button
@@ -341,7 +336,7 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                     type="text"
                     value={stepPhotoCaption}
                     onChange={(e) => setStepPhotoCaption(e.target.value)}
-                    placeholder="Photo caption (e.g. Gate Pass #, Recipient ID, or Seal Tag #)"
+                    placeholder="Photo notes / reference (e.g. Gate Pass #, Recipient Name, or Seal ID)"
                     className="input text-xs h-8"
                   />
                 </div>
@@ -357,7 +352,7 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                   {compressingImage ? (
                     <div className="flex items-center gap-2 text-xs font-medium text-[var(--primary)]">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
-                      Compressing verification photo...
+                      Processing photo...
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-center">
@@ -369,12 +364,12 @@ export function OrderStatusModal({ open, order, onClose, onUpdated }: OrderStatu
                       </div>
                       <div>
                         <span className="text-xs font-semibold text-[var(--primary)] hover:underline">
-                          Attach Step Verification Photo
+                          Attach Verification Photo
                         </span>
                         <span className="text-xs text-[var(--muted)]"> (Optional)</span>
                       </div>
                       <p className="text-[10px] text-[var(--muted)]">
-                        Auto-compressed to ~25 KB WebP · Saved directly to Neon DB
+                        Upload image or take photo with device camera
                       </p>
                     </div>
                   )}
