@@ -123,7 +123,7 @@ function createMainWindow() {
     title: 'Agentic Logistics Enterprise',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     show: false,
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -134,12 +134,43 @@ function createMainWindow() {
     },
   });
 
+  // Completely eliminate the top "File Edit View..." menu strip
+  Menu.setApplicationMenu(null);
+  mainWindow.setMenuBarVisibility(false);
+
+  // Identify as desktop app in user-agent
+  mainWindow.webContents.setUserAgent(mainWindow.webContents.getUserAgent() + ' AgenticDesktop/1.0');
+
+  // Inject desktop styles & flags to suppress web-only buttons (e.g. Download)
+  mainWindow.webContents.on('dom-ready', () => {
+    mainWindow.webContents.insertCSS(`
+      .agentic-download-btn { display: none !important; }
+    `).catch(() => {});
+    mainWindow.webContents.executeJavaScript(`
+      document.documentElement.classList.add('agentic-desktop-app');
+      window.isAgenticDesktop = true;
+    `).catch(() => {});
+  });
+
+  // Modern keyboard shortcuts (without needing a visible menu bar)
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if ((input.control && input.key.toLowerCase() === 'r') || input.key === 'F5') {
+      loadTargetApplication();
+      event.preventDefault();
+    }
+    if (input.control && input.shift && input.key.toLowerCase() === 'r') {
+      session.defaultSession.clearCache().then(() => loadTargetApplication());
+      event.preventDefault();
+    }
+    if (input.key === 'F11') {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+      event.preventDefault();
+    }
+  });
+
   if (windowState.isMaximized) {
     mainWindow.maximize();
   }
-
-  // Build enterprise menu
-  setupApplicationMenu();
 
   // Load the application
   loadTargetApplication();
@@ -217,102 +248,7 @@ function loadOfflinePage() {
   });
 }
 
-function setupApplicationMenu() {
-  const isMac = process.platform === 'darwin';
 
-  const template = [
-    ...(isMac ? [{ role: 'appMenu' }] : []),
-    {
-      label: '&File',
-      submenu: [
-        {
-          label: 'Reload Platform',
-          accelerator: 'CmdOrCtrl+R',
-          click: () => {
-            loadTargetApplication();
-          },
-        },
-        {
-          label: 'Clear Cache & Reload',
-          accelerator: 'CmdOrCtrl+Shift+R',
-          click: async () => {
-            if (mainWindow) {
-              await session.defaultSession.clearCache();
-              loadTargetApplication();
-            }
-          },
-        },
-        { type: 'separator' },
-        {
-          label: 'Open in Web Browser',
-          click: async () => {
-            const url = await resolveInitialUrl();
-            shell.openExternal(url);
-          },
-        },
-        { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit', label: 'E&xit' },
-      ],
-    },
-    {
-      label: '&Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
-      ],
-    },
-    {
-      label: '&View',
-      submenu: [
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-        { type: 'separator' },
-        { role: 'toggleDevTools' },
-      ],
-    },
-    {
-      label: '&Window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(isMac ? [{ type: 'separator' }, { role: 'front' }] : [{ role: 'close' }]),
-      ],
-    },
-    {
-      label: '&Help',
-      submenu: [
-        {
-          label: 'Agentic Logistics Documentation',
-          click: () => shell.openExternal('https://github.com/Debsmit16/agentic-logistics'),
-        },
-        {
-          label: 'About Agentic Logistics',
-          click: () => {
-            dialog.showMessageBox(mainWindow, {
-              type: 'info',
-              title: 'Agentic Logistics Enterprise',
-              message: 'Agentic Logistics Desktop Client',
-              detail: 'Version: 1.0.0\nArchitecture: Windows x64 Enterprise Wrapper\nPowered by Electron & Chromium',
-              buttons: ['OK'],
-              icon: path.join(__dirname, 'assets', 'icon.ico'),
-            });
-          },
-        },
-      ],
-    },
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-}
 
 // IPC Handlers
 ipcMain.handle('get-target-url', async () => {

@@ -3,7 +3,7 @@
 import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLogo } from "@/components/brand/app-logo";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -46,6 +46,21 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isDesktopEnv =
+        Boolean((window as unknown as { desktopClient?: { isDesktop?: boolean } }).desktopClient?.isDesktop) ||
+        Boolean((window as unknown as { isAgenticDesktop?: boolean }).isAgenticDesktop) ||
+        navigator.userAgent.includes("AgenticDesktop") ||
+        document.documentElement.classList.contains("agentic-desktop-app");
+
+      if (isDesktopEnv) {
+        setIsDesktop(true);
+      }
+    }
+  }, []);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const sidebarW = sidebarCollapsed ? "w-[4.5rem]" : "w-[var(--sidebar-width)]";
@@ -195,37 +210,39 @@ export function AppShell({
             {/* Theme Mode Switcher */}
             <ThemeToggle />
 
-            {/* Desktop App Download Button */}
-            <a
-              href="/api/download"
-              download="Agentic-Logistics-Setup.exe"
-              title="Download Agentic Logistics for Windows"
-              className="group inline-flex h-8 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-2.5 sm:px-3 text-xs font-semibold text-[var(--text)] shadow-sm backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-[var(--surface-raised)] hover:shadow-md active:scale-95"
-            >
-              <Image
-                src={LOGO.sm}
-                alt="Agentic Logistics"
-                width={18}
-                height={18}
-                className="shrink-0 object-contain transition-transform group-hover:scale-110"
-              />
-              <span className="hidden sm:inline">Download</span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-emerald-500 transition-transform group-hover:translate-y-0.5"
+            {/* Desktop App Download Button (hidden when already running inside the desktop app) */}
+            {!isDesktop && (
+              <a
+                href="/api/download"
+                download="Agentic-Logistics-Setup.exe"
+                title="Download Agentic Logistics for Windows"
+                className="agentic-download-btn group inline-flex h-8 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-2.5 sm:px-3 text-xs font-semibold text-[var(--text)] shadow-sm backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-[var(--surface-raised)] hover:shadow-md active:scale-95"
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </a>
+                <Image
+                  src={LOGO.sm}
+                  alt="Agentic Logistics"
+                  width={18}
+                  height={18}
+                  className="shrink-0 object-contain transition-transform group-hover:scale-110"
+                />
+                <span className="hidden sm:inline">Download</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-emerald-500 transition-transform group-hover:translate-y-0.5"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </a>
+            )}
           </div>
         </header>
 

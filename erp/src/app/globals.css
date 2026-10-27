@@ -333,3 +333,8 @@ body {
     margin: 0;
   }
 }
+
+/* Electron Desktop App: automatically suppress download installer CTA */
+.agentic-desktop-app .agentic-download-btn {
+  display: none !important;
+}
