@@ -9,6 +9,7 @@ export type NavItem = {
 /** Top-level operational modules (Settings is separate in the shell). */
 export const MODULE_NAV: NavItem[] = [
   { module: "ORDERS", href: "/orders", label: "Orders" },
+  { module: "DISPATCHES", href: "/dispatches", label: "Dispatches & Trips" },
 ];
 
 export type SettingsNavItem = {

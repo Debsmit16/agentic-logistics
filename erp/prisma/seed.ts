@@ -4,7 +4,7 @@ import { hashPassword } from "../src/lib/auth/crypto";
 const prisma = new PrismaClient();
 
 const ADMIN_EMAIL = "admin@agenticlogistics.in";
-const ALL_MODULES = [AppModule.ORDERS, AppModule.SETTINGS];
+const ALL_MODULES = [AppModule.ORDERS, AppModule.DISPATCHES, AppModule.SETTINGS];
 
 const FULL = { canCreate: true, canRead: true, canUpdate: true, canDelete: true };
 
@@ -44,6 +44,12 @@ async function main() {
   });
 
   await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: dispatcherRole.id, module: AppModule.DISPATCHES } },
+    update: { canCreate: true, canRead: true, canUpdate: true, canDelete: false },
+    create: { roleId: dispatcherRole.id, module: AppModule.DISPATCHES, canCreate: true, canRead: true, canUpdate: true, canDelete: false },
+  });
+
+  await prisma.rolePermission.upsert({
     where: { roleId_module: { roleId: dispatcherRole.id, module: AppModule.SETTINGS } },
     update: { canCreate: false, canRead: true, canUpdate: false, canDelete: false },
     create: { roleId: dispatcherRole.id, module: AppModule.SETTINGS, canCreate: false, canRead: true, canUpdate: false, canDelete: false },
@@ -60,6 +66,12 @@ async function main() {
     where: { roleId_module: { roleId: courierRole.id, module: AppModule.ORDERS } },
     update: { canCreate: false, canRead: true, canUpdate: true, canDelete: false },
     create: { roleId: courierRole.id, module: AppModule.ORDERS, canCreate: false, canRead: true, canUpdate: true, canDelete: false },
+  });
+
+  await prisma.rolePermission.upsert({
+    where: { roleId_module: { roleId: courierRole.id, module: AppModule.DISPATCHES } },
+    update: { canCreate: false, canRead: true, canUpdate: true, canDelete: false },
+    create: { roleId: courierRole.id, module: AppModule.DISPATCHES, canCreate: false, canRead: true, canUpdate: true, canDelete: false },
   });
 
   await prisma.rolePermission.upsert({

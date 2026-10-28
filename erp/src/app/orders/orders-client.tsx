@@ -13,6 +13,7 @@ import {
   IconSearch,
   IconTag,
   IconTrash,
+  IconTruck,
   IconUpload,
 } from "@/components/icons/nav-icons";
 import { OrderStatus, PaymentMode, ServiceType } from "@prisma/client";
@@ -23,6 +24,7 @@ import { OrderStatusModal } from "@/components/orders/order-status-modal";
 import { OrderLetterheadModal } from "@/components/orders/order-letterhead-modal";
 import { OrderBulkUploadModal } from "@/components/orders/order-bulk-upload-modal";
 import { OrderBatchStatusModal } from "@/components/orders/order-batch-status-modal";
+import { OrderAssignDispatchModal } from "@/components/orders/order-assign-dispatch-modal";
 import type { ModulePermissionFlags } from "@/lib/permissions/user-module";
 
 export interface OrderItem {
@@ -145,6 +147,7 @@ export function OrdersClient() {
   const [batchPrintOrders, setBatchPrintOrders] = useState<OrderItem[]>([]);
   const [batchPrintOpen, setBatchPrintOpen] = useState(false);
   const [batchStatusOpen, setBatchStatusOpen] = useState(false);
+  const [assignDispatchOpen, setAssignDispatchOpen] = useState(false);
 
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
@@ -930,15 +933,27 @@ export function OrdersClient() {
             </button>
 
             {canUpdate && (
-              <button
-                type="button"
-                onClick={handleOpenBatchStatus}
-                className="btn btn-ghost text-xs text-amber-600 dark:text-amber-400"
-                title="Bulk update shipment status"
-              >
-                <IconTag className="h-3.5 w-3.5" />
-                Bulk Status
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleOpenBatchStatus}
+                  className="btn btn-ghost text-xs text-amber-600 dark:text-amber-400"
+                  title="Bulk update shipment status"
+                >
+                  <IconTag className="h-3.5 w-3.5" />
+                  Bulk Status
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAssignDispatchOpen(true)}
+                  className="btn btn-ghost text-xs text-sky-600 dark:text-sky-400"
+                  title="Assign selected orders to a dispatch trip / manifest"
+                >
+                  <IconTruck className="h-3.5 w-3.5" />
+                  Assign to Trip
+                </button>
+              </>
             )}
 
             <button
@@ -1042,6 +1057,19 @@ export function OrdersClient() {
             clearSelection();
           }}
           onUpdated={() => fetchOrders(pagination.page)}
+        />
+      )}
+
+      {/* Assign to Dispatch Trip Modal */}
+      {assignDispatchOpen && (
+        <OrderAssignDispatchModal
+          open={assignDispatchOpen}
+          orderIds={Array.from(selectedIds)}
+          onClose={() => {
+            setAssignDispatchOpen(false);
+            clearSelection();
+          }}
+          onAssigned={() => fetchOrders(pagination.page)}
         />
       )}
 
