@@ -131,7 +131,16 @@ export function DispatchesClient() {
 
         setDispatches(json.items || json.dispatches || []);
         if (json.pagination) setPagination(json.pagination);
-        if (json.metrics) setMetrics(json.metrics);
+        if (json.metrics) {
+          setMetrics({
+            totalTrips: json.metrics.totalTrips ?? json.metrics.total ?? 0,
+            draftTrips: json.metrics.draftTrips ?? json.metrics.draft ?? 0,
+            dispatchedTrips: json.metrics.dispatchedTrips ?? json.metrics.dispatched ?? 0,
+            completedTrips: json.metrics.completedTrips ?? json.metrics.completed ?? 0,
+            totalAssignedOrders: json.metrics.totalAssignedOrders ?? 0,
+            totalCodAmount: Number(json.metrics.totalCodAmount ?? 0),
+          });
+        }
         if (json.permissions) setPermissions(json.permissions);
       } catch (err) {
         console.error("Error fetching dispatches:", err);
@@ -263,37 +272,37 @@ export function DispatchesClient() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]/40 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Active Fleet</span>
-          <p className="mt-1 text-2xl font-black text-[var(--text)]">{metrics.totalTrips}</p>
+          <p className="mt-1 text-2xl font-black text-[var(--text)]">{metrics?.totalTrips ?? 0}</p>
           <span className="text-[11px] text-[var(--muted)]">Total Trips</span>
         </div>
 
         <div className="rounded-2xl border border-slate-500/20 bg-slate-500/5 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Under Prep</span>
-          <p className="mt-1 text-2xl font-black text-slate-300">{metrics.draftTrips}</p>
+          <p className="mt-1 text-2xl font-black text-slate-300">{metrics?.draftTrips ?? 0}</p>
           <span className="text-[11px] text-[var(--muted)]">Draft Run-sheets</span>
         </div>
 
         <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">On The Road</span>
-          <p className="mt-1 text-2xl font-black text-sky-400">{metrics.dispatchedTrips}</p>
+          <p className="mt-1 text-2xl font-black text-sky-400">{metrics?.dispatchedTrips ?? 0}</p>
           <span className="text-[11px] text-[var(--muted)]">Dispatched</span>
         </div>
 
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Completed</span>
-          <p className="mt-1 text-2xl font-black text-emerald-400">{metrics.completedTrips}</p>
+          <p className="mt-1 text-2xl font-black text-emerald-400">{metrics?.completedTrips ?? 0}</p>
           <span className="text-[11px] text-[var(--muted)]">Reconciled</span>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]/40 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Cargo Loaded</span>
-          <p className="mt-1 text-2xl font-black text-[var(--text)]">{metrics.totalAssignedOrders}</p>
+          <p className="mt-1 text-2xl font-black text-[var(--text)]">{metrics?.totalAssignedOrders ?? 0}</p>
           <span className="text-[11px] text-[var(--muted)]">Parcels</span>
         </div>
 
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 backdrop-blur-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">COD in Transit</span>
-          <p className="mt-1 text-2xl font-black text-amber-400">₹{metrics.totalCodAmount.toFixed(0)}</p>
+          <p className="mt-1 text-2xl font-black text-amber-400">₹{Number(metrics?.totalCodAmount ?? 0).toFixed(0)}</p>
           <span className="text-[11px] text-[var(--muted)]">Driver Collections</span>
         </div>
       </div>

@@ -68,7 +68,7 @@ export async function listDispatches(params: DispatchFilterParams = {}) {
     ];
   }
 
-  const [items, total, statsCounts] = await Promise.all([
+  const [items, total, statsCounts, assignedOrdersCount, codSum] = await Promise.all([
     prisma.dispatchTrip.findMany({
       where,
       skip,
@@ -97,9 +97,23 @@ export async function listDispatches(params: DispatchFilterParams = {}) {
       by: ["status"],
       _count: { _all: true },
     }),
+    prisma.order.count({
+      where: { dispatchTripId: { not: null } },
+    }),
+    prisma.order.aggregate({
+      where: { dispatchTripId: { not: null }, paymentMode: "COD" },
+      _sum: { totalAmount: true },
+    }),
   ]);
 
   const metrics = {
+    totalTrips: 0,
+    draftTrips: 0,
+    dispatchedTrips: 0,
+    completedTrips: 0,
+    cancelledTrips: 0,
+    totalAssignedOrders: assignedOrdersCount,
+    totalCodAmount: Number(codSum._sum.totalAmount || 0),
     total: 0,
     draft: 0,
     dispatched: 0,
@@ -108,11 +122,24 @@ export async function listDispatches(params: DispatchFilterParams = {}) {
   };
 
   for (const s of statsCounts) {
+    metrics.totalTrips += s._count._all;
     metrics.total += s._count._all;
-    if (s.status === DispatchStatus.DRAFT) metrics.draft = s._count._all;
-    if (s.status === DispatchStatus.DISPATCHED) metrics.dispatched = s._count._all;
-    if (s.status === DispatchStatus.COMPLETED) metrics.completed = s._count._all;
-    if (s.status === DispatchStatus.CANCELLED) metrics.cancelled = s._count._all;
+    if (s.status === DispatchStatus.DRAFT) {
+      metrics.draftTrips = s._count._all;
+      metrics.draft = s._count._all;
+    }
+    if (s.status === DispatchStatus.DISPATCHED) {
+      metrics.dispatchedTrips = s._count._all;
+      metrics.dispatched = s._count._all;
+    }
+    if (s.status === DispatchStatus.COMPLETED) {
+      metrics.completedTrips = s._count._all;
+      metrics.completed = s._count._all;
+    }
+    if (s.status === DispatchStatus.CANCELLED) {
+      metrics.cancelledTrips = s._count._all;
+      metrics.cancelled = s._count._all;
+    }
   }
 
   // Calculate aggregates per trip
