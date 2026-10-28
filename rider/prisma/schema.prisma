@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+/// Feature modules — Order execution core and Settings administration.
+enum AppModule {
+  ORDERS
+  DISPATCHES
+  SETTINGS
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false)
+  permissions RolePermission[]
+  users       User[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RolePermission {
+  id        String    @id @default(cuid())
+  roleId    String
+  module    AppModule
+  canCreate Boolean   @default(false)
+  canRead   Boolean   @default(false)
+  canUpdate Boolean   @default(false)
+  canDelete Boolean   @default(false)
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module])
+  @@index([module])
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  displayName  String
+  phone        String?
+  department   String?
+  isActive     Boolean    @default(true)
+  roleId       String?
+  role         Role?      @relation(fields: [roleId], references: [id])
+  auditLogs    AuditLog[]
+  orders       Order[]
+  dispatchTrips DispatchTrip[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([roleId])
+}
+
+model AuditLog {
+  id            String     @id @default(cuid())
+  userId        String?
+  user          User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action        String
+  module        AppModule
+  entityId      String?
+  correlationId String?
+  oldValues     Json?
+  newValues     Json?
+  ipAddress     String?
+  userAgent     String?
+  httpMethod    String?
+  statusCode    Int?
+  requestUrl    String?
+  durationMs    Int?
+  createdAt     DateTime   @default(now())
+
+  @@index([module, createdAt])
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([entityId])
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  HANDED_TO_THIRD_PARTY
+  CANCELLED
+  RTO
+}
+
+enum PaymentMode {
+  PREPAID
+  COD
+}
+
+enum ServiceType {
+  STANDARD
+  EXPRESS
+  COLD_CHAIN
+}
+
+model Order {
+  id               String       @id @default(cuid())
+  orderNumber      String       @unique
+  awbNumber        String       @unique
+  status           OrderStatus  @default(CONFIRMED)
+  paymentMode      PaymentMode  @default(PREPAID)
+  serviceType      ServiceType  @default(STANDARD)
+
+  senderName       String
+  senderPhone      String
+  senderAddress    String
+  senderCity       String
+  senderState      String
+  senderPincode    String
+
+  receiverName     String
+  receiverPhone    String
+  receiverAddress  String
+  receiverCity     String
+  receiverState    String
+  receiverPincode  String
+
+  itemDescription  String
+  packageWeight    Float        @default(1.0)
+  lengthCm         Float        @default(15)
+  widthCm          Float        @default(10)
+  heightCm         Float        @default(10)
+  volumetricWeight Float        @default(0.3)
+  chargeableWeight Float        @default(1.0)
+
+  totalAmount      Float        @default(0)
+  declaredValue    Float        @default(0)
+
+  deliveryNotes    String?
+  ndrReason        String?
+  thirdPartyName   String?
+  thirdPartyTracking String?
+
+  createdById      String?
+  createdBy        User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  dispatchTripId   String?
+  dispatchTrip     DispatchTrip? @relation(fields: [dispatchTripId], references: [id], onDelete: SetNull)
+  milestones       OrderMilestone[]
+  attachments      OrderAttachment[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([status])
+  @@index([senderPincode])
+  @@index([receiverPincode])
+  @@index([dispatchTripId])
+  @@index([createdAt])
+}
+
+enum DispatchType {
+  LAST_MILE
+  LINEHAUL
+}
+
+enum DispatchStatus {
+  DRAFT
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+model DispatchTrip {
+  id             String         @id @default(cuid())
+  tripNumber     String         @unique
+  type           DispatchType   @default(LAST_MILE)
+  status         DispatchStatus @default(DRAFT)
+  originHub      String         @default("Central Sorting Facility")
+  destinationHub String?
+  vehicleNumber  String
+  driverName     String
+  driverPhone    String
+  notes          String?
+  orders         Order[]
+  createdById    String?
+  createdBy      User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderMilestone {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  title       String
+  description String?
+  location    String?
+  performedBy String?
+  attachments OrderAttachment[]
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+enum AttachmentType {
+  ORDER_REGISTRATION
+  MILESTONE_STEP
+}
+
+model OrderAttachment {
+  id          String          @id @default(cuid())
+  orderId     String
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  milestoneId String?
+  milestone   OrderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  type        AttachmentType  @default(ORDER_REGISTRATION)
+  fileName    String          @default("consignment-photo.webp")
+  mimeType    String          @default("image/webp")
+  sizeBytes   Int             @default(0)
+  data        Bytes           // Raw PostgreSQL BYTEA binary
+  caption     String?
+  createdAt   DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([milestoneId])
+}

@@ -5,18 +5,22 @@
   "workspaces": [
     "erp",
     "website",
-    "desktop"
+    "desktop",
+    "rider"
   ],
   "scripts": {
     "dev:erp": "npm run dev --workspace=erp",
     "dev:website": "npm run dev --workspace=website",
+    "dev:rider": "npm run dev --workspace=rider",
     "dev:desktop": "npm run start --workspace=desktop",
     "build:erp": "npm run build --workspace=erp",
     "build:website": "npm run build --workspace=website",
+    "build:rider": "npm run build --workspace=rider",
     "build:desktop": "npm run dist --workspace=desktop",
     "package:desktop": "node scripts/sync-desktop-dist.mjs",
     "typecheck:erp": "npm run typecheck --workspace=erp",
-    "typecheck:website": "npm run typecheck --workspace=website"
+    "typecheck:website": "npm run typecheck --workspace=website",
+    "typecheck:rider": "npm run typecheck --workspace=rider"
   },
   "devDependencies": {
     "app-builder-bin": "^5.0.0-alpha.10"
