@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { IconSignature, IconRefresh } from "./icons";
 
 interface SignaturePadProps {
   onSignatureChange: (dataUrl: string | null) => void;
@@ -18,14 +19,13 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Handle high DPI displays
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * ratio;
     canvas.height = rect.height * ratio;
     ctx.scale(ratio, ratio);
 
-    ctx.strokeStyle = "#10b981"; // Emerald ink
+    ctx.strokeStyle = "#60a5fa"; // Royal Electric Blue
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -77,23 +77,25 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
   };
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-[var(--text-muted)]">
-          Recipient Digital Signature (Touch / Finger)
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-xs">
+        <label className="flex items-center gap-1.5 font-medium text-slate-300">
+          <IconSignature className="h-3.5 w-3.5 text-blue-400" />
+          <span>Recipient Digital Signature</span>
         </label>
         {hasDrawn && (
           <button
             type="button"
             onClick={clear}
-            className="text-[11px] font-bold text-rose-400 hover:underline"
+            className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300"
           >
-            Clear Pad
+            <IconRefresh className="h-3 w-3" />
+            <span>Clear</span>
           </button>
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[#05070e]">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#050811] shadow-inner">
         <canvas
           ref={canvasRef}
           onPointerDown={startDrawing}
@@ -103,12 +105,11 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
           className="h-28 w-full touch-none cursor-crosshair"
         />
         {!hasDrawn && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-slate-500">
-            Sign here with finger ✍️
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-xs text-slate-600 tracking-wide">
+            Sign on screen with finger or stylus
           </div>
         )}
       </div>
     </div>
   );
 }
-

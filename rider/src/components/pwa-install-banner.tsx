@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconDownload, IconCross } from "./icons";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -33,34 +34,33 @@ export function PwaInstallBanner() {
   };
 
   return (
-    <div className="mx-4 my-2 flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400 backdrop-blur-md animate-in fade-in">
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 text-sm font-bold">
-          📲
-        </span>
+    <div className="mx-4 my-2 flex items-center justify-between gap-3 rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-950/40 via-[#0c1222] to-slate-900/60 p-3 shadow-lg backdrop-blur-xl animate-in fade-in">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400">
+          <IconDownload className="h-4 w-4" />
+        </div>
         <div>
-          <p className="font-bold text-[var(--text)]">Install Rider App</p>
-          <p className="text-[10px] text-[var(--text-muted)]">Add to Home Screen for 1-tap offline use</p>
+          <p className="font-display text-xs font-bold text-white tracking-tight">Install Rider Console</p>
+          <p className="text-[10px] text-slate-400">Add to Home Screen for fast offline telemetry</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleInstall}
-          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:bg-emerald-500"
+          className="rounded-xl bg-blue-600 px-3 py-1.5 font-display text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-500 transition active:scale-95"
         >
           Install
         </button>
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text)]"
+          className="rounded-lg p-1 text-slate-500 hover:text-slate-300"
         >
-          ✕
+          <IconCross className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
   );
 }
-
