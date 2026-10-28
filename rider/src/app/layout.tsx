@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: APP_SHORT_NAME,
   },
   icons: {
@@ -25,7 +25,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#070b14",
+  themeColor: "#f8fafc",
 };
 
 const swRegisterScript = `
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: swRegisterScript }}
         />
       </head>
-      <body className="min-h-screen safe-top safe-bottom bg-[#070b14] text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
+      <body className="min-h-screen safe-top safe-bottom bg-[#f8fafc] text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
         {children}
       </body>
     </html>

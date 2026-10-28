@@ -25,7 +25,7 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
     canvas.height = rect.height * ratio;
     ctx.scale(ratio, ratio);
 
-    ctx.strokeStyle = "#60a5fa"; // Royal Electric Blue
+    ctx.strokeStyle = "#1e3a8a"; // Executive Deep Navy Ink
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -79,15 +79,15 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs">
-        <label className="flex items-center gap-1.5 font-medium text-slate-300">
-          <IconSignature className="h-3.5 w-3.5 text-blue-400" />
+        <label className="flex items-center gap-1.5 font-medium text-slate-700">
+          <IconSignature className="h-3.5 w-3.5 text-blue-600" />
           <span>Recipient Digital Signature</span>
         </label>
         {hasDrawn && (
           <button
             type="button"
             onClick={clear}
-            className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300"
+            className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
           >
             <IconRefresh className="h-3 w-3" />
             <span>Clear</span>
@@ -95,17 +95,17 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#050811] shadow-inner">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-inner">
         <canvas
           ref={canvasRef}
           onPointerDown={startDrawing}
           onPointerMove={draw}
           onPointerUp={stopDrawing}
           onPointerCancel={stopDrawing}
-          className="h-28 w-full touch-none cursor-crosshair"
+          className="h-28 w-full touch-none cursor-crosshair bg-white"
         />
         {!hasDrawn && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-xs text-slate-600 tracking-wide">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-xs text-slate-400 tracking-wide">
             Sign on screen with finger or stylus
           </div>
         )}

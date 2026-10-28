@@ -88,25 +88,25 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-0 sm:items-center sm:p-4 backdrop-blur-md animate-in fade-in">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-white/[0.1] bg-[#0c1222] p-5 shadow-2xl sm:rounded-3xl sm:border">
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-700 sm:hidden" />
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4 backdrop-blur-sm animate-in fade-in">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white p-5 shadow-2xl sm:rounded-3xl sm:border text-slate-900">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
 
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <div className="flex items-center gap-1.5 text-rose-400 text-[10px] font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-rose-700 text-[10px] font-bold uppercase tracking-wider">
               <IconAlertTriangle className="h-3.5 w-3.5" />
               <span>Non-Delivery Exception (NDR)</span>
             </div>
-            <h3 className="mt-1 font-display text-base font-bold text-white tracking-tight">
+            <h3 className="mt-1 font-display text-base font-bold text-slate-900 tracking-tight">
               {order.receiverName}
             </h3>
-            <p className="font-mono text-xs text-slate-400">AWB: {order.awbNumber}</p>
+            <p className="font-mono text-xs text-slate-500">AWB: {order.awbNumber}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.05] text-slate-400 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
           >
             <IconCross className="h-4 w-4" />
           </button>
@@ -114,14 +114,14 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 font-semibold">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 font-semibold">
               {error}
             </div>
           )}
 
           {/* Reason Selection */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">
+            <label className="text-xs font-semibold text-slate-700">
               Select Reason for Incomplete Delivery
             </label>
             <div className="space-y-1.5">
@@ -132,10 +132,10 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
                     key={r}
                     type="button"
                     onClick={() => setSelectedReason(r)}
-                    className={`w-full rounded-xl border p-2.5 text-left text-xs font-semibold transition ${
+                    className={`w-full rounded-xl border p-2.5 text-left text-xs font-semibold transition cursor-pointer ${
                       isSelected
-                        ? "border-rose-500/60 bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30"
-                        : "border-white/[0.06] bg-white/[0.02] text-slate-400 hover:text-white"
+                        ? "border-rose-500 bg-rose-50 text-rose-800 ring-1 ring-rose-500 font-bold"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                     }`}
                   >
                     {r}
@@ -148,23 +148,23 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
           {/* Reschedule Date */}
           {selectedReason.includes("Reschedule") && (
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300">Requested Reschedule Date</label>
+              <label className="text-xs font-semibold text-slate-700">Requested Reschedule Date</label>
               <input
                 type="date"
                 value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-xs text-white focus:border-rose-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 focus:border-rose-500 focus:ring-4 focus:ring-rose-100 focus:outline-none transition shadow-sm"
               />
             </div>
           )}
 
           {/* Evidence Photo */}
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-300">
+            <label className="text-xs font-semibold text-slate-700">
               Evidence Photo (Locked Door / Gate)
             </label>
             {photoPreview ? (
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.1]">
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200">
                 <img src={photoPreview} alt="NDR Evidence" className="h-32 w-full object-cover" />
                 <button
                   type="button"
@@ -172,13 +172,13 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
                     setPhotoPreview(null);
                     setPhotoBase64(null);
                   }}
-                  className="absolute top-2 right-2 rounded-lg bg-black/80 px-2.5 py-1 text-[11px] font-bold text-rose-400"
+                  className="absolute top-2 right-2 rounded-lg bg-white/90 border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-rose-600 shadow-sm cursor-pointer"
                 >
                   Retake Photo
                 </button>
               </div>
             ) : (
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] py-3 text-xs font-semibold text-rose-400 hover:border-rose-500/50">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-rose-200 bg-rose-50/50 py-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition">
                 <IconCamera className="h-4 w-4" />
                 <span>{compressing ? "Compressing..." : "Capture Doorstep Evidence"}</span>
                 <input
@@ -198,13 +198,13 @@ export function NdrModal({ open, order, onClose, onSuccess }: NdrModalProps) {
             placeholder="Additional remarks (e.g. Called customer 3 times, no answer)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-rose-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-100 focus:outline-none transition"
           />
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-2xl bg-rose-600 py-3.5 font-display text-sm font-bold text-white shadow-xl shadow-rose-600/25 hover:bg-rose-500 active:scale-[0.98] disabled:opacity-50"
+            className="w-full rounded-2xl bg-rose-600 hover:bg-rose-700 py-3.5 font-display text-sm font-bold text-white shadow-lg shadow-rose-600/20 active:scale-[0.98] disabled:opacity-50 transition cursor-pointer"
           >
             {submitting ? "Logging Exception..." : "Submit Non-Delivery Exception"}
           </button>

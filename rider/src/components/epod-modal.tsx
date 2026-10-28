@@ -102,28 +102,28 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-0 sm:items-center sm:p-4 backdrop-blur-md animate-in fade-in">
-      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-white/[0.1] bg-[#0c1222] p-5 shadow-2xl sm:rounded-3xl sm:border">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4 backdrop-blur-sm animate-in fade-in">
+      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white p-5 shadow-2xl sm:rounded-3xl sm:border text-slate-900">
         {/* Mobile handle indicator */}
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-700 sm:hidden" />
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
 
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-5 items-center gap-1 rounded bg-blue-500/10 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-400">
+              <span className="flex h-5 items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-700">
                 <IconShieldCheck className="h-3 w-3" />
                 Digital e-POD
               </span>
             </div>
-            <h3 className="mt-1 font-display text-base font-bold text-white tracking-tight">
+            <h3 className="mt-1 font-display text-base font-bold text-slate-900 tracking-tight">
               {order.receiverName}
             </h3>
-            <p className="font-mono text-xs text-slate-400">AWB: {order.awbNumber}</p>
+            <p className="font-mono text-xs text-slate-500">AWB: {order.awbNumber}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.05] text-slate-400 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
           >
             <IconCross className="h-4 w-4" />
           </button>
@@ -131,30 +131,30 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-semibold text-rose-300">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
               {error}
             </div>
           )}
 
           {/* COD Cash Collection Alert */}
           {isCod && (
-            <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-transparent p-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-800">
                     <IconCash className="h-3 w-3" />
                     Cash Collection Due
                   </span>
-                  <p className="mt-0.5 font-mono text-2xl font-black text-amber-300">
+                  <p className="mt-0.5 font-mono text-2xl font-black text-amber-900">
                     ₹{order.totalAmount.toLocaleString("en-IN")}
                   </p>
                 </div>
-                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/20 px-3.5 py-2 text-xs font-bold text-amber-200">
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-amber-300 bg-white px-3.5 py-2 text-xs font-bold text-amber-900 shadow-sm">
                   <input
                     type="checkbox"
                     checked={codConfirmed}
                     onChange={(e) => setCodConfirmed(e.target.checked)}
-                    className="h-4 w-4 rounded border-amber-500/50 bg-black/40 text-amber-500 focus:ring-0"
+                    className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-0"
                   />
                   <span>Cash Collected</span>
                 </label>
@@ -164,17 +164,17 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
 
           {/* Handover Recipient */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Parcel Received By</label>
+            <label className="text-xs font-semibold text-slate-700">Parcel Received By</label>
             <div className="grid grid-cols-2 gap-2">
               {RECEIVED_BY_OPTIONS.map((opt) => (
                 <button
                   key={opt}
                   type="button"
                   onClick={() => setReceivedBy(opt)}
-                  className={`rounded-xl border py-2 px-3 text-xs font-semibold transition ${
+                  className={`rounded-xl border py-2 px-3 text-xs font-semibold transition cursor-pointer ${
                     receivedBy === opt
-                      ? "border-blue-500/60 bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/40"
-                      : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-white"
+                      ? "border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-600 font-bold"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
                   {opt}
@@ -185,14 +185,14 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
 
           {/* Doorstep Camera Photo */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">
+            <label className="text-xs font-semibold text-slate-700">
               Doorstep Package Photo (Verification Proof)
             </label>
 
             {photoPreview ? (
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.1]">
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200">
                 <img src={photoPreview} alt="e-POD Verification" className="h-36 w-full object-cover" />
-                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-lg bg-black/75 px-2.5 py-1 text-[10px] font-mono font-bold text-emerald-400 backdrop-blur-md">
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2.5 py-1 text-[10px] font-mono font-bold text-emerald-400 backdrop-blur-md">
                   <IconCheck className="h-3 w-3" />
                   <span>Compressed WebP · {photoSizeKb} KB</span>
                 </div>
@@ -202,20 +202,20 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
                     setPhotoPreview(null);
                     setPhotoBase64(null);
                   }}
-                  className="absolute top-2 right-2 rounded-lg bg-black/80 px-2.5 py-1 text-[11px] font-bold text-rose-400"
+                  className="absolute top-2 right-2 rounded-lg bg-white/90 border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-rose-600 shadow-sm cursor-pointer"
                 >
                   Retake Photo
                 </button>
               </div>
             ) : (
-              <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/[0.12] bg-white/[0.02] p-4 transition hover:border-blue-500/40">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-slate-100/70">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                   <IconCamera className="h-5 w-5" />
                 </div>
-                <span className="mt-2 font-display text-xs font-bold text-slate-200">
+                <span className="mt-2 font-display text-xs font-bold text-slate-800">
                   {compressing ? "Optimizing image..." : "Take Doorstep Photo"}
                 </span>
-                <span className="text-[10px] text-slate-500">Auto-compressed WebP format</span>
+                <span className="text-[10px] text-slate-400">Auto-compressed WebP format</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -236,14 +236,14 @@ export function EpodModal({ open, order, onClose, onSuccess }: EpodModalProps) {
             placeholder="Handover remarks (e.g. Left with security at building entrance)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 focus:outline-none transition"
           />
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={submitting || (isCod && !codConfirmed)}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 font-display text-sm font-bold text-white shadow-xl shadow-blue-500/25 transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 py-3.5 font-display text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {submitting ? (
               <span>Recording e-POD telemetry...</span>

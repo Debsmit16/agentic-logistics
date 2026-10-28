@@ -4,8 +4,8 @@
   "description": "Last-mile courier delivery run-sheet and digital e-POD verification platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#090d16",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {
@@ -23,4 +23,3 @@
   ],
   "categories": ["business", "productivity", "utilities"]
 }
-
