@@ -27,6 +27,7 @@ const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   "/orders": IconBox,
   "/dispatches": IconTruck,
   "/hub/scanner": IconBarcode,
+  "/finance/reconciliation": IconWallet,
   "/tracking": IconSearch,
 };
 
