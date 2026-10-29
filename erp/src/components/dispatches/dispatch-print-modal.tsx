@@ -1,25 +1,10 @@
 "use client";
 
-import { useRef } from "react";
-import Image from "next/image";
+import { Modal } from "@/components/ui/modal";
+import { IconPrinter } from "@/components/icons/nav-icons";
+import { printIsolatedElement } from "@/lib/print-utils";
 import { SvgBarcode } from "@/components/orders/svg-barcode";
-import { LOGO } from "@/lib/brand";
-
-interface OrderManifestItem {
-  id: string;
-  orderNumber: string;
-  awbNumber: string;
-  receiverName: string;
-  receiverPhone: string;
-  receiverAddress: string;
-  receiverCity: string;
-  receiverPincode: string;
-  itemDescription: string;
-  packageWeight: number;
-  paymentMode: string;
-  totalAmount: number;
-  status: string;
-}
+import type { DispatchDetail, DispatchOrderDetail } from "./dispatch-detail-modal";
 
 export interface DispatchPrintTrip {
   id: string;
@@ -33,7 +18,7 @@ export interface DispatchPrintTrip {
   driverPhone: string;
   notes?: string | null;
   createdAt: string | Date;
-  orders: OrderManifestItem[];
+  orders: DispatchOrderDetail[];
   orderCount?: number;
   totalWeight?: number;
   totalCod?: number;
@@ -46,39 +31,45 @@ export function DispatchPrintModal({
   onClose,
 }: {
   trip?: DispatchPrintTrip | null;
-  dispatch?: any;
+  dispatch?: DispatchDetail | DispatchPrintTrip | null;
   open?: boolean;
   onClose: () => void;
 }) {
-  const printRef = useRef<HTMLDivElement>(null);
+  const tripData: DispatchPrintTrip | null =
+    initialTrip ||
+    (dispatch
+      ? {
+          id: dispatch.id,
+          tripNumber: dispatch.tripNumber,
+          type: dispatch.type,
+          status: dispatch.status,
+          originHub: dispatch.originHub,
+          destinationHub: dispatch.destinationHub,
+          vehicleNumber: dispatch.vehicleNumber,
+          driverName: dispatch.driverName,
+          driverPhone: dispatch.driverPhone,
+          notes: dispatch.notes,
+          createdAt: dispatch.createdAt,
+          orders: (dispatch.orders || []) as DispatchOrderDetail[],
+          orderCount: dispatch.orders?.length ?? 0,
+          totalWeight: dispatch.orders
+            ? dispatch.orders.reduce((sum, o) => sum + (Number(o.packageWeight) || 0), 0)
+            : 0,
+          totalCod: dispatch.orders
+            ? dispatch.orders
+                .filter((o) => o.paymentMode === "COD")
+                .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0)
+            : 0,
+        }
+      : null);
 
-  const trip: DispatchPrintTrip | null = initialTrip || (dispatch ? {
-    id: dispatch.id,
-    tripNumber: dispatch.tripNumber,
-    type: dispatch.type,
-    status: dispatch.status,
-    originHub: dispatch.originHub,
-    destinationHub: dispatch.destinationHub,
-    vehicleNumber: dispatch.vehicleNumber,
-    driverName: dispatch.driverName,
-    driverPhone: dispatch.driverPhone,
-    notes: dispatch.notes,
-    createdAt: dispatch.createdAt,
-    orders: dispatch.orders || [],
-    orderCount: dispatch.orders?.length ?? 0,
-    totalWeight: dispatch.orders
-      ? dispatch.orders.reduce((sum: number, o: any) => sum + (Number(o.packageWeight) || 0), 0)
-      : 0,
-    totalCod: dispatch.orders
-      ? dispatch.orders
-          .filter((o: any) => o.paymentMode === "COD")
-          .reduce((sum: number, o: any) => sum + (Number(o.totalAmount) || 0), 0)
-      : 0,
-  } : null);
+  if (!open || !tripData) return null;
 
-  if (!open || !trip) return null;
+  function handlePrint() {
+    printIsolatedElement("dispatch-runsheet-letterhead", "a4");
+  }
 
-  const formattedDate = new Date(trip.createdAt).toLocaleDateString("en-IN", {
+  const formattedDate = new Date(tripData.createdAt).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -86,233 +77,563 @@ export function DispatchPrintModal({
     minute: "2-digit",
   });
 
-  const totalWeight = trip.totalWeight ?? trip.orders.reduce((sum, o) => sum + (Number(o.packageWeight) || 0), 0);
-  const totalCod = trip.totalCod ?? trip.orders
-    .filter((o) => o.paymentMode === "COD")
-    .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
-  const orderCount = trip.orderCount ?? trip.orders.length;
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const totalWeight =
+    tripData.totalWeight ??
+    tripData.orders.reduce((sum, o) => sum + (Number(o.packageWeight) || 0), 0);
+  const totalCod =
+    tripData.totalCod ??
+    tripData.orders
+      .filter((o) => o.paymentMode === "COD")
+      .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+  const orderCount = tripData.orderCount ?? tripData.orders.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm print:p-0 print:bg-white print:fixed print:inset-0">
-      <div className="flex h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl print:h-auto print:max-w-none print:border-none print:shadow-none print:rounded-none">
-        {/* Modal Action Bar (Hidden in Print) */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4 print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-            </span>
-            <div>
-              <h2 className="text-sm font-bold text-[var(--text)]">Official Driver Delivery Run-Sheet</h2>
-              <p className="text-xs text-[var(--muted)]">Trip #{trip.tripNumber} • Ready to Print</p>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Official Driver Delivery Run-Sheet (Letterhead Preview)"
+      description="Official operational letterhead document for outbound staging, driver custody, and cash reconciliation."
+      maxWidth="max-w-4xl"
+    >
+      <div className="space-y-6">
+        {/* Printable Letterhead Document Container */}
+        <div className="flex justify-center bg-slate-100 dark:bg-slate-900/60 p-4 rounded-2xl border border-[var(--border)] overflow-x-auto custom-scrollbar">
+          <div
+            id="dispatch-runsheet-letterhead"
+            className="w-full max-w-[760px] bg-white text-black p-8 font-sans text-xs shadow-lg rounded-sm border border-slate-300 select-none"
+            style={{
+              backgroundColor: "#ffffff",
+              color: "#000000",
+              boxSizing: "border-box",
+            }}
+          >
+            {/* Header: Official Company Letterhead */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #000000",
+                paddingBottom: "12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                <img
+                  src="/logo-128.png"
+                  alt="Agentic Logistics"
+                  style={{
+                    height: "48px",
+                    width: "48px",
+                    objectFit: "contain",
+                    borderRadius: "6px",
+                  }}
+                />
+                <div>
+                  <h1
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "900",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      lineHeight: "1.1",
+                      margin: 0,
+                      color: "#000000",
+                    }}
+                  >
+                    AGENTIC LOGISTICS INDIA PRIVATE LIMITED
+                  </h1>
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      color: "#334155",
+                      marginTop: "2px",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Autonomous Freight Management & Supply Chain Infrastructure
+                  </p>
+                  <p style={{ fontSize: "10px", color: "#1e293b", marginTop: "4px", lineHeight: "1.3" }}>
+                    <strong>Registered Operations Office:</strong> Ayantika Apartment, 76/B Selimpur Lane, Kolkata - 700031, West Bengal, India
+                  </p>
+                  <p style={{ fontSize: "9px", color: "#64748b", marginTop: "2px" }}>
+                    CIN: U63090WB2026PTC288910 · GSTIN: 19AAACA9876Q1Z2 · Helpline: +91 33 2415 8890
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    border: "2px solid #000000",
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    fontFamily: "monospace",
+                    fontSize: "10px",
+                    fontWeight: "900",
+                    padding: "2px 8px",
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  RUN-SHEET MANIFEST
+                </span>
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    fontWeight: "800",
+                    color: "#000000",
+                  }}
+                >
+                  REF: {tripData.tripNumber}
+                </div>
+                <div style={{ fontSize: "10px", color: "#475569", marginTop: "2px" }}>
+                  Date: {formattedDate}
+                </div>
+              </div>
+            </div>
+
+            {/* Document Title Banner */}
+            <div
+              style={{
+                marginTop: "12px",
+                marginBottom: "12px",
+                borderLeft: "4px solid #000000",
+                borderTop: "1px solid #cbd5e1",
+                borderRight: "1px solid #cbd5e1",
+                borderBottom: "1px solid #cbd5e1",
+                padding: "6px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    fontWeight: "900",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    color: "#000000",
+                  }}
+                >
+                  OFFICIAL DISPATCH TRIP RUN-SHEET & LAST-MILE CUSTODY MANIFEST
+                </span>
+                <p style={{ fontSize: "9.5px", color: "#475569", margin: "1px 0 0" }}>
+                  Authorized for Hub Outbound Staging, Courier Custody Handover, and Doorstep e-POD Settlement
+                </p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "9.5px", fontWeight: "700", textTransform: "uppercase", color: "#334155" }}>
+                  Lifecycle Status:{" "}
+                </span>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "900",
+                    color: "#000000",
+                    border: "1.5px solid #000000",
+                    padding: "1px 6px",
+                    backgroundColor: "#ffffff",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {tripData.status.replace(/_/g, " ")}
+                </span>
+              </div>
+            </div>
+
+            {/* Trip Fleet & Routing Bar with Barcode */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1.3fr 1.5fr 1.2fr 1.2fr",
+                gap: "8px",
+                border: "1px solid #000000",
+                backgroundColor: "#ffffff",
+                padding: "8px 10px",
+                marginBottom: "12px",
+                fontSize: "11px",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  VEHICLE & FLEET REG
+                </span>
+                <p style={{ fontFamily: "monospace", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                  {tripData.vehicleNumber}
+                </p>
+                <span style={{ fontSize: "9px", color: "#475569" }}>
+                  Type: {tripData.type === "LAST_MILE" ? "Last-Mile Delivery" : "Linehaul Transfer"}
+                </span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  ASSIGNED DRIVER / COURIER
+                </span>
+                <p style={{ fontWeight: "900", color: "#000000", margin: "1px 0 0" }}>
+                  {tripData.driverName}
+                </p>
+                <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#1e293b" }}>
+                  {tripData.driverPhone}
+                </span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  DEPOT & DELIVERY ROUTE
+                </span>
+                <p style={{ fontWeight: "800", color: "#000000", margin: "2px 0 0", lineHeight: "1.2" }}>
+                  {tripData.originHub} → {tripData.destinationHub || "Local Delivery Sector"}
+                </p>
+              </div>
+
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#475569" }}>
+                  MANIFEST BARCODE
+                </span>
+                <div style={{ marginTop: "2px" }}>
+                  <SvgBarcode value={tripData.tripNumber} height={20} className="w-28 ml-auto" />
+                </div>
+                <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#000000", fontWeight: "800" }}>
+                  {tripData.tripNumber}
+                </span>
+              </div>
+            </div>
+
+            {/* Consignment Delivery Checklist Table */}
+            <div style={{ marginTop: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "4px",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "900",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    margin: 0,
+                    color: "#000000",
+                  }}
+                >
+                  CONSIGNMENT DELIVERY CHECKLIST ({tripData.orders.length} PARCELS)
+                </h3>
+                <span style={{ fontSize: "9px", color: "#64748b" }}>
+                  Check package integrity upon customer handover
+                </span>
+              </div>
+
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  border: "1px solid #000000",
+                  fontSize: "10px",
+                  lineHeight: "1.25",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: "#f1f5f9",
+                      borderBottom: "1.5px solid #000000",
+                      textTransform: "uppercase",
+                      fontSize: "9px",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                    }}
+                  >
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 4px", width: "24px", textAlign: "center" }}>
+                      #
+                    </th>
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 6px", width: "115px" }}>
+                      AWB & Barcode
+                    </th>
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 6px" }}>
+                      Consignee Details & Address
+                    </th>
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 6px", width: "65px", textAlign: "center" }}>
+                      Weight
+                    </th>
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 6px", width: "95px", textAlign: "right" }}>
+                      Payment Mode
+                    </th>
+                    <th style={{ border: "1px solid #cbd5e1", padding: "5px 6px", width: "125px", textAlign: "center" }}>
+                      Recipient Sign / e-POD Proof
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tripData.orders.map((order, idx) => (
+                    <tr
+                      key={order.id}
+                      style={{
+                        borderBottom: "1px solid #e2e8f0",
+                        backgroundColor: idx % 2 === 1 ? "#fafafa" : "#ffffff",
+                      }}
+                    >
+                      <td
+                        style={{
+                          border: "1px solid #cbd5e1",
+                          padding: "6px 4px",
+                          textAlign: "center",
+                          fontFamily: "monospace",
+                          fontWeight: "800",
+                          color: "#334155",
+                        }}
+                      >
+                        {String(idx + 1).padStart(2, "0")}
+                      </td>
+                      <td style={{ border: "1px solid #cbd5e1", padding: "6px 6px" }}>
+                        <span style={{ fontFamily: "monospace", fontWeight: "900", color: "#000000", display: "block" }}>
+                          {order.awbNumber}
+                        </span>
+                        <div style={{ marginTop: "2px" }}>
+                          <SvgBarcode value={order.awbNumber} height={14} className="w-24" />
+                        </div>
+                        <span style={{ fontFamily: "monospace", fontSize: "8.5px", color: "#64748b" }}>
+                          {order.orderNumber}
+                        </span>
+                      </td>
+                      <td style={{ border: "1px solid #cbd5e1", padding: "6px 6px" }}>
+                        <span style={{ fontWeight: "800", color: "#000000", display: "block" }}>
+                          {order.receiverName}{" "}
+                          <span style={{ fontWeight: "normal", color: "#475569" }}>
+                            ({order.receiverPhone})
+                          </span>
+                        </span>
+                        <span style={{ fontSize: "9px", color: "#334155", display: "block", marginTop: "1px" }}>
+                          {order.receiverAddress}, {order.receiverCity} - {order.receiverPincode}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid #cbd5e1",
+                          padding: "6px 6px",
+                          textAlign: "center",
+                          fontFamily: "monospace",
+                          fontWeight: "800",
+                          color: "#000000",
+                        }}
+                      >
+                        {Number(order.packageWeight).toFixed(2)} kg
+                      </td>
+                      <td style={{ border: "1px solid #cbd5e1", padding: "6px 6px", textAlign: "right" }}>
+                        {order.paymentMode === "COD" ? (
+                          <div style={{ textAlign: "right" }}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                border: "1px solid #000000",
+                                padding: "1px 5px",
+                                backgroundColor: "#ffffff",
+                                fontWeight: "900",
+                                fontSize: "9.5px",
+                                color: "#000000",
+                              }}
+                            >
+                              COD: ₹{Number(order.totalAmount).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        ) : (
+                          <span
+                            style={{
+                              fontWeight: "800",
+                              color: "#047857",
+                              fontSize: "9px",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            PREPAID
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ border: "1px solid #cbd5e1", padding: "4px 6px", verticalAlign: "bottom" }}>
+                        <div style={{ fontSize: "8px", color: "#94a3b8", marginBottom: "12px", textAlign: "left" }}>
+                          Time: _________ Recv By: _________
+                        </div>
+                        <div style={{ borderBottom: "1px dashed #64748b" }} />
+                        <span style={{ fontSize: "7.5px", color: "#64748b", display: "block", textAlign: "center", marginTop: "1px" }}>
+                          Customer Signature
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cash & Consignment Reconciliation Summary */}
+            <div
+              style={{
+                marginTop: "14px",
+                border: "1.5px solid #000000",
+                backgroundColor: "#f8fafc",
+                padding: "8px 10px",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1.2fr 1.4fr",
+                  gap: "8px",
+                  fontSize: "10px",
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#64748b" }}>
+                    TOTAL CONSIGNMENTS
+                  </span>
+                  <p style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                    {orderCount} <span style={{ fontSize: "10px", fontWeight: "normal" }}>Parcels</span>
+                  </p>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#64748b" }}>
+                    TOTAL GROSS WEIGHT
+                  </span>
+                  <p style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                    {totalWeight.toFixed(2)} <span style={{ fontSize: "10px", fontWeight: "normal" }}>kg</span>
+                  </p>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#64748b" }}>
+                    TOTAL COD TO COLLECT
+                  </span>
+                  <p style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                    ₹{totalCod.toLocaleString("en-IN")}
+                  </p>
+                </div>
+
+                <div style={{ borderLeft: "1px solid #cbd5e1", paddingLeft: "8px" }}>
+                  <span style={{ fontSize: "8.5px", fontWeight: "800", textTransform: "uppercase", color: "#64748b" }}>
+                    ACTUAL CASH DEPOSITED
+                  </span>
+                  <p style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: "900", color: "#000000", margin: "2px 0 0" }}>
+                    ₹ ___________________
+                  </p>
+                  <span style={{ fontSize: "8px", color: "#64748b" }}>
+                    NDR / Returned Parcels: _______
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tripartite Audit & Custody Handover Sign-Off */}
+            <div
+              style={{
+                marginTop: "16px",
+                marginBottom: "8px",
+                borderTop: "1.5px solid #000000",
+                paddingTop: "12px",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Delivery Courier / Driver
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#475569", margin: "2px 0 0" }}>
+                    {tripData.driverName} ({tripData.vehicleNumber})
+                  </p>
+                  <span style={{ fontSize: "8px", color: "#64748b", display: "block", marginTop: "1px" }}>
+                    Sign & Shift Handover Ack
+                  </span>
+                </div>
+
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Dispatch Operations Supervisor
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#475569", margin: "2px 0 0" }}>
+                    {tripData.originHub}
+                  </p>
+                  <span style={{ fontSize: "8px", color: "#64748b", display: "block", marginTop: "1px" }}>
+                    Staging Verification & Seal Stamp
+                  </span>
+                </div>
+
+                <div style={{ borderTop: "1px dashed #64748b", paddingTop: "4px", textAlign: "center" }}>
+                  <p style={{ fontSize: "10px", fontWeight: "800", color: "#000000", margin: 0 }}>
+                    Finance & Cashier Gate Inbound
+                  </p>
+                  <p style={{ fontSize: "8.5px", color: "#475569", margin: "2px 0 0" }}>
+                    Cash Remittance & Voucher Reconciled
+                  </p>
+                  <span style={{ fontSize: "8px", color: "#64748b", display: "block", marginTop: "1px" }}>
+                    Signature & Cashier Stamp
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Internal Audit Footer Disclaimer */}
+            <div
+              style={{
+                borderTop: "1px solid #cbd5e1",
+                paddingTop: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "9px",
+                color: "#64748b",
+              }}
+            >
+              <p style={{ margin: 0 }}>
+                This official run-sheet is generated automatically by Agentic Logistics ERP. All delivered packages require signed e-POD proof or physical signature.
+              </p>
+              <p style={{ fontFamily: "monospace", margin: 0 }}>
+                PAGE 1 OF 1 · AUDIT COMPLIANT · DIGITAL E-POD SYNCED
+              </p>
             </div>
           </div>
+        </div>
 
+        {/* Modal Controls */}
+        <div className="no-print flex items-center justify-between border-t border-[var(--border)] pt-4">
+          <p className="text-xs text-[var(--muted)]">
+            Formatted for standard A4 portrait letterhead printing with high-fidelity isolation.
+          </p>
           <div className="flex items-center gap-2">
             <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 active:scale-95"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-              Print Run-Sheet
-            </button>
-            <button
+              type="button"
               onClick={onClose}
-              className="rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)] transition-all hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
+              className="btn btn-ghost text-xs"
             >
               Close
             </button>
-          </div>
-        </div>
-
-        {/* Printable Document Container */}
-        <div ref={printRef} className="flex-1 overflow-y-auto p-8 font-sans print:p-6 print:overflow-visible">
-          {/* Document Header */}
-          <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-            <div className="flex items-center gap-3">
-              <Image src={LOGO.sm} alt="Agentic Logistics" width={40} height={40} className="object-contain" />
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white print:text-black">
-                  AGENTIC LOGISTICS
-                </h1>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 print:text-slate-600">
-                  {trip.type === "LAST_MILE" ? "Last-Mile Delivery Run-Sheet" : "Linehaul Transfer Manifest"}
-                </p>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <div className="inline-block">
-                <SvgBarcode value={trip.tripNumber} height={32} className="w-36" />
-              </div>
-              <p className="font-mono text-xs font-bold text-slate-900 dark:text-white print:text-black">
-                {trip.tripNumber}
-              </p>
-              <p className="text-[10px] text-slate-500 print:text-slate-600">Generated: {formattedDate}</p>
-            </div>
-          </div>
-
-          {/* Dispatch Metadata Grid */}
-          <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/40 sm:grid-cols-4 print:border-slate-300 print:bg-slate-50 print:text-black">
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Vehicle #</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white print:text-black">
-                {trip.vehicleNumber}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Driver</span>
-              <span className="font-semibold text-slate-900 dark:text-white print:text-black">
-                {trip.driverName}
-              </span>
-              <span className="block text-[10px] text-slate-500">{trip.driverPhone}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Route / Hubs</span>
-              <span className="font-semibold text-slate-900 dark:text-white print:text-black">
-                {trip.originHub} → {trip.destinationHub || "Delivery Sector"}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Consignments</span>
-              <span className="font-bold text-slate-900 dark:text-white print:text-black">
-                {orderCount} Orders ({totalWeight.toFixed(2)} kg)
-              </span>
-              {totalCod > 0 && (
-                <span className="block text-[10px] font-bold text-amber-600 print:text-black">
-                  COD: ₹{totalCod.toLocaleString("en-IN")}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Parcel Delivery Manifest Table */}
-          <div className="mt-6">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 print:text-black">
-              Consignment Delivery Checklist ({trip.orders.length} Parcels)
-            </h3>
-            <table className="w-full border-collapse border border-slate-300 text-left text-xs print:border-slate-400">
-              <thead>
-                <tr className="bg-slate-100 text-[10px] font-bold uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-200 print:bg-slate-200 print:text-black">
-                  <th className="border border-slate-300 p-2 w-8 text-center print:border-slate-400">#</th>
-                  <th className="border border-slate-300 p-2 w-32 print:border-slate-400">AWB / Tracking</th>
-                  <th className="border border-slate-300 p-2 print:border-slate-400">Customer & Delivery Address</th>
-                  <th className="border border-slate-300 p-2 w-20 text-center print:border-slate-400">Weight</th>
-                  <th className="border border-slate-300 p-2 w-24 text-right print:border-slate-400">Payment</th>
-                  <th className="border border-slate-300 p-2 w-36 text-center print:border-slate-400">
-                    Recipient Sign / Remarks
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {trip.orders.map((order, idx) => (
-                  <tr
-                    key={order.id}
-                    className="border-b border-slate-200 hover:bg-slate-50/50 print:border-slate-300 print:hover:bg-transparent"
-                  >
-                    <td className="border border-slate-300 p-2 text-center font-mono font-bold text-slate-500 print:border-slate-400 print:text-black">
-                      {idx + 1}
-                    </td>
-                    <td className="border border-slate-300 p-2 print:border-slate-400">
-                      <span className="font-mono font-bold text-slate-900 dark:text-white print:text-black block">
-                        {order.awbNumber}
-                      </span>
-                      <span className="text-[10px] text-slate-500 print:text-slate-600 font-mono">
-                        {order.orderNumber}
-                      </span>
-                    </td>
-                    <td className="border border-slate-300 p-2 print:border-slate-400">
-                      <span className="font-bold text-slate-900 dark:text-white print:text-black block">
-                        {order.receiverName} ({order.receiverPhone})
-                      </span>
-                      <span className="text-[11px] text-slate-600 dark:text-slate-400 print:text-slate-700 block">
-                        {order.receiverAddress}, {order.receiverCity} - {order.receiverPincode}
-                      </span>
-                    </td>
-                    <td className="border border-slate-300 p-2 text-center font-mono print:border-slate-400 print:text-black">
-                      {order.packageWeight} kg
-                    </td>
-                    <td className="border border-slate-300 p-2 text-right font-mono print:border-slate-400">
-                      {order.paymentMode === "COD" ? (
-                        <span className="font-bold text-amber-700 dark:text-amber-400 print:text-black">
-                          COD ₹{order.totalAmount.toLocaleString("en-IN")}
-                        </span>
-                      ) : (
-                        <span className="font-medium text-emerald-700 dark:text-emerald-400 print:text-black">
-                          PREPAID
-                        </span>
-                      )}
-                    </td>
-                    <td className="border border-slate-300 p-2 text-center align-bottom print:border-slate-400">
-                      <div className="h-7 border-b border-dashed border-slate-300" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Cash & Delivery Reconciliation Block */}
-          <div className="mt-8 border-t-2 border-slate-900 pt-4 print:mt-6">
-            <div className="grid grid-cols-2 gap-6 text-xs sm:grid-cols-4 print:text-black">
-              <div>
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Total Consignments</span>
-                <span className="font-mono text-base font-bold text-slate-900 dark:text-white print:text-black">
-                  {orderCount}
-                </span>
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Total Weight</span>
-                <span className="font-mono text-base font-bold text-slate-900 dark:text-white print:text-black">
-                  {totalWeight.toFixed(2)} kg
-                </span>
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Total COD to Collect</span>
-                <span className="font-mono text-base font-bold text-amber-600 print:text-black">
-                  ₹{totalCod.toLocaleString("en-IN")}
-                </span>
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Actual Cash Deposited</span>
-                <span className="font-mono text-base font-bold text-slate-400 print:text-black">
-                  ₹ ____________
-                </span>
-              </div>
-            </div>
-
-            {/* Signature Blocks */}
-            <div className="mt-10 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 print:text-black">
-              <div className="w-48 text-center">
-                <div className="mb-1 border-b border-slate-400 pb-8" />
-                <span className="font-bold">Driver Signature</span>
-                <p className="text-[10px] text-slate-500">{trip.driverName}</p>
-              </div>
-
-              <div className="w-48 text-center">
-                <div className="mb-1 border-b border-slate-400 pb-8" />
-                <span className="font-bold">Dispatch Supervisor</span>
-                <p className="text-[10px] text-slate-500">Hub Operations</p>
-              </div>
-
-              <div className="w-48 text-center">
-                <div className="mb-1 border-b border-slate-400 pb-8" />
-                <span className="font-bold">Security Seal & Date</span>
-                <p className="text-[10px] text-slate-500">Gate Verification</p>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="btn btn-primary text-xs"
+            >
+              <IconPrinter className="h-4 w-4" />
+              Print Run-Sheet (Letterhead)
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

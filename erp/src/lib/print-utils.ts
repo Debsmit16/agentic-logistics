@@ -132,7 +132,8 @@ export function printIsolatedElement(
       break-after: avoid !important;
       break-inside: avoid !important;
     }
-    #internal-manifest-letterhead {
+    #internal-manifest-letterhead,
+    #dispatch-runsheet-letterhead {
       width: 100% !important;
       max-width: 194mm !important;
       margin: 0 auto !important;
