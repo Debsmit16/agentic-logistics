@@ -233,3 +233,11 @@ export function IconUpload({ className }: IconProps) {
 
 
 
+
+export function IconBarcode({ className }: IconProps) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M3 5v14M7 5v14M11 5v14M15 5v14M18 5v14M21 5v14" />
+    </svg>
+  );
+}

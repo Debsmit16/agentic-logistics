@@ -15,6 +15,7 @@ import {
   IconBox,
   IconDashboard,
   IconSearch,
+  IconBarcode,
   IconSettings,
   IconTruck,
   IconWallet,
@@ -25,6 +26,7 @@ import type { SettingsNavItem } from "@/lib/nav";
 const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   "/orders": IconBox,
   "/dispatches": IconTruck,
+  "/hub/scanner": IconBarcode,
   "/tracking": IconSearch,
 };
 

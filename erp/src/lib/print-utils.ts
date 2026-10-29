@@ -48,7 +48,7 @@ export function printIsolatedElement(
     pageType === "thermal"
       ? `
     @page {
-      size: 4in 6in;
+      size: 100mm 150mm;
       margin: 0 !important;
     }
     *, *::before, *::after {
@@ -57,7 +57,7 @@ export function printIsolatedElement(
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 4in !important;
+      width: 100mm !important;
       background: #ffffff !important;
       color: #000000 !important;
       font-family: Arial, Helvetica, "Liberation Sans", sans-serif !important;
@@ -71,8 +71,8 @@ export function printIsolatedElement(
       padding: 0 !important;
     }
     .thermal-label-page {
-      width: 4in !important;
-      height: 6in !important;
+      width: 100mm !important;
+      height: 150mm !important;
       margin: 0 !important;
       padding: 0 !important;
       display: flex !important;
@@ -89,11 +89,11 @@ export function printIsolatedElement(
     }
     #thermal-shipping-label,
     .thermal-shipping-label {
-      width: 3.8in !important;
-      max-width: 3.8in !important;
-      height: 5.6in !important;
-      max-height: 5.6in !important;
-      margin: 0.15in auto !important;
+      width: 96mm !important;
+      max-width: 96mm !important;
+      height: 144mm !important;
+      max-height: 144mm !important;
+      margin: 2mm auto !important;
       padding: 8px 10px !important;
       box-sizing: border-box !important;
       border: 2px solid #000000 !important;
