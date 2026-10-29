@@ -11,8 +11,10 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import { LOGO } from "@/lib/brand";
 import {
+  IconActivity,
   IconBox,
   IconDashboard,
+  IconSearch,
   IconSettings,
   IconTruck,
   IconWallet,
@@ -23,6 +25,7 @@ import type { SettingsNavItem } from "@/lib/nav";
 const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   "/orders": IconBox,
   "/dispatches": IconTruck,
+  "/tracking": IconSearch,
 };
 
 function navItemClass(active: boolean) {

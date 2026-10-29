@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ERP_URL } from "@/lib/brand";
 import { LogoCube3D } from "@/components/3d/logo-cube-3d";
 import { LogoShowcasePanel } from "@/components/3d/logo-showcase-panel";
+import { HeroTracker } from "@/components/home/hero-tracker";
 
 export default function HomePage() {
   const operations = [
@@ -111,6 +112,9 @@ export default function HomePage() {
                   Request Consultation →
                 </Link>
               </div>
+
+              {/* Real-Time Consignment Tracker Widget */}
+              <HeroTracker />
 
               {/* Trust Strip */}
               <div className="mt-10 pt-6 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center gap-6 text-xs text-slate-500 dark:text-slate-400 font-medium">

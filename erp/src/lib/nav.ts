@@ -10,6 +10,7 @@ export type NavItem = {
 export const MODULE_NAV: NavItem[] = [
   { module: "ORDERS", href: "/orders", label: "Orders" },
   { module: "DISPATCHES", href: "/dispatches", label: "Dispatches & Trips" },
+  { module: "ORDERS", href: "/tracking", label: "Consignment Tracker" },
 ];
 
 export type SettingsNavItem = {
