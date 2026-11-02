@@ -13,6 +13,8 @@
     "dev:website": "npm run dev --workspace=website",
     "dev:rider": "npm run dev --workspace=rider",
     "dev:desktop": "npm run start --workspace=desktop",
+    "build": "npm run build:erp && npm run build:website && npm run build:rider",
+    "typecheck": "npm run typecheck:erp && npm run typecheck:website && npm run typecheck:rider",
     "build:erp": "npm run build --workspace=erp",
     "build:website": "npm run build --workspace=website",
     "build:rider": "npm run build --workspace=rider",

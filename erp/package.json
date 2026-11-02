@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "build:vercel": "prisma generate && node scripts/migrate-deploy.mjs && next build",
     "postinstall": "prisma generate",
     "start": "next start",
