@@ -16,6 +16,7 @@ import {
   IconDashboard,
   IconSearch,
   IconBarcode,
+  IconAlert,
   IconSettings,
   IconTruck,
   IconWallet,
@@ -28,6 +29,7 @@ const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   "/dispatches": IconTruck,
   "/hub/scanner": IconBarcode,
   "/finance/reconciliation": IconWallet,
+  "/ndr": IconAlert,
   "/tracking": IconSearch,
 };
 

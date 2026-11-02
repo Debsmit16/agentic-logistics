@@ -83,6 +83,19 @@ export function TrackClient() {
   const [selectedProof, setSelectedProof] = useState<ProofAttachment | null>(null);
   const [, startTransition] = useTransition();
 
+  // Customer Self-Service Reschedule form states
+  const [rescheduleDate, setRescheduleDate] = useState(() => {
+    const tmrw = new Date();
+    tmrw.setDate(tmrw.getDate() + 1);
+    return tmrw.toISOString().split("T")[0];
+  });
+  const [rescheduleSlot, setRescheduleSlot] = useState("MORNING");
+  const [altPhone, setAltPhone] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [rescheduleSuccess, setRescheduleSuccess] = useState<string | null>(null);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+
   useEffect(() => {
     const awbFromUrl = searchParams.get("awb")?.trim();
     if (awbFromUrl) {
@@ -145,6 +158,43 @@ export function TrackClient() {
       navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  async function handleCustomerRescheduleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!tracking) return;
+
+    setIsRescheduling(true);
+    setRescheduleSuccess(null);
+    setRescheduleError(null);
+
+    try {
+      const res = await fetch(`${ERP_URL}/api/public/reschedule`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          awbNumber: tracking.awbNumber,
+          preferredDate: rescheduleDate,
+          preferredSlot: rescheduleSlot,
+          alternatePhone: altPhone.trim() || undefined,
+          deliveryNotes: deliveryNotes.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Unable to submit reschedule request");
+      }
+
+      setRescheduleSuccess(data.result.message);
+      // Re-fetch tracking to display updated milestones
+      fetchTracking(tracking.awbNumber);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to reschedule handover";
+      setRescheduleError(msg);
+    } finally {
+      setIsRescheduling(false);
     }
   }
 
@@ -456,6 +506,130 @@ export function TrackClient() {
                 </div>
               </div>
             </div>
+
+            {/* Customer Self-Service Reschedule Widget (Visible when NDR exception exists and not delivered) */}
+            {tracking.hasNdr && !tracking.isDelivered && (
+              <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-[#0c1222] to-[#0c1222] p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                        CUSTOMER SELF-SERVICE RESCHEDULING
+                      </span>
+                      <h3 className="text-lg font-bold text-white">Choose Your Preferred Delivery Slot</h3>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400">
+                    {tracking.ndrReason || "Delivery Attempt Unsuccessful"}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
+                  Our delivery courier was unable to complete handover on the first attempt. Please select your preferred handover date and time window below so our driver can arrive when you are available.
+                </p>
+
+                {rescheduleSuccess ? (
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-5 text-emerald-400 text-xs font-semibold flex items-center gap-3">
+                    <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{rescheduleSuccess}</span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCustomerRescheduleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5 font-mono">
+                          Preferred Delivery Date:
+                        </label>
+                        <input
+                          type="date"
+                          value={rescheduleDate}
+                          onChange={(e) => setRescheduleDate(e.target.value)}
+                          className="w-full rounded-2xl border border-white/10 bg-[#070b14] px-4 py-2.5 text-xs font-mono font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5 font-mono">
+                          Delivery Time Slot:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setRescheduleSlot("MORNING")}
+                            className={`rounded-2xl border py-2.5 px-3 text-center text-xs font-bold transition-all ${
+                              rescheduleSlot === "MORNING"
+                                ? "border-blue-500 bg-blue-600/20 text-blue-300 ring-1 ring-blue-500"
+                                : "border-white/10 bg-[#070b14] text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            🌅 Morning (9am–1pm)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRescheduleSlot("AFTERNOON")}
+                            className={`rounded-2xl border py-2.5 px-3 text-center text-xs font-bold transition-all ${
+                              rescheduleSlot === "AFTERNOON"
+                                ? "border-blue-500 bg-blue-600/20 text-blue-300 ring-1 ring-blue-500"
+                                : "border-white/10 bg-[#070b14] text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            🌇 Afternoon (1pm–6pm)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5 font-mono">
+                          Alternate Contact Phone (Optional):
+                        </label>
+                        <input
+                          type="tel"
+                          value={altPhone}
+                          onChange={(e) => setAltPhone(e.target.value)}
+                          placeholder="e.g. 9820011223"
+                          className="w-full rounded-2xl border border-white/10 bg-[#070b14] px-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5 font-mono">
+                          Handover Instructions (Optional):
+                        </label>
+                        <input
+                          type="text"
+                          value={deliveryNotes}
+                          onChange={(e) => setDeliveryNotes(e.target.value)}
+                          placeholder="e.g. Leave with building security guard"
+                          className="w-full rounded-2xl border border-white/10 bg-[#070b14] px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {rescheduleError && (
+                      <div className="text-xs text-red-400 font-semibold">{rescheduleError}</div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isRescheduling}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
+                    >
+                      {isRescheduling ? "Submitting Reschedule..." : "Confirm Preferred Delivery Slot →"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
 
             {/* 3. Bilateral Route & Origin / Destination Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

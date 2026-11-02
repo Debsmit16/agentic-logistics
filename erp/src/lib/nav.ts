@@ -12,6 +12,7 @@ export const MODULE_NAV: NavItem[] = [
   { module: "DISPATCHES", href: "/dispatches", label: "Dispatches & Trips" },
   { module: "ORDERS", href: "/hub/scanner", label: "Hub Scanner Station" },
   { module: "ORDERS", href: "/finance/reconciliation", label: "Cash Settlement" },
+  { module: "ORDERS", href: "/ndr", label: "NDR Exceptions" },
   { module: "ORDERS", href: "/tracking", label: "Consignment Tracker" },
 ];
 
