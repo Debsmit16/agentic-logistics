@@ -28,13 +28,13 @@ export interface OrderFormData {
   receiverPincode: string;
 
   itemDescription: string;
-  packageWeight: number;
-  lengthCm: number;
-  widthCm: number;
-  heightCm: number;
+  packageWeight: number | string;
+  lengthCm: number | string;
+  widthCm: number | string;
+  heightCm: number | string;
 
-  totalAmount: number;
-  declaredValue: number;
+  totalAmount: number | string;
+  declaredValue: number | string;
 
   thirdPartyName?: string | null;
   thirdPartyTracking?: string | null;
@@ -70,13 +70,13 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
     receiverPincode: order?.receiverPincode ?? "",
 
     itemDescription: order?.itemDescription ?? "",
-    packageWeight: order?.packageWeight ?? 1.0,
-    lengthCm: order?.lengthCm ?? 20,
-    widthCm: order?.widthCm ?? 15,
-    heightCm: order?.heightCm ?? 10,
+    packageWeight: order?.packageWeight != null ? order.packageWeight : "",
+    lengthCm: order?.lengthCm != null ? order.lengthCm : "",
+    widthCm: order?.widthCm != null ? order.widthCm : "",
+    heightCm: order?.heightCm != null ? order.heightCm : "",
 
-    totalAmount: order?.totalAmount ?? 150,
-    declaredValue: order?.declaredValue ?? 1000,
+    totalAmount: order?.totalAmount != null ? order.totalAmount : "",
+    declaredValue: order?.declaredValue != null ? order.declaredValue : "",
     thirdPartyName: order?.thirdPartyName ?? "",
     thirdPartyTracking: order?.thirdPartyTracking ?? "",
   }));
@@ -96,8 +96,13 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
 
   // Live calculation of volumetric & chargeable weights
   const { volWeight, chargeableWeight } = useMemo(() => {
-    const vol = Number(((formData.lengthCm * formData.widthCm * formData.heightCm) / 5000).toFixed(2));
-    const chg = Number(Math.max(formData.packageWeight || 0, vol).toFixed(2));
+    const l = typeof formData.lengthCm === "number" ? formData.lengthCm : parseFloat(formData.lengthCm) || 0;
+    const w = typeof formData.widthCm === "number" ? formData.widthCm : parseFloat(formData.widthCm) || 0;
+    const h = typeof formData.heightCm === "number" ? formData.heightCm : parseFloat(formData.heightCm) || 0;
+    const dead = typeof formData.packageWeight === "number" ? formData.packageWeight : parseFloat(formData.packageWeight) || 0;
+
+    const vol = l > 0 && w > 0 && h > 0 ? Number(((l * w * h) / 5000).toFixed(2)) : 0;
+    const chg = Number(Math.max(dead, vol).toFixed(2));
     return { volWeight: vol, chargeableWeight: chg };
   }, [formData.lengthCm, formData.widthCm, formData.heightCm, formData.packageWeight]);
 
@@ -137,6 +142,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
 
       const payload = {
         ...formData,
+        packageWeight: parseFloat(String(formData.packageWeight)) || 0,
+        lengthCm: parseFloat(String(formData.lengthCm)) || 0,
+        widthCm: parseFloat(String(formData.widthCm)) || 0,
+        heightCm: parseFloat(String(formData.heightCm)) || 0,
+        totalAmount: parseFloat(String(formData.totalAmount)) || 0,
+        declaredValue: parseFloat(String(formData.declaredValue)) || 0,
         ...(parcelPhoto
           ? {
               parcelPhotoBase64: parcelPhoto.dataUrl,
@@ -374,11 +385,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               <input
                 type="number"
                 step="0.01"
-                min="0.05"
+                min="0.01"
                 required
+                placeholder="0.00"
                 value={formData.packageWeight}
-                onChange={(e) => setFormData({ ...formData, packageWeight: parseFloat(e.target.value) || 0 })}
-                className="input mt-1 h-9 text-xs"
+                onChange={(e) => setFormData({ ...formData, packageWeight: e.target.value })}
+                className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -386,11 +398,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min="0.1"
                 required
+                placeholder="0.0"
                 value={formData.lengthCm}
-                onChange={(e) => setFormData({ ...formData, lengthCm: parseFloat(e.target.value) || 0 })}
-                className="input mt-1 h-9 text-xs"
+                onChange={(e) => setFormData({ ...formData, lengthCm: e.target.value })}
+                className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -398,11 +411,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min="0.1"
                 required
+                placeholder="0.0"
                 value={formData.widthCm}
-                onChange={(e) => setFormData({ ...formData, widthCm: parseFloat(e.target.value) || 0 })}
-                className="input mt-1 h-9 text-xs"
+                onChange={(e) => setFormData({ ...formData, widthCm: e.target.value })}
+                className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -410,11 +424,12 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min="0.1"
                 required
+                placeholder="0.0"
                 value={formData.heightCm}
-                onChange={(e) => setFormData({ ...formData, heightCm: parseFloat(e.target.value) || 0 })}
-                className="input mt-1 h-9 text-xs"
+                onChange={(e) => setFormData({ ...formData, heightCm: e.target.value })}
+                className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
@@ -424,19 +439,19 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
             <div className="flex items-center gap-4">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[var(--muted)]">Volumetric</span>
-                <p className="font-semibold text-[var(--text)]">{volWeight} kg</p>
+                <p className="font-semibold text-[var(--text)]">{volWeight ? `${volWeight} kg` : "0 kg"}</p>
               </div>
               <div className="h-6 w-px bg-[var(--border)]" />
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[var(--muted)]">Dead Weight</span>
-                <p className="font-semibold text-[var(--text)]">{formData.packageWeight} kg</p>
+                <p className="font-semibold text-[var(--text)]">{formData.packageWeight ? `${formData.packageWeight} kg` : "0 kg"}</p>
               </div>
             </div>
             <div className="rounded-lg bg-[var(--primary-soft)] px-3 py-1 text-right">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
                 Chargeable Weight
               </span>
-              <p className="text-sm font-bold text-[var(--primary)]">{chargeableWeight} kg</p>
+              <p className="text-sm font-bold text-[var(--primary)]">{chargeableWeight ? `${chargeableWeight} kg` : "0 kg"}</p>
             </div>
           </div>
         </div>
@@ -559,9 +574,10 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               type="number"
               step="1"
               min="0"
+              placeholder="0"
               value={formData.totalAmount}
-              onChange={(e) => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })}
-              className="input mt-1 h-9 text-xs"
+              onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
+              className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
@@ -571,9 +587,10 @@ export function OrderFormModal({ open, order, onClose, onSaved }: OrderFormModal
               type="number"
               step="1"
               min="0"
+              placeholder="0"
               value={formData.declaredValue}
-              onChange={(e) => setFormData({ ...formData, declaredValue: parseFloat(e.target.value) || 0 })}
-              className="input mt-1 h-9 text-xs"
+              onChange={(e) => setFormData({ ...formData, declaredValue: e.target.value })}
+              className="input mt-1 h-9 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
         </div>
